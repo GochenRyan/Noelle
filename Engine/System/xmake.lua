@@ -1,6 +1,6 @@
 target("System")
     set_kind("shared")
-    add_defines("SYSTEM_EXPORTS")
+    add_defines("SYSTEEXPORTS")
     add_includedirs("$(projectdir)/Extras/TBB/include")
     add_linkdirs("$(projectdir)/Extras/TBB/Lib")
     add_headerfiles("*.h")

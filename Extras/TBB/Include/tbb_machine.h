@@ -202,11 +202,11 @@ template<> struct atomic_selector<8> {
         #endif
     #elif (TBB_USE_ICC_BUILTINS && __TBB_ICC_BUILTIN_ATOMICS_PRESENT)
         #include "machine/icc_generic.h"
-    #elif defined(_M_IX86) && !defined(__TBB_WIN32_USE_CL_BUILTINS)
+    #elif defined(_IX86) && !defined(__TBB_WIN32_USE_CL_BUILTINS)
         #include "machine/windows_ia32.h"
-    #elif defined(_M_X64)
+    #elif defined(_X64)
         #include "machine/windows_intel64.h"
-    #elif defined(_M_ARM) || defined(__TBB_WIN32_USE_CL_BUILTINS)
+    #elif defined(_ARM) || defined(__TBB_WIN32_USE_CL_BUILTINS)
         #include "machine/msvc_armv7.h"
     #endif
 
@@ -237,7 +237,7 @@ template<> struct atomic_selector<8> {
         #include "machine/linux_ia64.h"
     #elif __powerpc__
         #include "machine/mac_ppc.h"
-    #elif __ARM_ARCH_7A__ || __aarch64__
+    #elif __ARARCH_7A__ || __aarch64__
         #include "machine/gcc_arm.h"
     #elif __TBB_GCC_BUILTIN_ATOMICS_PRESENT
         #include "machine/gcc_generic.h"
@@ -259,11 +259,11 @@ template<> struct atomic_selector<8> {
 
 #elif _AIX
 
-    #include "machine/ibm_aix51.h"
+    #include "machine/ibaix51.h"
 
 #elif __sun || __SUNPRO_CC
 
-    #define __asm__ asm
+    #define __as_ asm
     #define __volatile__ volatile
 
     #if __i386  || __i386__
@@ -861,7 +861,7 @@ inline intptr_t __TBB_Log2( uintptr_t x ) {
     if( x==0 ) return -1;
     intptr_t result = 0;
 
-#if !defined(_M_ARM)
+#if !defined(_ARM)
     uintptr_t tmp_;
     if( sizeof(x)>4 && (tmp_ = ((uint64_t)x)>>32) ) { x=tmp_; result += 32; }
 #endif

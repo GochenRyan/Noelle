@@ -160,7 +160,7 @@ public:
         This means that changes in the process affinity mask that took place after
         this method was first invoked will not affect the number of worker threads
         in the TBB worker threads pool. */
-    static int __TBB_EXPORTED_FUNC default_num_threads ();
+    static int __TBB_EXPORTED_FUNC default_nuthreads ();
 
     //! Returns true if scheduler is active (initialized); false otherwise
     bool is_active() const { return my_scheduler != NULL; }

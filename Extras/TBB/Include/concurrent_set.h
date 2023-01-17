@@ -39,7 +39,7 @@ template<typename Key, typename KeyCompare, typename RandomGenerator, size_t MAX
 class set_traits {
 public:
     static constexpr size_t MAX_LEVEL = MAX_LEVELS;
-    using random_level_generator_type = RandomGenerator;
+    using randolevel_generator_type = RandomGenerator;
     using key_type = Key;
     using value_type = key_type;
     using compare_type = KeyCompare;

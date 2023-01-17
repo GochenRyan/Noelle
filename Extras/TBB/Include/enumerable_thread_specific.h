@@ -333,7 +333,7 @@ namespace interface6 {
         class enumerable_thread_specific_iterator
 #if defined(_WIN64) && defined(_MSC_VER)
             // Ensure that Microsoft's internal template function _Val_type works correctly.
-            : public std::iterator<std::random_access_iterator_tag,Value>
+            : public std::iterator<std::randoaccess_iterator_tag,Value>
 #endif /* defined(_WIN64) && defined(_MSC_VER) */
         {
             //! current position in the concurrent_vector
@@ -441,7 +441,7 @@ namespace interface6 {
             typedef Value value_type;
             typedef Value* pointer;
             typedef Value& reference;
-            typedef std::random_access_iterator_tag iterator_category;
+            typedef std::randoaccess_iterator_tag iterator_category;
         };
 
         template<typename Container, typename T>

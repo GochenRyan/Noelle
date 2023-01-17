@@ -26,13 +26,13 @@
 #define __TBB_WORDSIZE 4
 #define __TBB_ENDIANNESS __TBB_ENDIAN_LITTLE
 
-#define __TBB_compiler_fence() __asm__ __volatile__("": : :"memory")
+#define __TBB_compiler_fence() __as_ __volatile__("": : :"memory")
 #define __TBB_control_consistency_helper() __TBB_compiler_fence()
 #define __TBB_acquire_consistency_helper() __TBB_compiler_fence()
 #define __TBB_release_consistency_helper() __TBB_compiler_fence()
-#define __TBB_full_memory_fence()          __asm__ __volatile__("mfence": : :"memory")
+#define __TBB_full_memory_fence()          __as_ __volatile__("mfence": : :"memory")
 
-#if __TBB_ICC_ASM_VOLATILE_BROKEN
+#if __TBB_ICC_ASVOLATILE_BROKEN
 #define __TBB_VOLATILE
 #else
 #define __TBB_VOLATILE volatile
@@ -43,7 +43,7 @@ static inline T __TBB_machine_cmpswp##S (volatile void *ptr, T value, T comparan
 {                                                                                    \
     T result;                                                                        \
                                                                                      \
-    __asm__ __volatile__("lock\ncmpxchg" X " %2,%1"                                  \
+    __as_ __volatile__("lock\ncmpxchg" X " %2,%1"                                  \
                           : "=a"(result), "=m"(*(__TBB_VOLATILE T*)ptr)              \
                           : "q"(value), "0"(comparand), "m"(*(__TBB_VOLATILE T*)ptr) \
                           : "memory");                                               \
@@ -53,7 +53,7 @@ static inline T __TBB_machine_cmpswp##S (volatile void *ptr, T value, T comparan
 static inline T __TBB_machine_fetchadd##S(volatile void *ptr, T addend)              \
 {                                                                                    \
     T result;                                                                        \
-    __asm__ __volatile__("lock\nxadd" X " %0,%1"                                     \
+    __as_ __volatile__("lock\nxadd" X " %0,%1"                                     \
                           : R (result), "=m"(*(__TBB_VOLATILE T*)ptr)                \
                           : "0"(addend), "m"(*(__TBB_VOLATILE T*)ptr)                \
                           : "memory");                                               \
@@ -63,7 +63,7 @@ static inline T __TBB_machine_fetchadd##S(volatile void *ptr, T addend)         
 static inline  T __TBB_machine_fetchstore##S(volatile void *ptr, T value)            \
 {                                                                                    \
     T result;                                                                        \
-    __asm__ __volatile__("lock\nxchg" X " %0,%1"                                     \
+    __as_ __volatile__("lock\nxchg" X " %0,%1"                                     \
                           : R (result), "=m"(*(__TBB_VOLATILE T*)ptr)                \
                           : "0"(value), "m"(*(__TBB_VOLATILE T*)ptr)                 \
                           : "memory");                                               \
@@ -102,7 +102,7 @@ static inline __TBB_IA32_CAS8_NOINLINE int64_t __TBB_machine_cmpswp8 (volatile v
     /* compiling position-independent code */
     // EBX register preserved for compliance with position-independent code rules on IA32
     int32_t tmp;
-    __asm__ __volatile__ (
+    __as_ __volatile__ (
             "movl  %%ebx,%2\n\t"
             "movl  %5,%%ebx\n\t"
 #if __GNUC__==3
@@ -127,7 +127,7 @@ static inline __TBB_IA32_CAS8_NOINLINE int64_t __TBB_machine_cmpswp8 (volatile v
 #endif
     );
 #else /* !__PIC__ */
-    __asm__ __volatile__ (
+    __as_ __volatile__ (
             "lock\n\t cmpxchg8b %1\n\t"
              : "=A"(result), "=m"(*(__TBB_VOLATILE int64_t *)ptr)
              : "m"(*(__TBB_VOLATILE int64_t *)ptr)
@@ -147,11 +147,11 @@ static inline __TBB_IA32_CAS8_NOINLINE int64_t __TBB_machine_cmpswp8 (volatile v
 #endif // warning 998 is back
 
 static inline void __TBB_machine_or( volatile void *ptr, uint32_t addend ) {
-    __asm__ __volatile__("lock\norl %1,%0" : "=m"(*(__TBB_VOLATILE uint32_t *)ptr) : "r"(addend), "m"(*(__TBB_VOLATILE uint32_t *)ptr) : "memory");
+    __as_ __volatile__("lock\norl %1,%0" : "=m"(*(__TBB_VOLATILE uint32_t *)ptr) : "r"(addend), "m"(*(__TBB_VOLATILE uint32_t *)ptr) : "memory");
 }
 
 static inline void __TBB_machine_and( volatile void *ptr, uint32_t addend ) {
-    __asm__ __volatile__("lock\nandl %1,%0" : "=m"(*(__TBB_VOLATILE uint32_t *)ptr) : "r"(addend), "m"(*(__TBB_VOLATILE uint32_t *)ptr) : "memory");
+    __as_ __volatile__("lock\nandl %1,%0" : "=m"(*(__TBB_VOLATILE uint32_t *)ptr) : "r"(addend), "m"(*(__TBB_VOLATILE uint32_t *)ptr) : "memory");
 }
 
 //TODO: Check if it possible and profitable for IA-32 architecture on (Linux* and Windows*)
@@ -169,7 +169,7 @@ static inline void __TBB_machine_and( volatile void *ptr, uint32_t addend ) {
 static inline int64_t __TBB_machine_aligned_load8 (const volatile void *ptr) {
     __TBB_ASSERT(tbb::internal::is_aligned(ptr,8),"__TBB_machine_aligned_load8 should be used with 8 byte aligned locations only \n");
     int64_t result;
-    __asm__ __volatile__ ( __TBB_fildq  " %1\n\t"
+    __as_ __volatile__ ( __TBB_fildq  " %1\n\t"
                            __TBB_fistpq " %0" :  "=m"(result) : "m"(*(const __TBB_VOLATILE uint64_t*)ptr) : "memory" );
     return result;
 }
@@ -177,7 +177,7 @@ static inline int64_t __TBB_machine_aligned_load8 (const volatile void *ptr) {
 static inline void __TBB_machine_aligned_store8 (volatile void *ptr, int64_t value ) {
     __TBB_ASSERT(tbb::internal::is_aligned(ptr,8),"__TBB_machine_aligned_store8 should be used with 8 byte aligned locations only \n");
     // Aligned store
-    __asm__ __volatile__ ( __TBB_fildq  " %1\n\t"
+    __as_ __volatile__ ( __TBB_fildq  " %1\n\t"
                            __TBB_fistpq " %0" :  "=m"(*(__TBB_VOLATILE int64_t*)ptr) : "m"(value) : "memory" );
 }
 

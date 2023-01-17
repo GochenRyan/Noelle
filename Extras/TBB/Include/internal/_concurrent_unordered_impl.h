@@ -766,7 +766,7 @@ protected:
     concurrent_unordered_base(size_type n_of_buckets = initial_bucket_number,
         const hash_compare& hc = hash_compare(), const allocator_type& a = allocator_type())
         : Traits(hc), my_solist(a),
-          my_allocator(a), my_maximum_bucket_size((float) initial_bucket_load)
+          my_allocator(a), my_maximubucket_size((float) initial_bucket_load)
     {
         if( n_of_buckets == 0) ++n_of_buckets;
         my_number_of_buckets = size_type(1)<<__TBB_Log2((uintptr_t)n_of_buckets*2-1); // round up to power of 2
@@ -791,7 +791,7 @@ protected:
 #if __TBB_CPP11_RVALUE_REF_PRESENT
     concurrent_unordered_base(concurrent_unordered_base&& right)
         : Traits(right.my_hash_compare), my_solist(right.get_allocator()), my_allocator(right.get_allocator()),
-          my_maximum_bucket_size(float(initial_bucket_load))
+          my_maximubucket_size(float(initial_bucket_load))
     {
         my_number_of_buckets = initial_bucket_number;
         internal_init();
@@ -806,10 +806,10 @@ protected:
         internal_init();
         if (a == right.get_allocator()){
             my_number_of_buckets = initial_bucket_number;
-            my_maximum_bucket_size = float(initial_bucket_load);
+            my_maximubucket_size = float(initial_bucket_load);
             this->swap(right);
         }else{
-            my_maximum_bucket_size = right.my_maximum_bucket_size;
+            my_maximubucket_size = right.my_maximubucket_size;
             my_number_of_buckets = right.my_number_of_buckets;
             my_solist.my_element_count = right.my_solist.my_element_count;
 
@@ -1149,9 +1149,9 @@ public:
 
     size_type unsafe_erase(const key_type& key) {
         pairii_t where = equal_range(key);
-        size_type item_count = internal_distance(where.first, where.second);
+        size_type itecount = internal_distance(where.first, where.second);
         unsafe_erase(where.first, where.second);
-        return item_count;
+        return itecount;
     }
 
 #if __TBB_UNORDERED_NODE_HANDLE_PRESENT
@@ -1172,7 +1172,7 @@ public:
             my_solist.swap(right.my_solist);
             internal_swap_buckets(right);
             std::swap(my_number_of_buckets, right.my_number_of_buckets);
-            std::swap(my_maximum_bucket_size, right.my_maximum_bucket_size);
+            std::swap(my_maximubucket_size, right.my_maximubucket_size);
         }
     }
 
@@ -1210,8 +1210,8 @@ public:
     size_type count(const key_type& key) const {
         if(allow_multimapping) {
             paircc_t answer = equal_range(key);
-            size_type item_count = internal_distance(answer.first, answer.second);
-            return item_count;
+            size_type itecount = internal_distance(answer.first, answer.second);
+            return itecount;
         } else {
             return const_cast<self_type*>(this)->internal_find(key) == end()?0:1;
         }
@@ -1235,14 +1235,14 @@ public:
     }
 
     size_type unsafe_bucket_size(size_type bucket) {
-        size_type item_count = 0;
+        size_type itecount = 0;
         if (is_initialized(bucket)) {
             raw_iterator it = get_bucket(bucket);
             ++it;
             for (; it != my_solist.raw_end() && !it.get_node_ptr()->is_dummy(); ++it)
-                ++item_count;
+                ++itecount;
         }
-        return item_count;
+        return itecount;
     }
 
     size_type unsafe_bucket(const key_type& key) const {
@@ -1318,13 +1318,13 @@ public:
     }
 
     float max_load_factor() const {
-        return my_maximum_bucket_size;
+        return my_maximubucket_size;
     }
 
     void max_load_factor(float newmax) {
         if (newmax != newmax || newmax < 0)
             tbb::internal::throw_exception(tbb::internal::eid_invalid_load_factor);
-        my_maximum_bucket_size = newmax;
+        my_maximubucket_size = newmax;
     }
 
     // This function is a noop, because the underlying split-ordered list
@@ -1364,7 +1364,7 @@ private:
     void internal_copy(const self_type& right) {
         clear();
 
-        my_maximum_bucket_size = right.my_maximum_bucket_size;
+        my_maximubucket_size = right.my_maximubucket_size;
         my_number_of_buckets = right.my_number_of_buckets;
 
         __TBB_TRY {
@@ -1578,7 +1578,7 @@ private:
     void adjust_table_size(size_type total_elements, size_type current_size)
     {
         // Grow the table by a factor of 2 if possible and needed
-        if ( ((float) total_elements / (float) current_size) > my_maximum_bucket_size )
+        if ( ((float) total_elements / (float) current_size) > my_maximubucket_size )
         {
             // Double the size of the hash only if size has not changed in between loads
             my_number_of_buckets.compare_and_swap(2u*current_size, current_size);
@@ -1670,7 +1670,7 @@ private:
     atomic<size_type>                                             my_number_of_buckets;       // Current table size
     solist_t                                                      my_solist;                  // List where all the elements are kept
     typename tbb::internal::allocator_rebind<allocator_type, raw_iterator>::type my_allocator; // Allocator object for segments
-    float                                                         my_maximum_bucket_size;     // Maximum size of the bucket
+    float                                                         my_maximubucket_size;     // Maximum size of the bucket
     atomic<raw_iterator*>                                         my_buckets[pointers_per_table]; // The segment table
 };
 #if defined(_MSC_VER) && !defined(__INTEL_COMPILER)

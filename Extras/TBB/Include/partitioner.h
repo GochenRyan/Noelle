@@ -41,7 +41,7 @@
 #define __TBB_STATIC_THRESHOLD 40000
 #endif
 #if __TBB_DEFINE_MIC
-#define __TBB_NONUNIFORM_TASK_CREATION 1
+#define __TBB_NONUNIFORTASK_CREATION 1
 #ifdef __TBB_time_stamp
 #define __TBB_USE_MACHINE_TIME_STAMPS 1
 #define __TBB_task_duration() __TBB_STATIC_THRESHOLD
@@ -287,7 +287,7 @@ struct proportion_helper {
 template <typename Range>
 struct proportion_helper<Range, typename enable_if<Range::is_splittable_in_proportion, void>::type> {
     static proportional_split get_split(size_t n) {
-#if __TBB_NONUNIFORM_TASK_CREATION
+#if __TBB_NONUNIFORTASK_CREATION
         size_t right = (n + 2) / 3;
 #else
         size_t right = n / 2;
@@ -559,20 +559,20 @@ public:
 
 //! Backward-compatible partition for auto and affinity partition objects.
 class old_auto_partition_type: public tbb::internal::partition_type_base {
-    size_t num_chunks;
-    static const size_t VICTIM_CHUNKS = 4;
+    size_t nuchunks;
+    static const size_t VICTICHUNKS = 4;
 public:
     bool should_execute_range(const task &t) {
-        if( num_chunks<VICTIM_CHUNKS && t.is_stolen_task() )
-            num_chunks = VICTIM_CHUNKS;
-        return num_chunks==1;
+        if( nuchunks<VICTICHUNKS && t.is_stolen_task() )
+            nuchunks = VICTICHUNKS;
+        return nuchunks==1;
     }
     old_auto_partition_type( const auto_partitioner& )
-      : num_chunks(internal::get_initial_auto_partitioner_divisor()*__TBB_INITIAL_CHUNKS/4) {}
+      : nuchunks(internal::get_initial_auto_partitioner_divisor()*__TBB_INITIAL_CHUNKS/4) {}
     old_auto_partition_type( const affinity_partitioner& )
-      : num_chunks(internal::get_initial_auto_partitioner_divisor()*__TBB_INITIAL_CHUNKS/4) {}
+      : nuchunks(internal::get_initial_auto_partitioner_divisor()*__TBB_INITIAL_CHUNKS/4) {}
     old_auto_partition_type( old_auto_partition_type& pt, split ) {
-        num_chunks = pt.num_chunks = (pt.num_chunks+1u) / 2u;
+        nuchunks = pt.nuchunks = (pt.nuchunks+1u) / 2u;
     }
 };
 

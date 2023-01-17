@@ -692,7 +692,7 @@ public:
     template<typename T, typename R>
     tagged_msg(T const &index, R const &value) : my_tag(index), my_msg(value) {}
 
-    #if __TBB_CONST_REF_TO_ARRAY_TEMPLATE_PARAM_BROKEN
+    #if __TBB_CONST_REF_TO_ARRAY_TEMPLATE_PARABROKEN
     template<typename T, typename R, size_t N>
     tagged_msg(T const &index,  R (&value)[N]) : my_tag(index), my_msg(value) {}
     #endif

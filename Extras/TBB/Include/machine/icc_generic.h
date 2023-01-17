@@ -48,17 +48,17 @@
     #pragma intrinsic(_ReadWriteBarrier)
     #define __TBB_compiler_fence()    _ReadWriteBarrier()
 #else
-    #define __TBB_compiler_fence()    __asm__ __volatile__("": : :"memory")
+    #define __TBB_compiler_fence()    __as_ __volatile__("": : :"memory")
 #endif
 #endif
 
 #ifndef __TBB_full_memory_fence
 #if _MSC_VER
     //TODO: any way to use same intrinsics on windows and linux?
-    #pragma intrinsic(_mm_mfence)
-    #define __TBB_full_memory_fence() _mm_mfence()
+    #pragma intrinsic(_mmfence)
+    #define __TBB_full_memory_fence() _mmfence()
 #else
-    #define __TBB_full_memory_fence() __asm__ __volatile__("mfence": : :"memory")
+    #define __TBB_full_memory_fence() __as_ __volatile__("mfence": : :"memory")
 #endif
 #endif
 

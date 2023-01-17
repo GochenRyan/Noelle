@@ -77,11 +77,11 @@
 /** Preprocessor symbols to determine HW architecture **/
 
 #if _WIN32||_WIN64
-#   if defined(_M_X64)||defined(__x86_64__)  // the latter for MinGW support
+#   if defined(_X64)||defined(__x86_64__)  // the latter for MinGW support
 #       define __TBB_x86_64 1
-#   elif defined(_M_IA64)
+#   elif defined(_IA64)
 #       define __TBB_ipf 1
-#   elif defined(_M_IX86)||defined(__i386__) // the latter for MinGW support
+#   elif defined(_IX86)||defined(__i386__) // the latter for MinGW support
 #       define __TBB_x86_32 1
 #   else
 #       define __TBB_generic_arch 1
@@ -401,7 +401,7 @@
     #define __TBB_MSVC_PART_WORD_INTERLOCKED_INTRINSICS_PRESENT 1
 #endif
 
-#define __TBB_TSX_INTRINSICS_PRESENT ((__RTM__ || _MSC_VER>=1700 || __INTEL_COMPILER>=1300) && !__TBB_DEFINE_MIC && !__ANDROID__)
+#define __TBB_TSX_INTRINSICS_PRESENT ((__RT_ || _MSC_VER>=1700 || __INTEL_COMPILER>=1300) && !__TBB_DEFINE_MIC && !__ANDROID__)
 
 /** Macro helpers **/
 #define __TBB_CONCAT_AUX(A,B) A##B
@@ -680,7 +680,7 @@ There are four cases that are supported:
 #endif
 
 #if __GNUC__ && __TBB_x86_64 && __INTEL_COMPILER == 1200
-    #define __TBB_ICC_12_0_INL_ASM_FSTCW_BROKEN 1
+    #define __TBB_ICC_12_0_INL_ASFSTCW_BROKEN 1
 #endif
 
 #if _MSC_VER && __INTEL_COMPILER && (__INTEL_COMPILER<1110 || __INTEL_COMPILER==1110 && __INTEL_COMPILER_BUILD_DATE < 20091012)
@@ -735,8 +735,8 @@ There are four cases that are supported:
 
 #if (__linux__ || __APPLE__) && __i386__ && defined(__INTEL_COMPILER)
     /** The Intel C++ Compiler for IA-32 architecture (Linux* OS|macOS) crashes or generates
-        incorrect code when __asm__ arguments have a cast to volatile. **/
-    #define __TBB_ICC_ASM_VOLATILE_BROKEN 1
+        incorrect code when __as_ arguments have a cast to volatile. **/
+    #define __TBB_ICC_ASVOLATILE_BROKEN 1
 #endif
 
 #if !__INTEL_COMPILER && (_MSC_VER && _MSC_VER < 1700 || __GNUC__==3 && __GNUC_MINOR__<=2)
@@ -799,7 +799,7 @@ There are four cases that are supported:
 #if _MSC_VER && _MSC_VER <= 1800 && !__INTEL_COMPILER
     // With MSVC, when an array is passed by const reference to a template function,
     // constness from the function parameter may get propagated to the template parameter.
-    #define __TBB_CONST_REF_TO_ARRAY_TEMPLATE_PARAM_BROKEN 1
+    #define __TBB_CONST_REF_TO_ARRAY_TEMPLATE_PARABROKEN 1
 #endif
 
 // A compiler bug: a disabled copy constructor prevents use of the moving constructor
@@ -807,7 +807,7 @@ There are four cases that are supported:
 
 #define __TBB_CPP11_DECLVAL_BROKEN (_MSC_VER == 1600 || (__GNUC__ && __TBB_GCC_VERSION < 40500) )
 // Intel C++ Compiler has difficulties with copying std::pair with VC11 std::reference_wrapper being a const member
-#define __TBB_COPY_FROM_NON_CONST_REF_BROKEN (_MSC_VER == 1700 && __INTEL_COMPILER && __INTEL_COMPILER < 1600)
+#define __TBB_COPY_FRONON_CONST_REF_BROKEN (_MSC_VER == 1700 && __INTEL_COMPILER && __INTEL_COMPILER < 1600)
 
 // The implicit upcasting of the tuple of a reference of a derived class to a base class fails on icc 13.X if the system's gcc environment is 4.8
 // Also in gcc 4.4 standard library the implementation of the tuple<&> conversion (tuple<A&> a = tuple<B&>, B is inherited from A) is broken.

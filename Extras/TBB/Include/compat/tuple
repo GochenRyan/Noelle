@@ -42,9 +42,9 @@
 #define __TBB_TYPENAME_T_PACK
 #define __TBB_TYPENAME_U_PACK
 #define __TBB_NULL_TYPE_PACK
-#define __TBB_REF_T_PARAM_PACK
-#define __TBB_CONST_REF_T_PARAM_PACK
-#define __TBB_T_PARAM_LIST_PACK
+#define __TBB_REF_T_PARAPACK
+#define __TBB_CONST_REF_T_PARAPACK
+#define __TBB_T_PARALIST_PACK
 #define __TBB_CONST_NULL_REF_PACK
 //
 #elif __TBB_VARIADIC_MAX == 6
@@ -53,9 +53,9 @@
 #define __TBB_TYPENAME_T_PACK , typename __T5
 #define __TBB_TYPENAME_U_PACK , typename __U5
 #define __TBB_NULL_TYPE_PACK , null_type
-#define __TBB_REF_T_PARAM_PACK ,__T5& t5
-#define __TBB_CONST_REF_T_PARAM_PACK ,const __T5& t5
-#define __TBB_T_PARAM_LIST_PACK ,t5
+#define __TBB_REF_T_PARAPACK ,__T5& t5
+#define __TBB_CONST_REF_T_PARAPACK ,const __T5& t5
+#define __TBB_T_PARALIST_PACK ,t5
 #define __TBB_CONST_NULL_REF_PACK , const null_type&
 //
 #elif __TBB_VARIADIC_MAX == 7
@@ -64,9 +64,9 @@
 #define __TBB_TYPENAME_T_PACK , typename __T5 , typename __T6
 #define __TBB_TYPENAME_U_PACK , typename __U5 , typename __U6
 #define __TBB_NULL_TYPE_PACK , null_type, null_type
-#define __TBB_REF_T_PARAM_PACK ,__T5& t5, __T6& t6
-#define __TBB_CONST_REF_T_PARAM_PACK ,const __T5& t5, const __T6& t6
-#define __TBB_T_PARAM_LIST_PACK ,t5 ,t6
+#define __TBB_REF_T_PARAPACK ,__T5& t5, __T6& t6
+#define __TBB_CONST_REF_T_PARAPACK ,const __T5& t5, const __T6& t6
+#define __TBB_T_PARALIST_PACK ,t5 ,t6
 #define __TBB_CONST_NULL_REF_PACK , const null_type&, const null_type&
 //
 #elif __TBB_VARIADIC_MAX == 8
@@ -75,9 +75,9 @@
 #define __TBB_TYPENAME_T_PACK , typename __T5 , typename __T6, typename __T7
 #define __TBB_TYPENAME_U_PACK , typename __U5 , typename __U6, typename __U7
 #define __TBB_NULL_TYPE_PACK , null_type, null_type, null_type
-#define __TBB_REF_T_PARAM_PACK ,__T5& t5, __T6& t6, __T7& t7
-#define __TBB_CONST_REF_T_PARAM_PACK , const __T5& t5, const __T6& t6, const __T7& t7
-#define __TBB_T_PARAM_LIST_PACK ,t5 ,t6 ,t7
+#define __TBB_REF_T_PARAPACK ,__T5& t5, __T6& t6, __T7& t7
+#define __TBB_CONST_REF_T_PARAPACK , const __T5& t5, const __T6& t6, const __T7& t7
+#define __TBB_T_PARALIST_PACK ,t5 ,t6 ,t7
 #define __TBB_CONST_NULL_REF_PACK , const null_type&, const null_type&, const null_type&
 //
 #elif __TBB_VARIADIC_MAX == 9
@@ -86,9 +86,9 @@
 #define __TBB_TYPENAME_T_PACK , typename __T5, typename __T6, typename __T7, typename __T8
 #define __TBB_TYPENAME_U_PACK , typename __U5, typename __U6, typename __U7, typename __U8
 #define __TBB_NULL_TYPE_PACK , null_type, null_type, null_type, null_type
-#define __TBB_REF_T_PARAM_PACK ,__T5& t5, __T6& t6, __T7& t7, __T8& t8
-#define __TBB_CONST_REF_T_PARAM_PACK , const __T5& t5, const __T6& t6, const __T7& t7, const __T8& t8
-#define __TBB_T_PARAM_LIST_PACK ,t5 ,t6 ,t7 ,t8
+#define __TBB_REF_T_PARAPACK ,__T5& t5, __T6& t6, __T7& t7, __T8& t8
+#define __TBB_CONST_REF_T_PARAPACK , const __T5& t5, const __T6& t6, const __T7& t7, const __T8& t8
+#define __TBB_T_PARALIST_PACK ,t5 ,t6 ,t7 ,t8
 #define __TBB_CONST_NULL_REF_PACK , const null_type&, const null_type&, const null_type&, const null_type&
 //
 #elif __TBB_VARIADIC_MAX >= 10
@@ -97,9 +97,9 @@
 #define __TBB_TYPENAME_T_PACK , typename __T5, typename __T6, typename __T7, typename __T8, typename __T9
 #define __TBB_TYPENAME_U_PACK , typename __U5, typename __U6, typename __U7, typename __U8, typename __U9
 #define __TBB_NULL_TYPE_PACK , null_type, null_type, null_type, null_type, null_type
-#define __TBB_REF_T_PARAM_PACK ,__T5& t5, __T6& t6, __T7& t7, __T8& t8, __T9& t9
-#define __TBB_CONST_REF_T_PARAM_PACK , const __T5& t5, const __T6& t6, const __T7& t7, const __T8& t8, const __T9& t9
-#define __TBB_T_PARAM_LIST_PACK ,t5 ,t6 ,t7 ,t8 ,t9
+#define __TBB_REF_T_PARAPACK ,__T5& t5, __T6& t6, __T7& t7, __T8& t8, __T9& t9
+#define __TBB_CONST_REF_T_PARAPACK , const __T5& t5, const __T6& t6, const __T7& t7, const __T8& t8, const __T9& t9
+#define __TBB_T_PARALIST_PACK ,t5 ,t6 ,t7 ,t8 ,t9
 #define __TBB_CONST_NULL_REF_PACK , const null_type&, const null_type&, const null_type&, const null_type&, const null_type&
 #endif
 
@@ -236,12 +236,12 @@ struct cons{
     cons(head_type& h, const tail_type& t) : head(h), tail(t) { }
 
     template <typename __T0, typename __T1, typename __T2, typename __T3, typename __T4 __TBB_TYPENAME_T_PACK >
-    cons(const __T0& t0, const __T1& t1, const __T2& t2, const __T3& t3, const __T4& t4 __TBB_CONST_REF_T_PARAM_PACK) :
-        head(t0), tail(t1, t2, t3, t4 __TBB_T_PARAM_LIST_PACK, cnull()) { }
+    cons(const __T0& t0, const __T1& t1, const __T2& t2, const __T3& t3, const __T4& t4 __TBB_CONST_REF_T_PARAPACK) :
+        head(t0), tail(t1, t2, t3, t4 __TBB_T_PARALIST_PACK, cnull()) { }
 
     template <typename __T0, typename __T1, typename __T2, typename __T3, typename __T4 __TBB_TYPENAME_T_PACK >
-    cons(__T0& t0, __T1& t1, __T2& t2, __T3& t3, __T4& t4 __TBB_REF_T_PARAM_PACK) :
-        head(t0), tail(t1, t2, t3, t4 __TBB_T_PARAM_LIST_PACK , cnull()) { }
+    cons(__T0& t0, __T1& t1, __T2& t2, __T3& t3, __T4& t4 __TBB_REF_T_PARAPACK) :
+        head(t0), tail(t1, t2, t3, t4 __TBB_T_PARALIST_PACK , cnull()) { }
 
     template <typename __HT1, typename __TT1>
     cons(const cons<__HT1,__TT1>& other) : head(other.head), tail(other.tail) { }
@@ -397,7 +397,7 @@ public:
 #endif
 #endif
           ) :
-        my_cons(t0,t1,t2,t3,t4 __TBB_T_PARAM_LIST_PACK) { }
+        my_cons(t0,t1,t2,t3,t4 __TBB_T_PARALIST_PACK) { }
 
     template<int __N>
     struct internal_tuple_element {
@@ -490,9 +490,9 @@ namespace tbb {
 #undef __TBB_TYPENAME_T_PACK
 #undef __TBB_TYPENAME_U_PACK
 #undef __TBB_NULL_TYPE_PACK
-#undef __TBB_REF_T_PARAM_PACK
-#undef __TBB_CONST_REF_T_PARAM_PACK
-#undef __TBB_T_PARAM_LIST_PACK
+#undef __TBB_REF_T_PARAPACK
+#undef __TBB_CONST_REF_T_PARAPACK
+#undef __TBB_T_PARALIST_PACK
 #undef __TBB_CONST_NULL_REF_PACK
 
 #include "../internal/_warning_suppress_disable_notice.h"

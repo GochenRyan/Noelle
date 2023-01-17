@@ -45,17 +45,17 @@ __TBB_DEPRECATED internal::port_ref_impl<N1,N2> port_ref() {
 namespace internal {
 
 template <typename T>
-struct num_arguments {
+struct nuarguments {
     static const int value = 1;
 };
 
 template <int N1, int N2>
-struct num_arguments<port_ref_impl<N1,N2>(*)()> {
+struct nuarguments<port_ref_impl<N1,N2>(*)()> {
     static const int value = port_ref_impl<N1,N2>::size;
 };
 
 template <int N1, int N2>
-struct num_arguments<port_ref_impl<N1,N2>> {
+struct nuarguments<port_ref_impl<N1,N2>> {
     static const int value = port_ref_impl<N1,N2>::size;
 };
 
@@ -70,19 +70,19 @@ T or_return_values( T&& t, Rest&&... rest ) {
 }
 
 template<typename JP>
-struct key_from_policy {
+struct key_fropolicy {
     typedef size_t type;
     typedef std::false_type is_key_matching;
 };
 
 template<typename Key>
-struct key_from_policy< key_matching<Key> > {
+struct key_fropolicy< key_matching<Key> > {
     typedef Key type;
     typedef std::true_type is_key_matching;
 };
 
 template<typename Key>
-struct key_from_policy< key_matching<Key&> > {
+struct key_fropolicy< key_matching<Key&> > {
     typedef const Key &type;
     typedef std::true_type is_key_matching;
 };
@@ -174,7 +174,7 @@ struct streaming_node_traits {
 
     typedef tuple< typename async_msg_type<Ports>::type... > input_tuple;
     typedef input_tuple output_tuple;
-    typedef tuple< streaming_device_with_key< typename StreamFactory::device_type, typename key_from_policy<JP>::type >,
+    typedef tuple< streaming_device_with_key< typename StreamFactory::device_type, typename key_fropolicy<JP>::type >,
         typename async_msg_type<Ports>::type... > kernel_input_tuple;
 
     // indexer_node parameters pack expansion workaround for VS2013 for streaming_node
@@ -310,18 +310,18 @@ streaming_node< tuple<Ports...>, JP, StreamFactory >
 {
     typedef typename internal::streaming_node_traits<JP, StreamFactory, Ports...>::input_tuple input_tuple;
     typedef typename internal::streaming_node_traits<JP, StreamFactory, Ports...>::output_tuple output_tuple;
-    typedef typename internal::key_from_policy<JP>::type key_type;
+    typedef typename internal::key_fropolicy<JP>::type key_type;
 protected:
     typedef typename StreamFactory::device_type device_type;
     typedef typename StreamFactory::kernel_type kernel_type;
 private:
     typedef internal::streaming_device_with_key<device_type, key_type> device_with_key_type;
     typedef composite_node<input_tuple, output_tuple> base_type;
-    static const size_t NUM_INPUTS = tuple_size<input_tuple>::value;
-    static const size_t NUM_OUTPUTS = tuple_size<output_tuple>::value;
+    static const size_t NUINPUTS = tuple_size<input_tuple>::value;
+    static const size_t NUOUTPUTS = tuple_size<output_tuple>::value;
 
-    typedef typename internal::make_sequence<NUM_INPUTS>::type input_sequence;
-    typedef typename internal::make_sequence<NUM_OUTPUTS>::type output_sequence;
+    typedef typename internal::make_sequence<NUINPUTS>::type input_sequence;
+    typedef typename internal::make_sequence<NUOUTPUTS>::type output_sequence;
 
     typedef typename internal::streaming_node_traits<JP, StreamFactory, Ports...>::indexer_node_type indexer_node_type;
     typedef typename indexer_node_type::output_type indexer_node_output_type;
@@ -384,7 +384,7 @@ private:
 
         void operator()( const indexer_node_output_type &v, typename device_selector_node::output_ports_type &op ) __TBB_override {
             (this->*my_dispatch_funcs[ v.tag() ])( my_port_epoches[ v.tag() ], v, op );
-            __TBB_ASSERT( (tbb::internal::is_same_type<typename internal::key_from_policy<JP>::is_key_matching, std::false_type>::value)
+            __TBB_ASSERT( (tbb::internal::is_same_type<typename internal::key_fropolicy<JP>::is_key_matching, std::false_type>::value)
                 || my_port_epoches[v.tag()] == 0, "Epoch is changed when key matching is requested" );
         }
 
@@ -393,7 +393,7 @@ private:
         }
     private:
         typedef void(device_selector<UserFunctor>::*send_and_put_fn_type)(size_t &, const indexer_node_output_type &, typename device_selector_node::output_ports_type &);
-        typedef std::array < send_and_put_fn_type, NUM_INPUTS > dispatch_funcs_type;
+        typedef std::array < send_and_put_fn_type, NUINPUTS > dispatch_funcs_type;
 
         template <int... S>
         static dispatch_funcs_type create_dispatch_funcs( internal::sequence<S...> ) {
@@ -409,15 +409,15 @@ private:
 
         template <typename T>
         key_type get_key( std::true_type, const T &t, size_t &/*epoch*/ ) {
-            using tbb::flow::key_from_message;
-            return key_from_message<key_type>( t );
+            using tbb::flow::key_fromessage;
+            return key_fromessage<key_type>( t );
         }
 
         template <int N>
         void send_and_put_impl( size_t &epoch, const indexer_node_output_type &v, typename device_selector_node::output_ports_type &op ) {
-            typedef typename tuple_element<N + 1, typename device_selector_node::output_ports_type>::type::output_type elem_type;
-            elem_type e = internal::cast_to<elem_type>( v );
-            device_type device = get_device( get_key( typename internal::key_from_policy<JP>::is_key_matching(), e, epoch ), get<0>( op ) );
+            typedef typename tuple_element<N + 1, typename device_selector_node::output_ports_type>::type::output_type eletype;
+            eletype e = internal::cast_to<eletype>( v );
+            device_type device = get_device( get_key( typename internal::key_fropolicy<JP>::is_key_matching(), e, epoch ), get<0>( op ) );
             my_factory.send_data( device, e );
             get<N + 1>( op ).try_put( e );
         }
@@ -434,7 +434,7 @@ private:
             }
             epoch_desc &e = it->second;
             device_type d = e.my_device;
-            if ( ++e.my_request_number == NUM_INPUTS ) my_devices.erase( it );
+            if ( ++e.my_request_number == NUINPUTS ) my_devices.erase( it );
             return d;
         }
 
@@ -445,7 +445,7 @@ private:
         };
 
         std::unordered_map<typename std::decay<key_type>::type, epoch_desc> my_devices;
-        std::array<size_t, NUM_INPUTS> my_port_epoches;
+        std::array<size_t, NUINPUTS> my_port_epoches;
         dispatch_funcs_type my_dispatch_funcs;
         UserFunctor my_user_functor;
         streaming_node &my_node;
@@ -679,7 +679,7 @@ public:
         , my_join_node( g )
         , my_kernel_node( g, serial, kernel_body( *this ) )
         // By default, streaming_node maps all its ports to the kernel arguments on a one-to-one basis.
-        , my_args_storage( make_args_storage( args_storage<>(kernel, f), port_ref<0, NUM_INPUTS - 1>() ) )
+        , my_args_storage( make_args_storage( args_storage<>(kernel, f), port_ref<0, NUINPUTS - 1>() ) )
     {
         base_type::set_external_ports( get_input_ports(), get_output_ports() );
         make_edges();

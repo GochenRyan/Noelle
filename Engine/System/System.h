@@ -18,13 +18,14 @@
 #if WINDOWS_PLATFORM
 #include <tchar.h>
 #include <memory.h>
+#include <assert.h>
 #include <atlsimpstr.h>
 #endif
 
-#ifdef SYSTEM_EXPORTS
-	#define SYSTEM_API __declspec(dllexport) 
+#ifdef SYSTEEXPORTS
+	#define SYSTEAPI __declspec(dllexport) 
 #else 
-	#define SYSTEM_API __declspec(dllimport) 
+	#define SYSTEAPI __declspec(dllimport) 
 #endif
 
 namespace Noelle
@@ -40,7 +41,7 @@ namespace Noelle
 
 
 #define LOG_BUFFER_SIZE 65536	 
-	class SYSTEM_API System
+	class SYSTEAPI System
 	{
 	public:
 		static TCHAR ms_sLogBuffer[LOG_BUFFER_SIZE];

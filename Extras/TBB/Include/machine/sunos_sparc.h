@@ -31,11 +31,11 @@
 
 /** To those working on SPARC hardware. Consider relaxing acquire and release
     consistency helpers to no-op (as this port covers TSO mode only). **/
-#define __TBB_compiler_fence()             __asm__ __volatile__ ("": : :"memory")
+#define __TBB_compiler_fence()             __as_ __volatile__ ("": : :"memory")
 #define __TBB_control_consistency_helper() __TBB_compiler_fence()
 #define __TBB_acquire_consistency_helper() __TBB_compiler_fence()
 #define __TBB_release_consistency_helper() __TBB_compiler_fence()
-#define __TBB_full_memory_fence()          __asm__ __volatile__("membar #LoadLoad|#LoadStore|#StoreStore|#StoreLoad": : : "memory")
+#define __TBB_full_memory_fence()          __as_ __volatile__("membar #LoadLoad|#LoadStore|#StoreStore|#StoreLoad": : : "memory")
 
 //--------------------------------------------------
 // Compare and swap
@@ -50,7 +50,7 @@
 */
 static inline int32_t __TBB_machine_cmpswp4(volatile void *ptr, int32_t value, int32_t comparand ){
   int32_t result;
-  __asm__ __volatile__(
+  __as_ __volatile__(
                        "cas\t[%5],%4,%1"
                        : "=m"(*(int32_t *)ptr), "=r"(result)
                        : "m"(*(int32_t *)ptr), "1"(value), "r"(comparand), "r"(ptr)
@@ -67,7 +67,7 @@ static inline int32_t __TBB_machine_cmpswp4(volatile void *ptr, int32_t value, i
  */
 static inline int64_t __TBB_machine_cmpswp8(volatile void *ptr, int64_t value, int64_t comparand ){
   int64_t result;
-  __asm__ __volatile__(
+  __as_ __volatile__(
                        "casx\t[%5],%4,%1"
                : "=m"(*(int64_t *)ptr), "=r"(result)
                : "m"(*(int64_t *)ptr), "1"(value), "r"(comparand), "r"(ptr)
@@ -87,7 +87,7 @@ static inline int64_t __TBB_machine_cmpswp8(volatile void *ptr, int64_t value, i
  */
 static inline int32_t __TBB_machine_fetchadd4(volatile void *ptr, int32_t addend){
   int32_t result;
-  __asm__ __volatile__ (
+  __as_ __volatile__ (
                         "0:\t add\t %3, %4, %0\n"           // do addition
                         "\t cas\t [%2], %3, %0\n"           // cas to store result in memory
                         "\t cmp\t %3, %0\n"                 // check if value from memory is original
@@ -107,7 +107,7 @@ static inline int32_t __TBB_machine_fetchadd4(volatile void *ptr, int32_t addend
  */
 static inline int64_t __TBB_machine_fetchadd8(volatile void *ptr, int64_t addend){
   int64_t result;
-  __asm__ __volatile__ (
+  __as_ __volatile__ (
                         "0:\t add\t %3, %4, %0\n"           // do addition
                         "\t casx\t [%2], %3, %0\n"          // cas to store result in memory
                         "\t cmp\t %3, %0\n"                 // check if value from memory is original
@@ -134,14 +134,14 @@ static inline int64_t __TBB_machine_lg( uint64_t x ) {
     x |= (x >> 16);
     x |= (x >> 32);
     // count 1's
-    __asm__ ("popc %1, %0" : "=r"(count) : "r"(x) );
+    __as_ ("popc %1, %0" : "=r"(count) : "r"(x) );
     return count-1;
 }
 
 //--------------------------------------------------------
 
 static inline void __TBB_machine_or( volatile void *ptr, uint64_t value ) {
-  __asm__ __volatile__ (
+  __as_ __volatile__ (
                         "0:\t or\t %2, %3, %%g1\n"          // do operation
                         "\t casx\t [%1], %2, %%g1\n"        // cas to store result in memory
                         "\t cmp\t %2, %%g1\n"               // check if value from memory is original
@@ -153,7 +153,7 @@ static inline void __TBB_machine_or( volatile void *ptr, uint64_t value ) {
 }
 
 static inline void __TBB_machine_and( volatile void *ptr, uint64_t value ) {
-  __asm__ __volatile__ (
+  __as_ __volatile__ (
                         "0:\t and\t %2, %3, %%g1\n"         // do operation
                         "\t casx\t [%1], %2, %%g1\n"        // cas to store result in memory
                         "\t cmp\t %2, %%g1\n"               // check if value from memory is original
@@ -174,7 +174,7 @@ static inline void __TBB_machine_pause( int32_t delay ) {
 //  because all that matters is that 0 is unlocked
 static inline bool __TBB_machine_trylockbyte(unsigned char &flag){
     unsigned char result;
-    __asm__ __volatile__ (
+    __as_ __volatile__ (
             "ldstub\t [%2], %0\n"
         : "=r"(result), "=m"(flag)
         : "r"(&flag), "m"(flag)

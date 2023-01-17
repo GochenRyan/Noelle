@@ -18,48 +18,34 @@ using namespace Noelle;
 
 MemManager::MemManager()
 {
-
 }
 MemManager::~MemManager()
 {
-
 }
-
 
 #if _DEBUG
 #if WINDOWS_PLATFORM
 #include <DbgHelp.h>
-typedef BOOL
-(WINAPI
-	* tFSymInitializeW)(
-		_In_ HANDLE hProcess,
-		_In_opt_ PCWSTR UserSearchPath,
-		_In_ BOOL fInvadeProcess
-		);
+typedef BOOL(WINAPI
+				 *tFSymInitializeW)(
+	_In_ HANDLE hProcess,
+	_In_opt_ PCWSTR UserSearchPath,
+	_In_ BOOL fInvadeProcess);
 
-typedef BOOL
-(WINAPI
-	* tFSymGetLineFromAddr64)
-	(
-		IN  HANDLE                  hProcess,
-		IN  DWORD64                 qwAddr,
-		OUT PDWORD                  pdwDisplacement,
-		OUT PIMAGEHLP_LINE64        Line64
-		);
+typedef BOOL(WINAPI
+				 *tFSymGetLineFromAddr64)(
+	IN HANDLE hProcess,
+	IN DWORD64 qwAddr,
+	OUT PDWORD pdwDisplacement,
+	OUT PIMAGEHLP_LINE64 Line64);
 
-typedef DWORD
-(WINAPI
-	* tFSymGetOptions)
-	(
-		VOID
-		);
+typedef DWORD(WINAPI
+				  *tFSymGetOptions)(
+	VOID);
 
-typedef DWORD
-(WINAPI
-	* tFSymSetOptions)
-	(
-		IN DWORD   SymOptions
-		);
+typedef DWORD(WINAPI
+				  *tFSymSetOptions)(
+	IN DWORD SymOptions);
 
 static tFSymGetLineFromAddr64 fnSymGetLineFromAddr64 = NULL;
 static tFSymGetOptions fnSymGetOptions = NULL;
@@ -71,7 +57,7 @@ bool DebugMem::InitDbgHelpLib()
 {
 	TCHAR szDbgName[MAX_PATH];
 	GetModuleFileName(NULL, szDbgName, MAX_PATH);
-	TCHAR* p = (TCHAR*)NoelCsrchr(szDbgName, _T('\\'));
+	TCHAR *p = (TCHAR *)NoelCsrchr(szDbgName, _T('\\'));
 	if (p)
 		*p = 0;
 	NoelStrcat(szDbgName, MAX_PATH, _T("\\dbghelp.dll"));
@@ -112,13 +98,12 @@ void DebugMem::FreeDbgHelpLib()
 		s_DbgHelpLib = NULL;
 	}
 
-
 	fnSymGetLineFromAddr64 = NULL;
 	fnSymGetOptions = NULL;
 	fnSymSetOptions = NULL;
 	fnSymInitializeW = NULL;
 }
-bool DebugMem::GetFileAndLine(const void* pAddress, TCHAR szFile[MAX_PATH], int& line)
+bool DebugMem::GetFileAndLine(const void *pAddress, TCHAR szFile[MAX_PATH], int &line)
 {
 
 	IMAGEHLP_LINE64 Line;
@@ -128,7 +113,7 @@ bool DebugMem::GetFileAndLine(const void* pAddress, TCHAR szFile[MAX_PATH], int&
 
 	if (fnSymGetLineFromAddr64(GetCurrentProcess(), (DWORD64)pAddress, &Offset, &Line))
 	{
-#ifdef  _UNICODE
+#ifdef _UNICODE
 		NoelMbsToWcs(szFile, MAX_PATH, Line.FileName, MAX_PATH);
 #else
 		StrCopy(szFile, MAX_PATH, Line.FileName);
@@ -140,18 +125,6 @@ bool DebugMem::GetFileAndLine(const void* pAddress, TCHAR szFile[MAX_PATH], int&
 	else
 	{
 		DWORD error = GetLastError();
-		// 		if (error == 487)
-		// 		{
-		// 			NoelOutputDebugString(_T("No debug info in current module\n"));
-		// 		}
-		// 		else if (error == 126)
-		// 		{
-		// 			NoelOutputDebugString(_T("Debug info in current module has not loaded\n"));
-		// 		}
-		// 		else 
-		// 		{
-		// 			NoelOutputDebugString(_T("SymGetLineFromAddr64 failed\n"));
-		// 		}
 		return false;
 	}
 }
@@ -159,12 +132,12 @@ bool DebugMem::GetFileAndLine(const void* pAddress, TCHAR szFile[MAX_PATH], int&
 
 void DebugMem::FreeLeakMem()
 {
-	Block* pBlock = m_pHead;
+	Block *pBlock = pHead;
 	while (pBlock)
 	{
-		Block* Temp = pBlock;
-		pBlock = pBlock->m_pNext;
-		free((void*)Temp);
+		Block *Temp = pBlock;
+		pBlock = pBlock->pNext;
+		free((void *)Temp);
 	}
 }
 
@@ -172,19 +145,19 @@ void DebugMem::PrintInfo()
 {
 	NoelOutputDebugString(_T("#########################  begin print leak mem  ######################\n"));
 
-	NoelOutputDebugString(_T("Max Byte Num: %d\n"), m_uiMaxNumBytes);
+	NoelOutputDebugString(_T("Max Byte Num: %d\n"), uiMaxNumBytes);
 
-	NoelOutputDebugString(_T("Max Block Num: %d\n"), m_uiMaxNumBlocks);
+	NoelOutputDebugString(_T("Max Block Num: %d\n"), uiMaxNumBlocks);
 
-	NoelOutputDebugString(_T("Total Size: %d\n"), m_uiNumBytes);
+	NoelOutputDebugString(_T("Total Size: %d\n"), uiNumBytes);
 
-	NoelOutputDebugString(_T("Block Num: %d\n"), m_uiNumBlocks);
+	NoelOutputDebugString(_T("Block Num: %d\n"), uiNumBlocks);
 
-	NoelOutputDebugString(_T("New Call: %d\n"), m_uiNumNewCalls);
+	NoelOutputDebugString(_T("New Call: %d\n"), uiNumNewCalls);
 
-	NoelOutputDebugString(_T("Delete Call: %d\n"), m_uiNumDeleteCalls);
+	NoelOutputDebugString(_T("Delete Call: %d\n"), uiNumDeleteCalls);
 
-	if (m_pHead)
+	if (pHead)
 	{
 		NoelOutputDebugString(_T("Memory Leak:\n"));
 	}
@@ -192,18 +165,18 @@ void DebugMem::PrintInfo()
 	{
 		NoelOutputDebugString(_T("No Memory Leak\n"));
 	}
-	Block* pBlock = m_pHead;
+	Block *pBlock = pHead;
 	static USIZE_TYPE uiLeakNum = 0;
 	while (pBlock)
 	{
 		uiLeakNum++;
 		NoelOutputDebugString(_T("$$$$$$$$$$$$$$$$  Leak %d  $$$$$$$$$$$$$$$$$\n"), uiLeakNum);
-		NoelOutputDebugString(_T("Size: %d\n"), pBlock->m_uiSize);
-		NoelOutputDebugString(_T("Is Array:%d\n"), pBlock->m_bIsArray);
+		NoelOutputDebugString(_T("Size: %d\n"), pBlock->uiSize);
+		NoelOutputDebugString(_T("Is Array:%d\n"), pBlock->bIsArray);
 #if WINDOWS_PLATFORM
 		TCHAR szFile[MAX_PATH];
-		int	  line;
-		for (USIZE_TYPE i = 0; i < pBlock->m_uiStackInfoNum; i++)
+		int line;
+		for (USIZE_TYPE i = 0; i < pBlock->uiStackInfoNum; i++)
 		{
 
 			if (!GetFileAndLine(pBlock->pAddr[i], szFile, line))
@@ -211,36 +184,33 @@ void DebugMem::PrintInfo()
 				break;
 			}
 			NoelOutputDebugString(_T("%s(%d)\n"), szFile, line);
-
 		}
 #endif
 		NoelOutputDebugString(_T("$$$$$$$$$$$$$$$$$ Leak %d  $$$$$$$$$$$$$$$$$$$\n"), uiLeakNum);
-		pBlock = pBlock->m_pNext;
+		pBlock = pBlock->pNext;
 	}
 	NoelOutputDebugString(_T("leak block total num : %d\n"), uiLeakNum);
 
 	NoelOutputDebugString(_T("#########################  end print leak mem  ######################\n"));
 }
 
-
 DebugMem::DebugMem()
 {
-	m_uiNumNewCalls = 0;
-	m_uiNumDeleteCalls = 0;
+	uiNumNewCalls = 0;
+	uiNumDeleteCalls = 0;
 
-	m_uiNumBlocks = 0;
-	m_uiNumBytes = 0;
-	m_uiMaxNumBytes = 0;
-	m_uiMaxNumBlocks = 0;
+	uiNumBlocks = 0;
+	uiNumBytes = 0;
+	uiMaxNumBytes = 0;
+	uiMaxNumBlocks = 0;
 
-	m_pHead = 0;
-	m_pTail = 0;
+	pHead = 0;
+	pTail = 0;
 
 	for (USIZE_TYPE i = 0; i < RECORD_NUM; i++)
 	{
-		m_uiSizeRecord[i] = 0;
+		uiSizeRecord[i] = 0;
 	}
-
 }
 
 DebugMem::~DebugMem()
@@ -255,48 +225,48 @@ DebugMem::~DebugMem()
 	FreeLeakMem();
 }
 
-void* DebugMem::Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArray)
+void *DebugMem::Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArray)
 {
-	m_uiNumNewCalls++;
+	uiNumNewCalls++;
 
-	// 
+	//
 	USIZE_TYPE uiExtendedSize = sizeof(Block) + sizeof(USIZE_TYPE) + uiSize + sizeof(USIZE_TYPE);
-	char* pcAddr = (char*)MemObject::GetCMemManager().Allocate(uiExtendedSize, uiAlignment, bIsArray);
+	char *pcAddr = (char *)MemObject::GetCMemManager().Allocate(uiExtendedSize, uiAlignment, bIsArray);
 	if (!pcAddr)
 		return nullptr;
 
-	// 
-	Block* pBlock = (Block*)pcAddr;
-	pBlock->m_uiSize = uiSize;
-	pBlock->m_bIsArray = bIsArray;
+	//
+	Block *pBlock = (Block *)pcAddr;
+	pBlock->uiSize = uiSize;
+	pBlock->bIsArray = bIsArray;
 
 	bool bAlignment = (uiAlignment > 0) ? true : false;
-	pBlock->m_bAlignment = bAlignment;
-	pBlock->m_uiStackInfoNum = 0;
+	pBlock->bAlignment = bAlignment;
+	pBlock->uiStackInfoNum = 0;
 
 	//
 	InsertBlock(pBlock);
 
 	pcAddr += sizeof(Block);
-	// 
-	USIZE_TYPE* pBeginMask = (USIZE_TYPE*)(pcAddr);
+	//
+	USIZE_TYPE *pBeginMask = (USIZE_TYPE *)(pcAddr);
 	*pBeginMask = BEGIN_MASK;
 	pcAddr += sizeof(USIZE_TYPE);
-	// 
-	USIZE_TYPE* pEndMask = (USIZE_TYPE*)(pcAddr + uiSize);
+	//
+	USIZE_TYPE *pEndMask = (USIZE_TYPE *)(pcAddr + uiSize);
 	*pEndMask = END_MASK;
 
-	m_uiNumBlocks++;
-	m_uiNumBytes += uiSize;
+	uiNumBlocks++;
+	uiNumBytes += uiSize;
 
-	if (m_uiNumBlocks > m_uiMaxNumBlocks)
+	if (uiNumBlocks > uiMaxNumBlocks)
 	{
-		m_uiMaxNumBlocks = m_uiNumBlocks;
+		uiMaxNumBlocks = uiNumBlocks;
 	}
 
-	if (m_uiNumBytes > m_uiMaxNumBytes)
+	if (uiNumBytes > uiMaxNumBytes)
 	{
-		m_uiMaxNumBytes = m_uiNumBytes;
+		uiMaxNumBytes = uiNumBytes;
 	}
 
 	USIZE_TYPE uiTwoPowerI = 1;
@@ -305,80 +275,80 @@ void* DebugMem::Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArra
 	{
 		if (uiSize <= uiTwoPowerI)
 		{
-			m_uiSizeRecord[i]++;
+			uiSizeRecord[i]++;
 			break;
 		}
 	}
 	if (i == RECORD_NUM - 1)
 	{
-		m_uiSizeRecord[i]++;
+		uiSizeRecord[i]++;
 	}
 
-	return (void*)pcAddr;
+	return (void *)pcAddr;
 }
 
-void DebugMem::Deallocate(char* pcAddr, USIZE_TYPE uiAlignment, bool bIsArray)
+void DebugMem::Deallocate(char *pcAddr, USIZE_TYPE uiAlignment, bool bIsArray)
 {
-	m_uiNumDeleteCalls++;
+	uiNumDeleteCalls++;
 	pcAddr -= sizeof(USIZE_TYPE);
 
-	USIZE_TYPE* pBeginMask = (USIZE_TYPE*)(pcAddr);
-	//NOELLE_ASSERT(*pBeginMask == BEGIN_MASK);
+	USIZE_TYPE *pBeginMask = (USIZE_TYPE *)(pcAddr);
+	NOEL_ASSERT(*pBeginMask == BEGIN_MASK);
 
 	pcAddr -= sizeof(Block);
 
-	Block* pBlock = (Block*)pcAddr;
+	Block *pBlock = (Block *)pcAddr;
 	RemoveBlock(pBlock);
 
-	//NOELLE_ASSERT(pBlock->m_bIsArray == bIsArray);
-	//NOELLE_ASSERT(m_uiNumBlocks > 0 && m_uiNumBytes >= pBlock->m_uiSize);
+	NOEL_ASSERT(pBlock->bIsArray == bIsArray);
+	NOEL_ASSERT(uiNumBlocks > 0 && uiNumBytes >= pBlock->uiSize);
 	bool bAlignment = (uiAlignment > 0) ? true : false;
-	//NOELLE_ASSERT(pBlock->m_bAlignment == bAlignment);
-	USIZE_TYPE* pEndMask = (USIZE_TYPE*)(pcAddr + sizeof(Block) + sizeof(USIZE_TYPE) + pBlock->m_uiSize);
-	//NOELLE_ASSERT(*pEndMask == END_MASK);
+	NOEL_ASSERT(pBlock->bAlignment == bAlignment);
+	USIZE_TYPE *pEndMask = (USIZE_TYPE *)(pcAddr + sizeof(Block) + sizeof(USIZE_TYPE) + pBlock->uiSize);
+	NOEL_ASSERT(*pEndMask == END_MASK);
 
-	m_uiNumBlocks--;
-	m_uiNumBytes -= pBlock->m_uiSize;
+	uiNumBlocks--;
+	uiNumBytes -= pBlock->uiSize;
 
 	free(pcAddr);
 }
 
-void DebugMem::InsertBlock(Block* pBlock)
+void DebugMem::InsertBlock(Block *pBlock)
 {
-	if (m_pHead == nullptr)
+	if (pHead == nullptr)
 	{
-		pBlock->m_pPrev = nullptr;
-		pBlock->m_pNext = nullptr;
-		m_pHead = pBlock;
-		m_pTail = pBlock;
+		pBlock->pPrev = nullptr;
+		pBlock->pNext = nullptr;
+		pHead = pBlock;
+		pTail = pBlock;
 	}
 	else
 	{
-		pBlock->m_pNext = nullptr;
-		pBlock->m_pPrev = m_pTail;
-		m_pTail->m_pNext = pBlock;
-		m_pTail = pBlock;
+		pBlock->pNext = nullptr;
+		pBlock->pPrev = pTail;
+		pTail->pNext = pBlock;
+		pTail = pBlock;
 	}
 }
 
-void DebugMem::RemoveBlock(Block* pBlock)
+void DebugMem::RemoveBlock(Block *pBlock)
 {
-	if (pBlock->m_pPrev)
+	if (pBlock->pPrev)
 	{
-		pBlock->m_pPrev->m_pNext = pBlock->m_pNext;
+		pBlock->pPrev->pNext = pBlock->pNext;
 	}
 	else
 	{
-		m_pHead = pBlock->m_pNext;
+		pHead = pBlock->pNext;
 	}
 
-	if (pBlock->m_pNext)
+	if (pBlock->pNext)
 	{
-		pBlock->m_pNext->m_pPrev = pBlock->m_pPrev;
+		pBlock->pNext->pPrev = pBlock->pPrev;
 	}
 	else
 	{
-		m_pTail = pBlock->m_pPrev;
+		pTail = pBlock->pPrev;
 	}
 }
 
@@ -386,15 +356,13 @@ void DebugMem::RemoveBlock(Block* pBlock)
 #include <scalable_allocator.h>
 MemWin64::MemWin64()
 {
-
 }
 
 MemWin64::~MemWin64()
 {
-
 }
 
-void* MemWin64::Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArray)
+void *MemWin64::Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArray)
 {
 	if (uiAlignment != 0)
 	{
@@ -407,7 +375,7 @@ void* MemWin64::Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArra
 	}
 }
 
-void MemWin64::Deallocate(char* pcAddr, USIZE_TYPE uiAlignment, bool bIsArray)
+void MemWin64::Deallocate(char *pcAddr, USIZE_TYPE uiAlignment, bool bIsArray)
 {
 	if (!pcAddr)
 		return;
@@ -428,7 +396,7 @@ MemWin32::MemWin32()
 	pageSize = 0;
 
 	// Get OS page size
-	SYSTEM_INFO SI;
+	SYSTEINFO SI;
 	GetSystemInfo(&SI);
 	pageSize = SI.dwPageSize;
 	NOEL_ASSERT(!(pageSize & (pageSize - 1)));
@@ -459,7 +427,7 @@ MemWin32::MemWin32()
 
 	NOEL_ASSERT(poolTable[POOL_CNT - 1].blockSize == POOL_MAX - 1)
 
-		DWORD index = 0;
+	DWORD index = 0;
 	for (DWORD j = 0; j < POOL_CNT; ++j)
 	{
 		while (index <= poolTable[j].blockSize)
@@ -487,24 +455,24 @@ MemWin32::~MemWin32()
 
 			if (poolIndirect[i][i].mem)
 			{
-				VirtualFree(poolIndirect[i][i].mem, 0, MEM_RELEASE);
+				VirtualFree(poolIndirect[i][i].mem, 0, MERELEASE);
 				poolIndirect[i][i].mem = nullptr;
 			}
 
-			VirtualFree(poolIndirect[i], 0, MEM_RELEASE);
+			VirtualFree(poolIndirect[i], 0, MERELEASE);
 			poolIndirect[i] = nullptr;
 		}
 	}
 }
 
-void* MemWin32::Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArray)
+void *MemWin32::Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArray)
 {
 	// TODO: multithread
-	FreeMem* free;
+	FreeMem *free;
 	if (uiSize < POOL_MAX)
 	{
-		PoolTable* table = memSize2PoolTable[uiSize];
-		PoolInfo* pool = table->firstPool;
+		PoolTable *table = memSize2PoolTable[uiSize];
+		PoolInfo *pool = table->firstPool;
 		if (pool == nullptr)
 		{
 			DWORD blocks = 65536 / table->blockSize;
@@ -512,14 +480,14 @@ void* MemWin32::Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArra
 			NOEL_ASSERT(blocks >= 1);
 
 			// Allocate memory
-			free = (FreeMem*)VirtualAlloc(nullptr, bytes, MEM_COMMIT, PAGE_READWRITE);
+			free = (FreeMem *)VirtualAlloc(nullptr, bytes, MECOMMIT, PAGE_READWRITE);
 			if (!free)
 			{
 				return nullptr;
 			}
 
 			// Create pool in the indirect table
-			PoolInfo*& indirect = poolIndirect[(DWORD)free >> 27];
+			PoolInfo *&indirect = poolIndirect[(DWORD)free >> 27];
 			if (!indirect)
 			{
 				indirect = CreateIndirect();
@@ -529,7 +497,7 @@ void* MemWin32::Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArra
 			// Init pool
 			pool->Link(table->firstPool);
 			pool->firstMem = free;
-			pool->mem = (BYTE*)free;
+			pool->mem = (BYTE *)free;
 			pool->table = table;
 			pool->bytes = bytes;
 			pool->osBytes = Align(bytes, pageSize);
@@ -544,7 +512,7 @@ void* MemWin32::Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArra
 		pool->taken++;
 		NOEL_ASSERT(pool->firstMem);
 		NOEL_ASSERT(pool->firstMem->blocks > 0);
-		free = (FreeMem*)((BYTE*)pool->firstMem + (--pool->firstMem->blocks) * table->blockSize);
+		free = (FreeMem *)((BYTE *)pool->firstMem + (--pool->firstMem->blocks) * table->blockSize);
 
 		if (pool->firstMem->blocks == 0)
 		{
@@ -561,18 +529,18 @@ void* MemWin32::Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArra
 	{
 		// Use OS for large allocation
 		DWORD alignedBytes = Align(uiSize, pageSize);
-		free = (FreeMem*)VirtualAlloc(nullptr, alignedBytes, MEM_COMMIT, PAGE_READWRITE);
+		free = (FreeMem *)VirtualAlloc(nullptr, alignedBytes, MECOMMIT, PAGE_READWRITE);
 
 		// Create indirect
-		PoolInfo*& indirect = poolIndirect[(DWORD)free >> 27];
+		PoolInfo *&indirect = poolIndirect[(DWORD)free >> 27];
 		if (!indirect)
 		{
 			indirect = CreateIndirect();
 		}
-		PoolInfo* pool = &indirect[((DWORD)free >> 16) & 2047];
+		PoolInfo *pool = &indirect[((DWORD)free >> 16) & 2047];
 
 		pool->firstMem = free;
-		pool->mem = (BYTE*)free;
+		pool->mem = (BYTE *)free;
 		pool->table = &osTable;
 		pool->bytes = uiSize;
 		pool->osBytes = alignedBytes;
@@ -581,11 +549,11 @@ void* MemWin32::Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArra
 	return free;
 }
 
-void MemWin32::Deallocate(char* pcAddr, USIZE_TYPE uiAlignment, bool bIsArray)
+void MemWin32::Deallocate(char *pcAddr, USIZE_TYPE uiAlignment, bool bIsArray)
 {
 	// TODO: mutithread
 	NOEL_ASSERT(pcAddr);
-	PoolInfo* pool = &poolIndirect[(DWORD)pcAddr >> 27][((DWORD)free >> 16) & 2047];
+	PoolInfo *pool = &poolIndirect[(DWORD)pcAddr >> 27][((DWORD)free >> 16) & 2047];
 	NOEL_ASSERT(pool->bytes != 0);
 	if (pool->table != &osTable)
 	{
@@ -596,7 +564,7 @@ void MemWin32::Deallocate(char* pcAddr, USIZE_TYPE uiAlignment, bool bIsArray)
 			pool->Link(pool->table->firstPool);
 		}
 
-		FreeMem* free = (FreeMem*)pcAddr;
+		FreeMem *free = (FreeMem *)pcAddr;
 		free->blocks = 1;
 		free->next = pool->firstMem;
 		pool->firstMem = free;
@@ -607,30 +575,68 @@ void MemWin32::Deallocate(char* pcAddr, USIZE_TYPE uiAlignment, bool bIsArray)
 		{
 			// Free the OS memory
 			pool->Unlink();
-			VirtualFree(pool->mem, 0, MEM_RELEASE);
+			VirtualFree(pool->mem, 0, MERELEASE);
 			pool->mem = nullptr;
 		}
 	}
 	else
 	{
 		// Free an OS allocation
-		VirtualFree(pcAddr, 0, MEM_RELEASE);
+		VirtualFree(pcAddr, 0, MERELEASE);
 		pool->mem = nullptr;
 	}
 }
 #endif
 
+StackMem::StackMem(USIZE_TYPE uiDefaultChunkSize = 65536)
+{
+	NOEL_ASSERT(uiDefaultChunkSize > sizeof(TaggedMemory));
+	defaultChunkSize = uiDefaultChunkSize;
+	top = nullptr;
+	end = nullptr;
+	topChunk = nullptr;
+	numMarks = 0;
+}
+
+StackMem::~StackMem()
+{
+	FreeChunks(nullptr);
+	while (unusedChunk)
+	{
+		TaggedMemory *temp = unusedChunk;
+		unusedChunk = unusedChunk->next;
+		MemObject::GetMemManager().Deallocate((char *)temp, 0, true);
+	}
+	NOEL_ASSERT(numMarks == 0);
+}
+
+void *StackMem::Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArray)
+{
+	
+
+}
+
+void StackMem::Deallocate(char *pcAddr, USIZE_TYPE uiAlignment, bool bIsArray)
+{
+}
+
+BYTE *StackMem::AllocateNewChunk(USIZE_TYPE minSize)
+{
+}
+
+void StackMem::FreeChunks(TaggedMemory *newTopChunk)
+{
+}
+
 CMem::CMem()
 {
-
 }
 
 CMem::~CMem()
 {
-
 }
 
-void* CMem::Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArray)
+void *CMem::Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArray)
 {
 	if (uiAlignment == 0)
 		return malloc(uiSize);
@@ -639,7 +645,7 @@ void* CMem::Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArray)
 	return nullptr;
 }
 
-void CMem::Deallocate(char* pcAddr, USIZE_TYPE uiAlignment, bool bIsArray)
+void CMem::Deallocate(char *pcAddr, USIZE_TYPE uiAlignment, bool bIsArray)
 {
 	if (uiAlignment == 0)
 		return free(pcAddr);
@@ -647,8 +653,14 @@ void CMem::Deallocate(char* pcAddr, USIZE_TYPE uiAlignment, bool bIsArray)
 		return _aligned_free(pcAddr);
 }
 
+StackMem &MemObject::GetStackMemManager()
+{
+	// todo: multithread
+	static StackMem g_StackMemManager;
+	return g_StackMemManager;
+}
 
-MemManager& MemObject::GetMemManager()
+MemManager &MemObject::GetMemManager()
 {
 #if WINDOWS_PLATFORM
 #if _DEBUG
@@ -662,7 +674,7 @@ MemManager& MemObject::GetMemManager()
 	return g_MemManager;
 }
 
-MemManager& MemObject::GetCMemManager()
+MemManager &MemObject::GetCMemManager()
 {
 	static CMem g_MemManager;
 	return g_MemManager;

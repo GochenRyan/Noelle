@@ -36,7 +36,7 @@
 inline static uint8_t __TBB_machine_try_lock_elided( volatile uint8_t* lk )
 {
     uint8_t value = 1;
-    __asm__ volatile (".byte " __TBB_STRINGIZE(__TBB_OP_XACQUIRE)"; lock; xchgb %0, %1;"
+    __as_ volatile (".byte " __TBB_STRINGIZE(__TBB_OP_XACQUIRE)"; lock; xchgb %0, %1;"
                       : __TBB_r_out(value), "=m"(*lk)  : "0"(value), "m"(*lk) : "memory" );
     return uint8_t(value^1);
 }
@@ -44,12 +44,12 @@ inline static uint8_t __TBB_machine_try_lock_elided( volatile uint8_t* lk )
 inline static void __TBB_machine_try_lock_elided_cancel()
 {
     // 'pause' instruction aborts HLE/RTM transactions
-    __asm__ volatile ("pause\n" : : : "memory" );
+    __as_ volatile ("pause\n" : : : "memory" );
 }
 
 inline static void __TBB_machine_unlock_elided( volatile uint8_t* lk )
 {
-    __asm__ volatile (".byte " __TBB_STRINGIZE(__TBB_OP_XRELEASE)"; movb $0, %0"
+    __as_ volatile (".byte " __TBB_STRINGIZE(__TBB_OP_XRELEASE)"; movb $0, %0"
                       : "=m"(*lk) : "m"(*lk) : "memory" );
 }
 
@@ -70,10 +70,10 @@ inline static bool __TBB_machine_is_in_transaction()
 {
     int8_t res = 0;
 #if __TBB_x86_32
-    __asm__ volatile (".byte 0x0F; .byte 0x01; .byte 0xD6;\n"
+    __as_ volatile (".byte 0x0F; .byte 0x01; .byte 0xD6;\n"
                       "setz %0" : "=q"(res) : : "memory" );
 #else
-    __asm__ volatile (".byte 0x0F; .byte 0x01; .byte 0xD6;\n"
+    __as_ volatile (".byte 0x0F; .byte 0x01; .byte 0xD6;\n"
                       "setz %0" : "=r"(res) : : "memory" );
 #endif
     return res==0;
@@ -87,7 +87,7 @@ inline static bool __TBB_machine_is_in_transaction()
 inline static uint32_t __TBB_machine_begin_transaction()
 {
     uint32_t res = ~uint32_t(0);   // success value
-    __asm__ volatile ("1: .byte  0xC7; .byte 0xF8;\n"           //  XBEGIN <abort-offset>
+    __as_ volatile ("1: .byte  0xC7; .byte 0xF8;\n"           //  XBEGIN <abort-offset>
                       "   .long  2f-1b-6\n"                     //  2f-1b == difference in addresses of start
                                                                 //  of XBEGIN and the MOVL
                                                                 //  2f - 1b - 6 == that difference minus the size of the
@@ -105,7 +105,7 @@ inline static uint32_t __TBB_machine_begin_transaction()
  */
 inline static void __TBB_machine_end_transaction()
 {
-    __asm__ volatile (".byte 0x0F; .byte 0x01; .byte 0xD5" :::"memory");   // XEND
+    __as_ volatile (".byte 0x0F; .byte 0x01; .byte 0xD5" :::"memory");   // XEND
 }
 
 /*
@@ -113,7 +113,7 @@ inline static void __TBB_machine_end_transaction()
  */
 inline static void __TBB_machine_transaction_conflict_abort()
 {
-    __asm__ volatile (".byte 0xC6; .byte 0xF8; .byte 0xFF" :::"memory");
+    __as_ volatile (".byte 0xC6; .byte 0xF8; .byte 0xFF" :::"memory");
 }
 
 #endif /* __TBB_TSX_INTRINSICS_PRESENT */

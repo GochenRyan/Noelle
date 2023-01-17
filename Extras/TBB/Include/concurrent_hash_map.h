@@ -252,25 +252,25 @@ namespace interface5 {
         //! Check for mask race
         // Splitting into two functions should help inlining
         inline bool check_mask_race( const hashcode_t h, hashcode_t &m ) const {
-            hashcode_t m_now, m_old = m;
-            m_now = (hashcode_t) itt_load_word_with_acquire( my_mask );
-            if( m_old != m_now )
-                return check_rehashing_collision( h, m_old, m = m_now );
+            hashcode_t now, old = m;
+            now = (hashcode_t) itt_load_word_with_acquire( my_mask );
+            if( old != now )
+                return check_rehashing_collision( h, old, m = now );
             return false;
         }
 
         //! Process mask race, check for rehashing collision
-        bool check_rehashing_collision( const hashcode_t h, hashcode_t m_old, hashcode_t m ) const {
-            __TBB_ASSERT(m_old != m, NULL); // TODO?: m arg could be optimized out by passing h = h&m
-            if( (h & m_old) != (h & m) ) { // mask changed for this hashcode, rare event
-                // condition above proves that 'h' has some other bits set beside 'm_old'
-                // find next applicable mask after m_old    //TODO: look at bsl instruction
-                for( ++m_old; !(h & m_old); m_old <<= 1 ) // at maximum few rounds depending on the first block size
+        bool check_rehashing_collision( const hashcode_t h, hashcode_t old, hashcode_t m ) const {
+            __TBB_ASSERT(old != m, NULL); // TODO?: m arg could be optimized out by passing h = h&m
+            if( (h & old) != (h & m) ) { // mask changed for this hashcode, rare event
+                // condition above proves that 'h' has some other bits set beside 'old'
+                // find next applicable mask after old    //TODO: look at bsl instruction
+                for( ++old; !(h & old); old <<= 1 ) // at maximum few rounds depending on the first block size
                     ;
-                m_old = (m_old<<1) - 1; // get full mask from a bit
-                __TBB_ASSERT((m_old&(m_old+1))==0 && m_old <= m, NULL);
+                old = (old<<1) - 1; // get full mask from a bit
+                __TBB_ASSERT((old&(old+1))==0 && old <= m, NULL);
                 // check whether it is rehashing/ed
-                if( itt_load_word_with_acquire(get_bucket(h & m_old)->node_list) != rehash_req )
+                if( itt_load_word_with_acquire(get_bucket(h & old)->node_list) != rehash_req )
                 {
 #if __TBB_STATISTICS
                     my_info_restarts++; // race collisions
@@ -1128,14 +1128,14 @@ public:
 
     //! Erase item by const_accessor.
     /** Return true if item was erased by particularly this call. */
-    bool erase( const_accessor& item_accessor ) {
-        return exclude( item_accessor );
+    bool erase( const_accessor& iteaccessor ) {
+        return exclude( iteaccessor );
     }
 
     //! Erase item by accessor.
     /** Return true if item was erased by particularly this call. */
-    bool erase( accessor& item_accessor ) {
-        return exclude( item_accessor );
+    bool erase( accessor& iteaccessor ) {
+        return exclude( iteaccessor );
     }
 
 protected:
@@ -1168,7 +1168,7 @@ protected:
 #endif //__TBB_CPP11_RVALUE_REF_PRESENT
 
     //! delete item by accessor
-    bool exclude( const_accessor &item_accessor );
+    bool exclude( const_accessor &iteaccessor );
 
     //! Returns an iterator for an item defined by the key, or for the next item after it (if upper==true)
     template<typename I>
@@ -1353,10 +1353,10 @@ std::pair<I, I> concurrent_hash_map<Key,T,HashCompare,A>::internal_equal_range( 
 }
 
 template<typename Key, typename T, typename HashCompare, typename A>
-bool concurrent_hash_map<Key,T,HashCompare,A>::exclude( const_accessor &item_accessor ) {
-    __TBB_ASSERT( item_accessor.my_node, NULL );
-    node_base *const n = item_accessor.my_node;
-    hashcode_t const h = item_accessor.my_hash;
+bool concurrent_hash_map<Key,T,HashCompare,A>::exclude( const_accessor &iteaccessor ) {
+    __TBB_ASSERT( iteaccessor.my_node, NULL );
+    node_base *const n = iteaccessor.my_node;
+    hashcode_t const h = iteaccessor.my_hash;
     hashcode_t m = (hashcode_t) itt_load_word_with_acquire( my_mask );
     do {
         // get bucket
@@ -1367,7 +1367,7 @@ bool concurrent_hash_map<Key,T,HashCompare,A>::exclude( const_accessor &item_acc
         if( !*p ) { // someone else was first
             if( check_mask_race( h, m ) )
                 continue;
-            item_accessor.release();
+            iteaccessor.release();
             return false;
         }
         __TBB_ASSERT( *p == n, NULL );
@@ -1375,9 +1375,9 @@ bool concurrent_hash_map<Key,T,HashCompare,A>::exclude( const_accessor &item_acc
         my_size--;
         break;
     } while(true);
-    if( !item_accessor.is_writer() ) // need to get exclusive lock
-        item_accessor.upgrade_to_writer(); // return value means nothing here
-    item_accessor.release();
+    if( !iteaccessor.is_writer() ) // need to get exclusive lock
+        iteaccessor.upgrade_to_writer(); // return value means nothing here
+    iteaccessor.release();
     delete_node( n ); // Only one thread can delete it
     return true;
 }
@@ -1412,7 +1412,7 @@ restart:
         my_size--;
     }
     {
-        typename node::scoped_t item_locker( n->mutex, /*write=*/true );
+        typename node::scoped_t itelocker( n->mutex, /*write=*/true );
     }
     // note: there should be no threads pretending to acquire this mutex again, do not try to upgrade const_accessor!
     delete_node( n ); // Only one thread can delete it due to write lock on the bucket

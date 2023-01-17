@@ -23,15 +23,15 @@
 #include <intrin.h>
 
 //TODO: consider moving this macro to tbb_config.h and using where MSVC asm is used
-#if  !_M_X64 || __INTEL_COMPILER
-    #define __TBB_X86_MSVC_INLINE_ASM_AVAILABLE 1
+#if  !_X64 || __INTEL_COMPILER
+    #define __TBB_X86_MSVC_INLINE_ASAVAILABLE 1
 #else
     //MSVC in x64 mode does not accept inline assembler
-    #define __TBB_X86_MSVC_INLINE_ASM_AVAILABLE 0
-    #define __TBB_NO_X86_MSVC_INLINE_ASM_MSG "The compiler being used is not supported (outdated?)"
+    #define __TBB_X86_MSVC_INLINE_ASAVAILABLE 0
+    #define __TBB_NO_X86_MSVC_INLINE_ASMSG "The compiler being used is not supported (outdated?)"
 #endif
 
-#if _M_X64
+#if _X64
     #define __TBB_r(reg_name) r##reg_name
     #define __TBB_W(name) name##64
     namespace tbb { namespace internal { namespace msvc_intrinsics {
@@ -75,10 +75,10 @@
 
 #if _MSC_VER>=1300 || __INTEL_COMPILER>=1100
     #pragma intrinsic(_ReadWriteBarrier)
-    #pragma intrinsic(_mm_mfence)
+    #pragma intrinsic(_mmfence)
     #define __TBB_compiler_fence()    _ReadWriteBarrier()
-    #define __TBB_full_memory_fence() _mm_mfence()
-#elif __TBB_X86_MSVC_INLINE_ASM_AVAILABLE
+    #define __TBB_full_memory_fence() _mmfence()
+#elif __TBB_X86_MSVC_INLINE_ASAVAILABLE
     #define __TBB_compiler_fence()    __asm { __asm nop }
     #define __TBB_full_memory_fence() __asm { __asm mfence }
 #else
@@ -90,18 +90,18 @@
 #define __TBB_release_consistency_helper() __TBB_compiler_fence()
 
 #if (_MSC_VER>=1300) || (__INTEL_COMPILER)
-    #pragma intrinsic(_mm_pause)
+    #pragma intrinsic(_mpause)
     namespace tbb { namespace internal { namespace msvc_intrinsics {
         static inline void pause (uintptr_t delay ) {
             for (;delay>0; --delay )
-                _mm_pause();
+                _mpause();
         }
     }}}
     #define __TBB_Pause(V) tbb::internal::msvc_intrinsics::pause(V)
-    #define __TBB_SINGLE_PAUSE _mm_pause()
+    #define __TBB_SINGLE_PAUSE _mpause()
 #else
-    #if !__TBB_X86_MSVC_INLINE_ASM_AVAILABLE
-        #error __TBB_NO_X86_MSVC_INLINE_ASM_MSG
+    #if !__TBB_X86_MSVC_INLINE_ASAVAILABLE
+        #error __TBB_NO_X86_MSVC_INLINE_ASMSG
     #endif
     namespace tbb { namespace internal { namespace msvc_inline_asm
         static inline void pause (uintptr_t delay ) {
@@ -133,8 +133,8 @@
     }}}
     #define __TBB_Log2(V) tbb::internal::msvc_intrinsics::lg_bsr(V)
 #else
-    #if !__TBB_X86_MSVC_INLINE_ASM_AVAILABLE
-        #error __TBB_NO_X86_MSVC_INLINE_ASM_MSG
+    #if !__TBB_X86_MSVC_INLINE_ASAVAILABLE
+        #error __TBB_NO_X86_MSVC_INLINE_ASMSG
     #endif
     namespace tbb { namespace internal { namespace msvc_inline_asm {
         static inline uintptr_t lg_bsr( uintptr_t i ){
@@ -164,8 +164,8 @@
     #define __TBB_AtomicOR(P,V)  tbb::internal::msvc_intrinsics::lock_or(P,V)
     #define __TBB_AtomicAND(P,V) tbb::internal::msvc_intrinsics::lock_and(P,V)
 #else
-    #if !__TBB_X86_MSVC_INLINE_ASM_AVAILABLE
-        #error __TBB_NO_X86_MSVC_INLINE_ASM_MSG
+    #if !__TBB_X86_MSVC_INLINE_ASAVAILABLE
+        #error __TBB_NO_X86_MSVC_INLINE_ASMSG
     #endif
     namespace tbb { namespace internal { namespace msvc_inline_asm {
         static inline void lock_or( volatile void *operand, __int32 addend ) {
@@ -200,7 +200,7 @@ static inline tbb::internal::machine_tsc_t __TBB_machine_time_stamp() {
 #define __TBB_CPU_CTL_ENV_PRESENT 1
 
 namespace tbb { namespace internal { class cpu_ctl_env; } }
-#if __TBB_X86_MSVC_INLINE_ASM_AVAILABLE
+#if __TBB_X86_MSVC_INLINE_ASAVAILABLE
     inline void __TBB_get_cpu_ctl_env ( tbb::internal::cpu_ctl_env* ctl ) {
         __asm {
             __asm mov     __TBB_r(ax), ctl

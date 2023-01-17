@@ -40,7 +40,7 @@ template<typename Key, typename Value, typename KeyCompare, typename RandomGener
 class map_traits {
 public:
     static constexpr size_t MAX_LEVEL = MAX_LEVELS;
-    using random_level_generator_type = RandomGenerator;
+    using randolevel_generator_type = RandomGenerator;
     using key_type = Key;
     using mapped_type = Value;
     using compare_type = KeyCompare;

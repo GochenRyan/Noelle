@@ -22,7 +22,7 @@
 namespace tbb {
     namespace internal {
 
-#if TBB_PREVIEW_ALGORITHM_TRACE
+#if TBB_PREVIEW_ALGORITHTRACE
         static inline void fgt_algorithm( string_index t, void *algorithm, void *parent ) {
             itt_make_task_group( ITT_DOMAIN_FLOW, algorithm, ALGORITHM, parent, ALGORITHM, t );
         }
@@ -39,7 +39,7 @@ namespace tbb {
             itt_task_end( ITT_DOMAIN_FLOW );
         }
 
-#else // TBB_PREVIEW_ALGORITHM_TRACE
+#else // TBB_PREVIEW_ALGORITHTRACE
 
         static inline void fgt_algorithm( string_index /*t*/, void * /*algorithm*/, void * /*parent*/ ) { }
         static inline void fgt_begin_algorithm( string_index /*t*/, void * /*algorithm*/ ) { }
@@ -47,7 +47,7 @@ namespace tbb {
         static inline void fgt_alg_begin_body( string_index /*t*/, void * /*body*/, void * /*algorithm*/ ) { }
         static inline void fgt_alg_end_body( void * ) { }
 
-#endif // TBB_PREVIEW_ALGORITHM_TRACEE
+#endif // TBB_PREVIEW_ALGORITHTRACEE
 
     } // namespace internal
 } // namespace tbb

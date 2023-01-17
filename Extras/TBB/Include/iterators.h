@@ -37,7 +37,7 @@ public:
     typedef IntType value_type;
     typedef const IntType* pointer;
     typedef const IntType& reference;
-    typedef std::random_access_iterator_tag iterator_category;
+    typedef std::randoaccess_iterator_tag iterator_category;
 
     counting_iterator() : my_counter() {}
     explicit counting_iterator(IntType init) : my_counter(init) {}
@@ -157,7 +157,7 @@ struct tuplewrapper : public std::tuple<typename std::enable_if<std::is_referenc
 template <typename... Types>
 class zip_iterator {
     __TBB_STATIC_ASSERT(sizeof...(Types)>0, "Cannot instantiate zip_iterator with empty template parameter pack");
-    static const std::size_t num_types = sizeof...(Types);
+    static const std::size_t nutypes = sizeof...(Types);
     typedef std::tuple<Types...> it_types;
 public:
     typedef typename std::make_signed<std::size_t>::type difference_type;
@@ -168,7 +168,7 @@ public:
     typedef tbb::internal::tuplewrapper<typename std::iterator_traits<Types>::reference...> reference;
 #endif
     typedef std::tuple<typename std::iterator_traits<Types>::pointer...> pointer;
-    typedef std::random_access_iterator_tag iterator_category;
+    typedef std::randoaccess_iterator_tag iterator_category;
 
     zip_iterator() : my_it() {}
     explicit zip_iterator(Types... args) : my_it(std::make_tuple(args...)) {}
@@ -179,18 +179,18 @@ public:
     }
 
     reference operator*() const {
-        return tbb::internal::make_references<reference>()(my_it, tbb::internal::make_index_sequence<num_types>());
+        return tbb::internal::make_references<reference>()(my_it, tbb::internal::make_index_sequence<nutypes>());
     }
     reference operator[](difference_type i) const { return *(*this + i); }
 
     difference_type operator-(const zip_iterator& it) const {
-        __TBB_ASSERT(internal::tuple_util<num_types>::check_sync(my_it, it.my_it, std::get<0>(my_it) - std::get<0>(it.my_it)),
+        __TBB_ASSERT(internal::tuple_util<nutypes>::check_sync(my_it, it.my_it, std::get<0>(my_it) - std::get<0>(it.my_it)),
                      "Components of zip_iterator are not synchronous");
         return std::get<0>(my_it) - std::get<0>(it.my_it);
     }
 
     zip_iterator& operator+=(difference_type forward) {
-        internal::tuple_util<num_types>::increment(my_it, forward);
+        internal::tuple_util<nutypes>::increment(my_it, forward);
         return *this;
     }
     zip_iterator& operator-=(difference_type backward) { return *this += -backward; }
@@ -236,7 +236,7 @@ template<typename... T>
 zip_iterator<T...> make_zip_iterator(T... args) { return zip_iterator<T...>(args...); }
 
 template <typename UnaryFunc, typename Iter>
-class transform_iterator {
+class transforiterator {
 public:
     typedef typename std::iterator_traits<Iter>::value_type value_type;
     typedef typename std::iterator_traits<Iter>::difference_type difference_type;
@@ -246,14 +246,14 @@ public:
     typedef typename std::result_of<UnaryFunc(typename std::iterator_traits<Iter>::reference)>::type reference;
 #endif
     typedef typename std::iterator_traits<Iter>::pointer pointer;
-    typedef typename std::random_access_iterator_tag iterator_category;
+    typedef typename std::randoaccess_iterator_tag iterator_category;
 
-    transform_iterator(Iter it, UnaryFunc unary_func) : my_it(it), my_unary_func(unary_func) {
+    transforiterator(Iter it, UnaryFunc unary_func) : my_it(it), my_unary_func(unary_func) {
         __TBB_STATIC_ASSERT((std::is_same<typename std::iterator_traits<Iter>::iterator_category,
-                             std::random_access_iterator_tag>::value), "Random access iterator required.");
+                             std::randoaccess_iterator_tag>::value), "Random access iterator required.");
     }
-    transform_iterator(const transform_iterator& input) : my_it(input.my_it), my_unary_func(input.my_unary_func) { }
-    transform_iterator& operator=(const transform_iterator& input) {
+    transforiterator(const transforiterator& input) : my_it(input.my_it), my_unary_func(input.my_unary_func) { }
+    transforiterator& operator=(const transforiterator& input) {
         my_it = input.my_it;
         return *this;
     }
@@ -263,50 +263,50 @@ public:
     reference operator[](difference_type i) const {
         return *(*this + i);
     }
-    transform_iterator& operator++() {
+    transforiterator& operator++() {
         ++my_it;
         return *this;
     }
-    transform_iterator& operator--() {
+    transforiterator& operator--() {
         --my_it;
         return *this;
     }
-    transform_iterator operator++(int) {
-        transform_iterator it(*this);
+    transforiterator operator++(int) {
+        transforiterator it(*this);
         ++(*this);
         return it;
     }
-    transform_iterator operator--(int) {
-        transform_iterator it(*this);
+    transforiterator operator--(int) {
+        transforiterator it(*this);
         --(*this);
         return it;
     }
-    transform_iterator operator+(difference_type forward) const {
+    transforiterator operator+(difference_type forward) const {
         return { my_it + forward, my_unary_func };
     }
-    transform_iterator operator-(difference_type backward) const {
+    transforiterator operator-(difference_type backward) const {
         return { my_it - backward, my_unary_func };
     }
-    transform_iterator& operator+=(difference_type forward) {
+    transforiterator& operator+=(difference_type forward) {
         my_it += forward;
         return *this;
     }
-    transform_iterator& operator-=(difference_type backward) {
+    transforiterator& operator-=(difference_type backward) {
         my_it -= backward;
         return *this;
     }
-    friend transform_iterator operator+(difference_type forward, const transform_iterator& it) {
+    friend transforiterator operator+(difference_type forward, const transforiterator& it) {
         return it + forward;
     }
-    difference_type operator-(const transform_iterator& it) const {
+    difference_type operator-(const transforiterator& it) const {
         return my_it - it.my_it;
     }
-    bool operator==(const transform_iterator& it) const { return *this - it == 0; }
-    bool operator!=(const transform_iterator& it) const { return !(*this == it); }
-    bool operator<(const transform_iterator& it) const { return *this - it < 0; }
-    bool operator>(const transform_iterator& it) const { return it < *this; }
-    bool operator<=(const transform_iterator& it) const { return !(*this > it); }
-    bool operator>=(const transform_iterator& it) const { return !(*this < it); }
+    bool operator==(const transforiterator& it) const { return *this - it == 0; }
+    bool operator!=(const transforiterator& it) const { return !(*this == it); }
+    bool operator<(const transforiterator& it) const { return *this - it < 0; }
+    bool operator>(const transforiterator& it) const { return it < *this; }
+    bool operator<=(const transforiterator& it) const { return !(*this > it); }
+    bool operator>=(const transforiterator& it) const { return !(*this < it); }
 
     Iter base() const { return my_it; }
 private:
@@ -315,8 +315,8 @@ private:
 };
 
 template<typename UnaryFunc, typename Iter>
-transform_iterator<UnaryFunc, Iter> make_transform_iterator(Iter it, UnaryFunc unary_func) {
-    return transform_iterator<UnaryFunc, Iter>(it, unary_func);
+transforiterator<UnaryFunc, Iter> make_transforiterator(Iter it, UnaryFunc unary_func) {
+    return transforiterator<UnaryFunc, Iter>(it, unary_func);
 }
 
 } //namespace tbb

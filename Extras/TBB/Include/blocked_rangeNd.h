@@ -63,13 +63,13 @@ private:
 
     //! Helper type to construct range with N tbb::blocked_range<value_type> objects.
     template<std::size_t>
-    using dim_type_helper = tbb::blocked_range<value_type>;
+    using ditype_helper = tbb::blocked_range<value_type>;
 
 public:
     blocked_rangeNd_impl() = delete;
 
     //! Constructs N-dimensional range over N half-open intervals each represented as tbb::blocked_range<Value>.
-    blocked_rangeNd_impl(const dim_type_helper<Is>&... args) : my_dims{ {args...} } {}
+    blocked_rangeNd_impl(const ditype_helper<Is>&... args) : my_dims{ {args...} } {}
 
     //! Dimensionality of a range.
     static constexpr unsigned int ndims() { return N; }

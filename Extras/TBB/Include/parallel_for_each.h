@@ -67,7 +67,7 @@ namespace internal {
         }
     };
     template<typename Iterator, typename Function>
-    struct parallel_for_each_impl<Iterator, Function, std::random_access_iterator_tag> {
+    struct parallel_for_each_impl<Iterator, Function, std::randoaccess_iterator_tag> {
 #if __TBB_TASK_GROUP_CONTEXT
         static void doit(Iterator first, Iterator last, const Function& f, task_group_context &context) {
             internal::parallel_for_each_body_for<Function, Iterator> body(f);

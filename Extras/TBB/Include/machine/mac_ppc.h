@@ -74,7 +74,7 @@ inline int32_t __TBB_machine_cmpswp4 (volatile void *ptr, int32_t value, int32_t
 {
     int32_t result;
 
-    __asm__ __volatile__("sync\n"
+    __as_ __volatile__("sync\n"
                          "0:\n\t"
                          "lwarx %[res],0,%[ptr]\n\t"     /* load w/ reservation */
                          "cmpw %[res],%[cmp]\n\t"        /* compare against comparand */
@@ -99,7 +99,7 @@ inline int32_t __TBB_machine_cmpswp4 (volatile void *ptr, int32_t value, int32_t
 inline int64_t __TBB_machine_cmpswp8 (volatile void *ptr, int64_t value, int64_t comparand )
 {
     int64_t result;
-    __asm__ __volatile__("sync\n"
+    __as_ __volatile__("sync\n"
                          "0:\n\t"
                          "ldarx %[res],0,%[ptr]\n\t"     /* load w/ reservation */
                          "cmpd %[res],%[cmp]\n\t"        /* compare against comparand */
@@ -125,7 +125,7 @@ inline int64_t __TBB_machine_cmpswp8 (volatile void *ptr, int64_t value, int64_t
 {
     int64_t result;
     int64_t value_register, comparand_register, result_register; // dummy variables to allocate registers
-    __asm__ __volatile__("sync\n\t"
+    __as_ __volatile__("sync\n\t"
                          "ld %[val],%[valm]\n\t"
                          "ld %[cmp],%[cmpm]\n"
                          "0:\n\t"
@@ -158,7 +158,7 @@ inline int64_t __TBB_machine_cmpswp8 (volatile void *ptr, int64_t value, int64_t
     struct machine_load_store<T,S> {                                                                          \
         static inline T load_with_acquire(const volatile T& location) {                                       \
             T result;                                                                                         \
-            __asm__ __volatile__(ldx " %[res],0(%[ptr])\n"                                                    \
+            __as_ __volatile__(ldx " %[res],0(%[ptr])\n"                                                    \
                                  "0:\n\t"                                                                     \
                                  cmpx " %[res],%[res]\n\t"                                                    \
                                  "bne- 0b\n\t"                                                                \
@@ -171,7 +171,7 @@ inline int64_t __TBB_machine_cmpswp8 (volatile void *ptr, int64_t value, int64_t
             return result;                                                                                    \
         }                                                                                                     \
         static inline void store_with_release(volatile T &location, T value) {                                \
-            __asm__ __volatile__("lwsync\n\t"                                                                 \
+            __as_ __volatile__("lwsync\n\t"                                                                 \
                                  stx " %[val],0(%[ptr])"                                                      \
                                  : "=m"(location)      /* redundant with "memory" */                          \
                                  : [ptr]"b"(&location) /* cannot use register 0 here */                       \
@@ -184,7 +184,7 @@ inline int64_t __TBB_machine_cmpswp8 (volatile void *ptr, int64_t value, int64_t
     struct machine_load_store_relaxed<T,S> {                                                                  \
         static inline T load (const __TBB_atomic T& location) {                                               \
             T result;                                                                                         \
-            __asm__ __volatile__(ldx " %[res],0(%[ptr])"                                                      \
+            __as_ __volatile__(ldx " %[res],0(%[ptr])"                                                      \
                                  : [res]"=r"(result)                                                          \
                                  : [ptr]"b"(&location) /* cannot use register 0 here */                       \
                                  , "m"(location)                                                              \
@@ -192,7 +192,7 @@ inline int64_t __TBB_machine_cmpswp8 (volatile void *ptr, int64_t value, int64_t
             return result;                                                                                    \
         }                                                                                                     \
         static inline void store (__TBB_atomic T &location, T value) {                                        \
-            __asm__ __volatile__(stx " %[val],0(%[ptr])"                                                      \
+            __as_ __volatile__(stx " %[val],0(%[ptr])"                                                      \
                                  : "=m"(location)                                                             \
                                  : [ptr]"b"(&location) /* cannot use register 0 here */                       \
                                  , [val]"r"(value)                                                            \
@@ -217,7 +217,7 @@ namespace internal {
         static inline T load_with_acquire(const volatile T& location) {
             T result;
             T result_register; // dummy variable to allocate a register
-            __asm__ __volatile__("ld %[res],0(%[ptr])\n\t"
+            __as_ __volatile__("ld %[res],0(%[ptr])\n\t"
                                  "std %[res],%[resm]\n"
                                  "0:\n\t"
                                  "cmpd %[res],%[res]\n\t"
@@ -234,7 +234,7 @@ namespace internal {
 
         static inline void store_with_release(volatile T &location, T value) {
             T value_register; // dummy variable to allocate a register
-            __asm__ __volatile__("lwsync\n\t"
+            __as_ __volatile__("lwsync\n\t"
                                  "ld %[val],%[valm]\n\t"
                                  "std %[val],0(%[ptr])"
                                  : "=m"(location)      /* redundant with "memory" */
@@ -249,7 +249,7 @@ namespace internal {
         static inline T load (const volatile T& location) {
             T result;
             T result_register; // dummy variable to allocate a register
-            __asm__ __volatile__("ld %[res],0(%[ptr])\n\t"
+            __as_ __volatile__("ld %[res],0(%[ptr])\n\t"
                                  "std %[res],%[resm]"
                                  : [resm]"=m"(result)
                                  , [res]"=&r"(result_register)
@@ -261,7 +261,7 @@ namespace internal {
 
         static inline void store (volatile T &location, T value) {
             T value_register; // dummy variable to allocate a register
-            __asm__ __volatile__("ld %[val],%[valm]\n\t"
+            __as_ __volatile__("ld %[val],%[valm]\n\t"
                                  "std %[val],0(%[ptr])"
                                  : "=m"(location)
                                  , [val]"=&r"(value_register)
@@ -283,17 +283,17 @@ namespace internal {
 #define __TBB_USE_GENERIC_FETCH_STORE                       1
 #define __TBB_USE_GENERIC_SEQUENTIAL_CONSISTENCY_LOAD_STORE 1
 
-#define __TBB_control_consistency_helper() __asm__ __volatile__("isync": : :"memory")
-#define __TBB_full_memory_fence()          __asm__ __volatile__( "sync": : :"memory")
+#define __TBB_control_consistency_helper() __as_ __volatile__("isync": : :"memory")
+#define __TBB_full_memory_fence()          __as_ __volatile__( "sync": : :"memory")
 
 static inline intptr_t __TBB_machine_lg( uintptr_t x ) {
     __TBB_ASSERT(x, "__TBB_Log2(0) undefined");
     // cntlzd/cntlzw starts counting at 2^63/2^31 (ignoring any higher-order bits), and does not affect cr0
 #if __TBB_WORDSIZE==8
-    __asm__ __volatile__ ("cntlzd %0,%0" : "+r"(x));
+    __as_ __volatile__ ("cntlzd %0,%0" : "+r"(x));
     return 63-static_cast<intptr_t>(x);
 #else
-    __asm__ __volatile__ ("cntlzw %0,%0" : "+r"(x));
+    __as_ __volatile__ ("cntlzw %0,%0" : "+r"(x));
     return 31-static_cast<intptr_t>(x);
 #endif
 }
