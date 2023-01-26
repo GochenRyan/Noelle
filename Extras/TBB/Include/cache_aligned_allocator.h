@@ -137,17 +137,17 @@ inline bool operator!=( const cache_aligned_allocator<T>&, const cache_aligned_a
 class cache_aligned_resource : public std::pmr::memory_resource {
 public:
     cache_aligned_resource() : cache_aligned_resource(std::pmr::get_default_resource()) {}
-    explicit cache_aligned_resource(std::pmr::memory_resource* upstream) : upstream(upstream) {}
+    explicit cache_aligned_resource(std::pmr::memory_resource* upstream) : m_upstream(upstream) {}
 
-    std::pmr::memory_resource* upstrearesource() const {
-        return upstream;
+    std::pmr::memory_resource* upstream_resource() const {
+        return m_upstream;
     }
 
 private:
     //! We don't know what memory resource set. Use padding to guarantee alignment
     void* do_allocate(size_t bytes, size_t alignment) override {
         size_t cache_line_alignment = correct_alignment(alignment);
-        uintptr_t base = (uintptr_t)upstream->allocate(correct_size(bytes) + cache_line_alignment);
+        uintptr_t base = (uintptr_t)m_upstream->allocate(correct_size(bytes) + cache_line_alignment);
         __TBB_ASSERT(base != 0, "Upstream resource returned NULL.");
 #if _MSC_VER && !defined(__INTEL_COMPILER)
     // unary minus operator applied to unsigned type, result still unsigned
@@ -168,7 +168,7 @@ private:
         if (ptr) {
             // Recover where block actually starts
             uintptr_t base = ((uintptr_t*)ptr)[-1];
-            upstream->deallocate((void*)base, correct_size(bytes) + correct_alignment(alignment));
+            m_upstream->deallocate((void*)base, correct_size(bytes) + correct_alignment(alignment));
         }
     }
 
@@ -176,7 +176,7 @@ private:
         if (this == &other) { return true; }
 #if __TBB_USE_OPTIONAL_RTTI
         const cache_aligned_resource* other_res = dynamic_cast<const cache_aligned_resource*>(&other);
-        return other_res && (this->upstrearesource() == other_res->upstrearesource());
+        return other_res && (this->upstream_resource() == other_res->upstream_resource());
 #else
         return false;
 #endif
@@ -198,7 +198,7 @@ private:
         return bytes < sizeof(uintptr_t) ? sizeof(uintptr_t) : bytes;
     }
 
-    std::pmr::memory_resource* upstream;
+    std::pmr::memory_resource* m_upstream;
 };
 
 #endif /* __TBB_CPP17_MEMORY_RESOURCE_PRESENT */

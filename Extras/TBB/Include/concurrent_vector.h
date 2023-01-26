@@ -430,7 +430,7 @@ public:
         typedef Value value_type;
         typedef Value* pointer;
         typedef Value& reference;
-        typedef std::randoaccess_iterator_tag iterator_category;
+        typedef std::random_access_iterator_tag iterator_category;
     };
 
     template<typename Container, typename T>

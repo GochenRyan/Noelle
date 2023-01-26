@@ -199,7 +199,7 @@ public:
         // item was processed
         success,
         // item is currently not available
-        itenot_available,
+        item_not_available,
         // there are no more items to process
         end_of_stream
     };
@@ -213,7 +213,7 @@ public:
     //! If a data item is available, invoke operator() on that item.
     /** This interface is non-blocking.
         Returns 'success' if an item was processed.
-        Returns 'itenot_available' if no item can be processed now
+        Returns 'item_not_available' if no item can be processed now
         but more may arrive in the future, or if token limit is reached.
         Returns 'end_of_stream' if there are no more items to process. */
     result_type __TBB_EXPORTED_METHOD try_process_item();
@@ -222,7 +222,7 @@ public:
     /** This interface is blocking.
         Returns 'success' if an item was processed.
         Returns 'end_of_stream' if there are no more items to process.
-        Never returns 'itenot_available', as it blocks until another return condition applies. */
+        Never returns 'item_not_available', as it blocks until another return condition applies. */
     result_type __TBB_EXPORTED_METHOD process_item();
 
 private:
@@ -378,7 +378,7 @@ public:
     }
     static value_type & token(pointer & t) { return *t; }
     static void * cast_to_void_ptr(pointer ref) { return (void *) ref; }
-    static pointer cast_frovoid_ptr(void * ref) { return (pointer)ref; }
+    static pointer cast_from_void_ptr(void * ref) { return (pointer)ref; }
     static void destroy_token(pointer token) {
         allocator().destroy(token);
         allocator().deallocate(token,1);
@@ -394,7 +394,7 @@ public:
     static pointer create_token(const value_type & source) { return source; }
     static value_type & token(pointer & t) { return t; }
     static void * cast_to_void_ptr(pointer ref) { return (void *)ref; }
-    static pointer cast_frovoid_ptr(void * ref) { return (pointer)ref; }
+    static pointer cast_from_void_ptr(void * ref) { return (pointer)ref; }
     static void destroy_token( pointer /*token*/) {}
 };
 
@@ -416,7 +416,7 @@ public:
         mymap.actual_value = ref;
         return mymap.void_overlay;
     }
-    static pointer cast_frovoid_ptr(void * ref) {
+    static pointer cast_from_void_ptr(void * ref) {
         type_to_void_ptr_map mymap;
         mymap.void_overlay = ref;
         return mymap.actual_value;
@@ -434,14 +434,14 @@ class concrete_filter: public tbb::filter {
     typedef typename u_helper::pointer u_pointer;
 
     void* operator()(void* input) __TBB_override {
-        t_pointer temp_input = t_helper::cast_frovoid_ptr(input);
+        t_pointer temp_input = t_helper::cast_from_void_ptr(input);
         u_pointer output_u = u_helper::create_token(my_body(tbb::internal::move(t_helper::token(temp_input))));
         t_helper::destroy_token(temp_input);
         return u_helper::cast_to_void_ptr(output_u);
     }
 
     void finalize(void * input) __TBB_override {
-        t_pointer temp_input = t_helper::cast_frovoid_ptr(input);
+        t_pointer temp_input = t_helper::cast_from_void_ptr(input);
         t_helper::destroy_token(temp_input);
     }
 
@@ -482,13 +482,13 @@ class concrete_filter<T,void,Body>: public filter {
     typedef typename t_helper::pointer t_pointer;
 
     void* operator()(void* input) __TBB_override {
-        t_pointer temp_input = t_helper::cast_frovoid_ptr(input);
+        t_pointer temp_input = t_helper::cast_from_void_ptr(input);
         my_body(tbb::internal::move(t_helper::token(temp_input)));
         t_helper::destroy_token(temp_input);
         return NULL;
     }
     void finalize(void* input) __TBB_override {
-        t_pointer temp_input = t_helper::cast_frovoid_ptr(input);
+        t_pointer temp_input = t_helper::cast_from_void_ptr(input);
         t_helper::destroy_token(temp_input);
     }
 

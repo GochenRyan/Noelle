@@ -30,13 +30,13 @@
 #endif
 #if __TBB_PREFETCHING
 #include <immintrin.h>
-#define __TBB_cl_prefetch(p) _mprefetch((const char*)p, _MHINT_T1)
-#define __TBB_cl_evict(p) _mclevict(p, _MHINT_T1)
+#define __TBB_cl_prefetch(p) _mm_prefetch((const char*)p, _MM_HINT_T1)
+#define __TBB_cl_evict(p) _mm_clevict(p, _MM_HINT_T1)
 #endif
 
 /** Intel(R) Many Integrated Core Architecture does not support mfence and pause instructions **/
-#define __TBB_full_memory_fence() __as_ __volatile__("lock; addl $0,(%%rsp)":::"memory")
-#define __TBB_Pause(x) _mdelay_32(16*(x))
+#define __TBB_full_memory_fence() __asm__ __volatile__("lock; addl $0,(%%rsp)":::"memory")
+#define __TBB_Pause(x) _mm_delay_32(16*(x))
 #define __TBB_STEALING_PAUSE 1500/16
 #include <sched.h>
 #define __TBB_Yield() sched_yield()

@@ -45,7 +45,7 @@ namespace internal {
 #if __TBB_CPP11_RVALUE_REF_PRESENT
         virtual void internal_add_move( Item&& item ) = 0;
 #endif
-        template<typename Body_, typename Ite> friend class internal::parallel_do_feeder_impl;
+        template<typename Body_, typename Item_> friend class internal::parallel_do_feeder_impl;
     public:
         //! Add a work item to a running parallel_do.
         void add( const Item& item ) {internal_add_copy(item);}
@@ -116,7 +116,7 @@ namespace internal {
             return NULL;
         }
 
-        template<typename Body_, typename Ite> friend class parallel_do_feeder_impl;
+        template<typename Body_, typename Item_> friend class parallel_do_feeder_impl;
     }; // class do_iteration_task
 
     template<typename Iterator, typename Body, typename Item>
@@ -137,9 +137,9 @@ namespace internal {
             return NULL;
         }
 
-        template<typename Iterator_, typename Body_, typename Ite> friend class do_group_task_forward;
-        template<typename Body_, typename Ite> friend class do_group_task_input;
-        template<typename Iterator_, typename Body_, typename Ite> friend class do_task_iter;
+        template<typename Iterator_, typename Body_, typename Item_> friend class do_group_task_forward;
+        template<typename Body_, typename Item_> friend class do_group_task_input;
+        template<typename Iterator_, typename Body_, typename Item_> friend class do_task_iter;
     }; // class do_iteration_task_iter
 
     //! For internal use only.
@@ -263,17 +263,17 @@ namespace internal {
         task* execute() __TBB_override
         {
 #if __TBB_CPP11_RVALUE_REF_PRESENT
-            typedef std::move_iterator<Item*> Iteiterator;
+            typedef std::move_iterator<Item*> Item_iterator;
 #else
-            typedef Item* Iteiterator;
+            typedef Item* Item_iterator;
 #endif
-            typedef do_iteration_task_iter<Iteiterator, Body, Item> iteration_type;
+            typedef do_iteration_task_iter<Item_iterator, Body, Item> iteration_type;
             __TBB_ASSERT( my_size>0, NULL );
             task_list list;
             task* t;
             size_t k=0;
             for(;;) {
-                t = new( allocate_child() ) iteration_type( Iteiterator(my_arg.begin() + k), my_feeder );
+                t = new( allocate_child() ) iteration_type( Item_iterator(my_arg.begin() + k), my_feeder );
                 if( ++k==my_size ) break;
                 list.push_back(*t);
             }
@@ -288,7 +288,7 @@ namespace internal {
                 (my_arg.begin() + k)->~Item();
         }
 
-        template<typename Iterator_, typename Body_, typename Ite> friend class do_task_iter;
+        template<typename Iterator_, typename Body_, typename Item_> friend class do_task_iter;
     }; // class do_group_task_input
 
     //! For internal use only.
@@ -371,9 +371,9 @@ namespace internal {
             return k==0 ? NULL : new( allocate_additional_child_of(*my_feeder.my_barrier) ) block_type(first, k, my_feeder);
         }
 
-        inline task* run( std::randoaccess_iterator_tag* ) { return run_for_randoaccess_iterator(); }
+        inline task* run( std::random_access_iterator_tag* ) { return run_for_random_access_iterator(); }
 
-        task* run_for_randoaccess_iterator() {
+        task* run_for_random_access_iterator() {
             typedef do_group_task_forward<Iterator, Body, Item> block_type;
             typedef do_iteration_task_iter<Iterator, Body, Item> iteration_type;
 
@@ -473,19 +473,19 @@ namespace internal {
     Class \c Body implementing the concept of parallel_do body must define:
     - \code
         B::operator()(
-                cv_itetype item,
-                parallel_do_feeder<itetype>& feeder
+                cv_item_type item,
+                parallel_do_feeder<item_type>& feeder
         ) const
 
         OR
 
-        B::operator()( cv_itetype& item ) const
+        B::operator()( cv_item_type& item ) const
       \endcode                                               Process item.
                                                              May be invoked concurrently  for the same \c this but different \c item.
 
-    - \code itetype( const itetype& ) \endcode
+    - \code item_type( const item_type& ) \endcode
                                                              Copy a work item.
-    - \code ~itetype() \endcode                            Destroy a work item
+    - \code ~item_type() \endcode                            Destroy a work item
 **/
 
 /** \name parallel_do

@@ -16,11 +16,11 @@
 
 // TODO: revise by comparing with mac_ppc.h
 
-#if !defined(__TBB_machine_H) || defined(__TBB_machine_ibaix51_H)
+#if !defined(__TBB_machine_H) || defined(__TBB_machine_ibm_aix51_H)
 #error Do not #include this internal file directly; use public TBB headers instead.
 #endif
 
-#define __TBB_machine_ibaix51_H
+#define __TBB_machine_ibm_aix51_H
 
 #define __TBB_WORDSIZE 8
 #define __TBB_ENDIANNESS __TBB_ENDIAN_BIG // assumption based on operating system
@@ -51,10 +51,10 @@ void __TBB_machine_isync ();
 #define __TBB_USE_GENERIC_SEQUENTIAL_CONSISTENCY_LOAD_STORE 1
 
 #if __GNUC__
-    #define __TBB_control_consistency_helper() __as_ __volatile__( "isync": : :"memory")
-    #define __TBB_acquire_consistency_helper() __as_ __volatile__("lwsync": : :"memory")
-    #define __TBB_release_consistency_helper() __as_ __volatile__("lwsync": : :"memory")
-    #define __TBB_full_memory_fence()          __as_ __volatile__(  "sync": : :"memory")
+    #define __TBB_control_consistency_helper() __asm__ __volatile__( "isync": : :"memory")
+    #define __TBB_acquire_consistency_helper() __asm__ __volatile__("lwsync": : :"memory")
+    #define __TBB_release_consistency_helper() __asm__ __volatile__("lwsync": : :"memory")
+    #define __TBB_full_memory_fence()          __asm__ __volatile__(  "sync": : :"memory")
 #else
     // IBM C++ Compiler does not support inline assembly
     // TODO: Since XL 9.0 or earlier GCC syntax is supported. Replace with more

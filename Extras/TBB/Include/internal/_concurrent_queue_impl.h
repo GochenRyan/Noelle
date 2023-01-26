@@ -91,7 +91,7 @@ public:
     size_t items_per_page;
 
     //! Size of an item
-    size_t itesize;
+    size_t item_size;
 
     //! number of invalid entries in the queue
     atomic<size_t> n_invalid_entries;
@@ -130,7 +130,7 @@ private:
 template<typename T>
 class micro_queue : no_copy {
 public:
-    typedef void (*iteconstructor_t)(T* location, const void* src);
+    typedef void (*item_constructor_t)(T* location, const void* src);
 private:
     typedef concurrent_queue_rep_base::page page;
 
@@ -142,12 +142,12 @@ private:
         ~destroyer() {my_value.~T();}
     };
 
-    void copy_item( page& dst, size_t dindex, const void* src, iteconstructor_t construct_item ) {
+    void copy_item( page& dst, size_t dindex, const void* src, item_constructor_t construct_item ) {
         construct_item( &get_ref(dst, dindex), src );
     }
 
     void copy_item( page& dst, size_t dindex, const page& src, size_t sindex,
-        iteconstructor_t construct_item )
+        item_constructor_t construct_item )
     {
         T& src_item = get_ref( const_cast<page&>(src), sindex );
         construct_item( &get_ref(dst, dindex), static_cast<const void*>(&src_item) );
@@ -186,15 +186,15 @@ public:
     spin_mutex page_mutex;
 
     void push( const void* item, ticket k, concurrent_queue_base_v3<T>& base,
-        iteconstructor_t construct_item ) ;
+        item_constructor_t construct_item ) ;
 
     bool pop( void* dst, ticket k, concurrent_queue_base_v3<T>& base ) ;
 
     micro_queue& assign( const micro_queue& src, concurrent_queue_base_v3<T>& base,
-        iteconstructor_t construct_item ) ;
+        item_constructor_t construct_item ) ;
 
     page* make_copy( concurrent_queue_base_v3<T>& base, const page* src_page, size_t begin_in_page,
-        size_t end_in_page, ticket& g_index, iteconstructor_t construct_item ) ;
+        size_t end_in_page, ticket& g_index, item_constructor_t construct_item ) ;
 
     void invalidate_page_and_rethrow( ticket k ) ;
 };
@@ -213,7 +213,7 @@ void micro_queue<T>::spin_wait_until_my_turn( atomic<ticket>& counter, ticket k,
 
 template<typename T>
 void micro_queue<T>::push( const void* item, ticket k, concurrent_queue_base_v3<T>& base,
-    iteconstructor_t construct_item )
+    item_constructor_t construct_item )
 {
     k &= -concurrent_queue_rep_base::n_queue;
     page* p = NULL;
@@ -284,7 +284,7 @@ bool micro_queue<T>::pop( void* dst, ticket k, concurrent_queue_base_v3<T>& base
 
 template<typename T>
 micro_queue<T>& micro_queue<T>::assign( const micro_queue<T>& src, concurrent_queue_base_v3<T>& base,
-    iteconstructor_t construct_item )
+    item_constructor_t construct_item )
 {
     head_counter = src.head_counter;
     tail_counter = src.tail_counter;
@@ -343,7 +343,7 @@ void micro_queue<T>::invalidate_page_and_rethrow( ticket k ) {
 template<typename T>
 concurrent_queue_rep_base::page* micro_queue<T>::make_copy( concurrent_queue_base_v3<T>& base,
     const concurrent_queue_rep_base::page* src_page, size_t begin_in_page, size_t end_in_page,
-    ticket& g_index, iteconstructor_t construct_item )
+    ticket& g_index, item_constructor_t construct_item )
 {
     concurrent_queue_page_allocator& pa = base;
     page* new_page = pa.allocate_page();
@@ -433,7 +433,7 @@ protected:
 
 private:
     typedef typename micro_queue<T>::padded_page padded_page;
-    typedef typename micro_queue<T>::iteconstructor_t iteconstructor_t;
+    typedef typename micro_queue<T>::item_constructor_t item_constructor_t;
 
     virtual page *allocate_page() __TBB_override {
         concurrent_queue_rep<T>& r = *my_rep;
@@ -466,7 +466,7 @@ protected:
     }
 
     //! Enqueue item at tail of queue
-    void internal_push( const void* src, iteconstructor_t construct_item ) {
+    void internal_push( const void* src, item_constructor_t construct_item ) {
          concurrent_queue_rep<T>& r = *my_rep;
          ticket k = r.tail_counter++;
          r.choose(k).push( src, k, *this, construct_item );
@@ -492,7 +492,7 @@ protected:
     }
 
     //! copy or move internal representation
-    void assign( const concurrent_queue_base_v3& src, iteconstructor_t construct_item ) ;
+    void assign( const concurrent_queue_base_v3& src, item_constructor_t construct_item ) ;
 
 #if __TBB_CPP11_RVALUE_REF_PRESENT
     //! swap internal representation
@@ -504,19 +504,19 @@ protected:
 
 template<typename T>
 concurrent_queue_base_v3<T>::concurrent_queue_base_v3() {
-    const size_t itesize = sizeof(T);
+    const size_t item_size = sizeof(T);
     my_rep = cache_aligned_allocator<concurrent_queue_rep<T> >().allocate(1);
     __TBB_ASSERT( (size_t)my_rep % NFS_GetLineSize()==0, "alignment error" );
     __TBB_ASSERT( (size_t)&my_rep->head_counter % NFS_GetLineSize()==0, "alignment error" );
     __TBB_ASSERT( (size_t)&my_rep->tail_counter % NFS_GetLineSize()==0, "alignment error" );
     __TBB_ASSERT( (size_t)&my_rep->array % NFS_GetLineSize()==0, "alignment error" );
     memset(static_cast<void*>(my_rep),0,sizeof(concurrent_queue_rep<T>));
-    my_rep->itesize = itesize;
-    my_rep->items_per_page = itesize<=  8 ? 32 :
-                             itesize<= 16 ? 16 :
-                             itesize<= 32 ?  8 :
-                             itesize<= 64 ?  4 :
-                             itesize<=128 ?  2 :
+    my_rep->item_size = item_size;
+    my_rep->items_per_page = item_size<=  8 ? 32 :
+                             item_size<= 16 ? 16 :
+                             item_size<= 32 ?  8 :
+                             item_size<= 64 ?  4 :
+                             item_size<=128 ?  2 :
                              1;
 }
 
@@ -587,7 +587,7 @@ void concurrent_queue_base_v3<T>::internal_finish_clear() {
 
 template<typename T>
 void concurrent_queue_base_v3<T>::assign( const concurrent_queue_base_v3& src,
-    iteconstructor_t construct_item )
+    item_constructor_t construct_item )
 {
     concurrent_queue_rep<T>& r = *my_rep;
     r.items_per_page = src.my_rep->items_per_page;
@@ -847,7 +847,7 @@ protected:
     size_t items_per_page;
 
     //! Size of an item
-    size_t itesize;
+    size_t item_size;
 
     enum copy_specifics { copy, move };
 
@@ -868,7 +868,7 @@ private:
     virtual void copy_item( page& dst, size_t index, const void* src ) = 0;
     virtual void assign_and_destroy_item( void* dst, page& src, size_t index ) = 0;
 protected:
-    __TBB_EXPORTED_METHOD concurrent_queue_base_v3( size_t itesize );
+    __TBB_EXPORTED_METHOD concurrent_queue_base_v3( size_t item_size );
     virtual __TBB_EXPORTED_METHOD ~concurrent_queue_base_v3();
 
     //! Enqueue item at tail of queue using copy operation
@@ -917,7 +917,7 @@ protected:
     void internal_swap( concurrent_queue_base_v3& src ) {
         std::swap( my_capacity, src.my_capacity );
         std::swap( items_per_page, src.items_per_page );
-        std::swap( itesize, src.itesize );
+        std::swap( item_size, src.item_size );
         std::swap( my_rep, src.my_rep );
     }
 #endif /* __TBB_CPP11_RVALUE_REF_PRESENT */
@@ -939,7 +939,7 @@ private:
     @ingroup containers */
 class concurrent_queue_base_v8: public concurrent_queue_base_v3 {
 protected:
-    concurrent_queue_base_v8( size_t itesz ) : concurrent_queue_base_v3( itesz ) {}
+    concurrent_queue_base_v8( size_t item_sz ) : concurrent_queue_base_v3( item_sz ) {}
 
     //! move items
     void __TBB_EXPORTED_METHOD move_content( concurrent_queue_base_v8& src ) ;

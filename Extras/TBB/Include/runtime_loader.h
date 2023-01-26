@@ -98,9 +98,9 @@ class __TBB_DEPRECATED_IN_VERBOSE_MODE runtime_loader : tbb::internal::no_copy {
 
         //! Error mode constants.
         enum error_mode {
-            estatus,     //!< Save status of operation and continue.
-            ethrow,      //!< Throw an exception of tbb::runtime_loader::error_code type.
-            eabort       //!< Print message to \c stderr and call \c abort().
+            em_status,     //!< Save status of operation and continue.
+            em_throw,      //!< Throw an exception of tbb::runtime_loader::error_code type.
+            em_abort       //!< Print message to \c stderr and call \c abort().
         }; // error_mode
 
         //! Error codes.
@@ -114,19 +114,19 @@ class __TBB_DEPRECATED_IN_VERBOSE_MODE runtime_loader : tbb::internal::no_copy {
         }; // error_code
 
         //! Initialize object but do not load TBB.
-        runtime_loader( error_mode mode = eabort );
+        runtime_loader( error_mode mode = em_abort );
 
         //! Initialize object and load TBB.
         /*!
             See load() for details.
 
-            If error mode is \c estatus, call status() to check whether TBB was loaded or not.
+            If error mode is \c em_status, call status() to check whether TBB was loaded or not.
         */
         runtime_loader(
             char const * path[],                           //!< List of directories to search TBB in.
             int          min_ver = TBB_INTERFACE_VERSION,  //!< Minimal suitable version of TBB.
             int          max_ver = INT_MAX,                //!< Maximal suitable version of TBB.
-            error_mode   mode    = eabort                //!< Error mode for this object.
+            error_mode   mode    = em_abort                //!< Error mode for this object.
         );
 
         //! Destroy object.
@@ -168,7 +168,7 @@ class __TBB_DEPRECATED_IN_VERBOSE_MODE runtime_loader : tbb::internal::no_copy {
 
         //! Report status.
         /*!
-            If error mode is \c estatus, the function returns status of the last operation.
+            If error mode is \c em_status, the function returns status of the last operation.
         */
         error_code status();
 

@@ -33,13 +33,13 @@
     #define __TBB_release_consistency_helper()
     #define __TBB_full_memory_fence()          __mf()
 #else
-    #define __TBB_compiler_fence() __as_ __volatile__("": : :"memory")
+    #define __TBB_compiler_fence() __asm__ __volatile__("": : :"memory")
     #define __TBB_control_consistency_helper() __TBB_compiler_fence()
     // Even though GCC imbues volatile loads with acquire semantics, it sometimes moves
     // loads over the acquire fence. The following helpers stop such incorrect code motion.
     #define __TBB_acquire_consistency_helper() __TBB_compiler_fence()
     #define __TBB_release_consistency_helper() __TBB_compiler_fence()
-    #define __TBB_full_memory_fence()          __as_ __volatile__("mf": : :"memory")
+    #define __TBB_full_memory_fence()          __asm__ __volatile__("mf": : :"memory")
 #endif /* !__INTEL_COMPILER */
 
 // Most of the functions will be in a .s file

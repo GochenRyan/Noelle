@@ -79,19 +79,19 @@ namespace internal {
     //! Split work to be done in the scan.
     /** @ingroup algorithms */
     template<typename Range, typename Body>
-    class sunode: public task {
-        typedef final_sum<Range,Body> final_sutype;
+    class sum_node: public task {
+        typedef final_sum<Range,Body> final_sum_type;
     public:
-        final_sutype *my_incoming;
-        final_sutype *my_body;
+        final_sum_type *my_incoming;
+        final_sum_type *my_body;
         Body *my_stuff_last;
     private:
-        final_sutype *my_left_sum;
-        sunode *my_left;
-        sunode *my_right;
+        final_sum_type *my_left_sum;
+        sum_node *my_left;
+        sum_node *my_right;
         bool my_left_is_final;
         Range my_range;
-        sunode( const Range range_, bool left_is_final_ ) :
+        sum_node( const Range range_, bool left_is_final_ ) :
             my_stuff_last(NULL),
             my_left_sum(NULL),
             my_left(NULL),
@@ -103,7 +103,7 @@ namespace internal {
             poison_pointer(my_body);
             poison_pointer(my_incoming);
         }
-        task* create_child( const Range& range_, final_sutype& f, sunode* n, final_sutype* incoming_, Body* stuff_last_ ) {
+        task* create_child( const Range& range_, final_sum_type& f, sum_node* n, final_sum_type* incoming_, Body* stuff_last_ ) {
             if( !n ) {
                 f.recycle_as_child_of( *this );
                 f.finish_construction( range_, stuff_last_ );
@@ -120,7 +120,7 @@ namespace internal {
                 if( my_incoming )
                     my_left_sum->my_body.reverse_join( my_incoming->my_body );
                 recycle_as_continuation();
-                sunode& c = *this;
+                sum_node& c = *this;
                 task* b = c.create_child(Range(my_range,split()),*my_left_sum,my_right,my_left_sum,my_stuff_last);
                 task* a = my_left_is_final ? NULL : c.create_child(my_range,*my_body,my_left,my_incoming,NULL);
                 set_ref_count( (a!=NULL)+(b!=NULL) );
@@ -143,13 +143,13 @@ namespace internal {
     /** @ingroup algorithms */
     template<typename Range, typename Body>
     class finish_scan: public task {
-        typedef sunode<Range,Body> sunode_type;
-        typedef final_sum<Range,Body> final_sutype;
-        final_sutype** const my_sum;
-        sunode_type*& my_return_slot;
+        typedef sum_node<Range,Body> sum_node_type;
+        typedef final_sum<Range,Body> final_sum_type;
+        final_sum_type** const my_sum;
+        sum_node_type*& my_return_slot;
     public:
-        final_sutype* my_right_zombie;
-        sunode_type& my_result;
+        final_sum_type* my_right_zombie;
+        sum_node_type& my_result;
 
         task* execute() __TBB_override {
             __TBB_ASSERT( my_result.ref_count()==(my_result.my_left!=NULL)+(my_result.my_right!=NULL), NULL );
@@ -170,8 +170,8 @@ namespace internal {
             return NULL;
         }
 
-        finish_scan( sunode_type*& return_slot_, final_sutype** su, sunode_type& result_ ) :
-            my_sum(su),
+        finish_scan( sum_node_type*& return_slot_, final_sum_type** sum_, sum_node_type& result_ ) :
+            my_sum(sum_),
             my_return_slot(return_slot_),
             my_right_zombie(NULL),
             my_result(result_)
@@ -184,25 +184,25 @@ namespace internal {
     /** @ingroup algorithms */
     template<typename Range, typename Body, typename Partitioner=simple_partitioner>
     class start_scan: public task {
-        typedef sunode<Range,Body> sunode_type;
-        typedef final_sum<Range,Body> final_sutype;
-        final_sutype* my_body;
+        typedef sum_node<Range,Body> sum_node_type;
+        typedef final_sum<Range,Body> final_sum_type;
+        final_sum_type* my_body;
         /** Non-null if caller is requesting total. */
-        final_sutype** my_sum;
-        sunode_type** my_return_slot;
+        final_sum_type** my_sum;
+        sum_node_type** my_return_slot;
         /** Null if computing root. */
-        sunode_type* my_parent_sum;
+        sum_node_type* my_parent_sum;
         bool my_is_final;
         bool my_is_right_child;
         Range my_range;
         typename Partitioner::partition_type my_partition;
         task* execute() __TBB_override ;
     public:
-        start_scan( sunode_type*& return_slot_, start_scan& parent_, sunode_type* parent_su ) :
+        start_scan( sum_node_type*& return_slot_, start_scan& parent_, sum_node_type* parent_sum_ ) :
             my_body(parent_.my_body),
             my_sum(parent_.my_sum),
             my_return_slot(&return_slot_),
-            my_parent_sum(parent_su),
+            my_parent_sum(parent_sum_),
             my_is_final(parent_.my_is_final),
             my_is_right_child(false),
             my_range(parent_.my_range,split()),
@@ -211,7 +211,7 @@ namespace internal {
             __TBB_ASSERT( !*my_return_slot, NULL );
         }
 
-        start_scan( sunode_type*& return_slot_, const Range& range_, final_sutype& body_, const Partitioner& partitioner_) :
+        start_scan( sum_node_type*& return_slot_, const Range& range_, final_sum_type& body_, const Partitioner& partitioner_) :
             my_body(&body_),
             my_sum(NULL),
             my_return_slot(&return_slot_),
@@ -227,8 +227,8 @@ namespace internal {
         static void run( const Range& range_, Body& body_, const Partitioner& partitioner_ ) {
             if( !range_.empty() ) {
                 typedef internal::start_scan<Range,Body,Partitioner> start_pass1_type;
-                internal::sunode<Range,Body>* root = NULL;
-                final_sutype* temp_body = new(task::allocate_root()) final_sutype( body_ );
+                internal::sum_node<Range,Body>* root = NULL;
+                final_sum_type* temp_body = new(task::allocate_root()) final_sum_type( body_ );
                 start_pass1_type& pass1 = *new(task::allocate_root()) start_pass1_type(
                     /*my_return_slot=*/root,
                     range_,
@@ -260,7 +260,7 @@ namespace internal {
         bool treat_as_stolen = my_is_right_child && (is_stolen_task() || my_body!=p->my_result.my_left_sum);
         if( treat_as_stolen ) {
             // Invocation is for right child that has been really stolen or needs to be virtually stolen
-            p->my_right_zombie = my_body = new( allocate_root() ) final_sutype(my_body->my_body);
+            p->my_right_zombie = my_body = new( allocate_root() ) final_sum_type(my_body->my_body);
             my_is_final = false;
         }
         task* next_task = NULL;
@@ -273,11 +273,11 @@ namespace internal {
                 *my_sum = my_body;
             __TBB_ASSERT( !*my_return_slot, NULL );
         } else {
-            sunode_type* result;
+            sum_node_type* result;
             if( my_parent_sum )
-                result = new(allocate_additional_child_of(*my_parent_sum)) sunode_type(my_range,/*my_left_is_final=*/my_is_final);
+                result = new(allocate_additional_child_of(*my_parent_sum)) sum_node_type(my_range,/*my_left_is_final=*/my_is_final);
             else
-                result = new(task::allocate_root()) sunode_type(my_range,/*my_left_is_final=*/my_is_final);
+                result = new(task::allocate_root()) sum_node_type(my_range,/*my_left_is_final=*/my_is_final);
             finish_pass1_type& c = *new( allocate_continuation()) finish_pass1_type(*my_return_slot,my_sum,*result);
             // Split off right child
             start_scan& b = *new( c.allocate_child() ) start_scan( /*my_return_slot=*/result->my_right, *this, result );

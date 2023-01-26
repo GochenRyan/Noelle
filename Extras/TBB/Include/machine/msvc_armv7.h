@@ -28,19 +28,19 @@
 #define __TBB_ENDIANNESS __TBB_ENDIAN_UNSUPPORTED
 
 #if defined(TBB_WIN32_USE_CL_BUILTINS)
-// We can test this on _IX86
+// We can test this on _M_IX86
 #pragma intrinsic(_ReadWriteBarrier)
-#pragma intrinsic(_mmfence)
+#pragma intrinsic(_mm_mfence)
 #define __TBB_compiler_fence()    _ReadWriteBarrier()
-#define __TBB_full_memory_fence() _mmfence()
+#define __TBB_full_memory_fence() _mm_mfence()
 #define __TBB_control_consistency_helper() __TBB_compiler_fence()
 #define __TBB_acquire_consistency_helper() __TBB_compiler_fence()
 #define __TBB_release_consistency_helper() __TBB_compiler_fence()
 #else
-//Now __dmb(_ARBARRIER_SY) is used for both compiler and memory fences
+//Now __dmb(_ARM_BARRIER_SY) is used for both compiler and memory fences
 //This might be changed later after testing
-#define __TBB_compiler_fence()    __dmb(_ARBARRIER_SY)
-#define __TBB_full_memory_fence() __dmb(_ARBARRIER_SY)
+#define __TBB_compiler_fence()    __dmb(_ARM_BARRIER_SY)
+#define __TBB_full_memory_fence() __dmb(_ARM_BARRIER_SY)
 #define __TBB_control_consistency_helper() __TBB_compiler_fence()
 #define __TBB_acquire_consistency_helper() __TBB_full_memory_fence()
 #define __TBB_release_consistency_helper() __TBB_full_memory_fence()
@@ -74,7 +74,7 @@ __TBB_MACHINE_DEFINE_ATOMICS_CMPSWP(4,long,)
 __TBB_MACHINE_DEFINE_ATOMICS_CMPSWP(8,__int64,64)
 __TBB_MACHINE_DEFINE_ATOMICS_FETCHADD(4,long,)
 #if defined(TBB_WIN32_USE_CL_BUILTINS)
-// No _InterlockedExchangeAdd64 intrinsic on _IX86
+// No _InterlockedExchangeAdd64 intrinsic on _M_IX86
 #define __TBB_64BIT_ATOMICS 0
 #else
 __TBB_MACHINE_DEFINE_ATOMICS_FETCHADD(8,__int64,64)

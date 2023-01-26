@@ -27,7 +27,7 @@ namespace tbb {
         #define TBB_STRING_RESOURCE(index_name,str) index_name,
         enum string_index {
            #include "internal/_tbb_strings.h"
-           NUSTRINGS
+           NUM_STRINGS
         };
         #undef TBB_STRING_RESOURCE
 
@@ -128,13 +128,13 @@ namespace tbb {
 
         enum notify_type {prepare=0, cancel, acquired, releasing};
 
-        const uintptr_t NUNOTIFY_TYPES = 4; // set to # elements in enum above
+        const uintptr_t NUM_NOTIFY_TYPES = 4; // set to # elements in enum above
 
         void __TBB_EXPORTED_FUNC call_itt_notify_v5(int t, void *ptr);
         void __TBB_EXPORTED_FUNC itt_store_pointer_with_release_v3(void *dst, void *src);
         void* __TBB_EXPORTED_FUNC itt_load_pointer_with_acquire_v3(const void *src);
         void* __TBB_EXPORTED_FUNC itt_load_pointer_v3( const void* src );
-        enum itt_domain_enum { ITT_DOMAIN_FLOW=0, ITT_DOMAIN_MAIN=1, ITT_DOMAIN_ALGO=2, ITT_NUDOMAINS };
+        enum itt_domain_enum { ITT_DOMAIN_FLOW=0, ITT_DOMAIN_MAIN=1, ITT_DOMAIN_ALGO=2, ITT_NUM_DOMAINS };
 
         void __TBB_EXPORTED_FUNC itt_make_task_group_v7( itt_domain_enum domain, void *group, unsigned long long group_extra,
                                                          void *parent, unsigned long long parent_extra, string_index name_index );

@@ -234,11 +234,11 @@ struct async_helpers {
         return static_cast<void*>(&t);
     }
 
-    static const T& frovoid_ptr(const void* p) {
+    static const T& from_void_ptr(const void* p) {
         return *static_cast<const T*>(p);
     }
 
-    static T& frovoid_ptr(void* p) {
+    static T& from_void_ptr(void* p) {
         return *static_cast<T*>(p);
     }
 
@@ -246,7 +246,7 @@ struct async_helpers {
         if (is_async) {
             // This (T) is NOT async and incoming 'A<X> t' IS async
             // Get data from async_msg
-            const async_msg<filtered_type>& msg = async_helpers< async_msg<filtered_type> >::frovoid_ptr(p);
+            const async_msg<filtered_type>& msg = async_helpers< async_msg<filtered_type> >::from_void_ptr(p);
             task* const new_task = msg.my_storage->subscribe(*this_recv, this_recv->graph_reference());
             // finalize() must be called after subscribe() because set() can be called in finalize()
             // and 'this_recv' client must be subscribed by this moment
@@ -255,7 +255,7 @@ struct async_helpers {
         }
         else {
             // Incoming 't' is NOT async
-            return this_recv->try_put_task(frovoid_ptr(p));
+            return this_recv->try_put_task(from_void_ptr(p));
         }
     }
 };
@@ -277,11 +277,11 @@ struct async_helpers< T, typename std::enable_if< std::is_base_of<async_msg<type
     }
 
     // Sender-classes use non-const interfaces
-    static const T& frovoid_ptr(const void* p) {
+    static const T& from_void_ptr(const void* p) {
         return *static_cast<const T*>(static_cast<const async_msg<filtered_type>*>(p));
     }
 
-    static T& frovoid_ptr(void* p) {
+    static T& from_void_ptr(void* p) {
         return *static_cast<T*>(static_cast<async_msg<filtered_type>*>(p));
     }
 
@@ -289,12 +289,12 @@ struct async_helpers< T, typename std::enable_if< std::is_base_of<async_msg<type
     static task* try_put_task_wrapper_impl(receiver<T>* const this_recv, const void *p, bool is_async) {
         if (is_async) {
             // Both are async
-            return this_recv->try_put_task(frovoid_ptr(p));
+            return this_recv->try_put_task(from_void_ptr(p));
         }
         else {
             // This (T) is async and incoming 'X t' is NOT async
             // Create async_msg for X
-            const filtered_type& t = async_helpers<filtered_type>::frovoid_ptr(p);
+            const filtered_type& t = async_helpers<filtered_type>::from_void_ptr(p);
             const T msg(t);
             return this_recv->try_put_task(msg);
         }
@@ -439,7 +439,7 @@ protected:
     virtual bool try_get_wrapper( void* p, bool is_async ) __TBB_override {
         // Both async OR both are NOT async
         if ( internal::async_helpers<T>::is_async_type == is_async ) {
-            return try_get( internal::async_helpers<T>::frovoid_ptr(p) );
+            return try_get( internal::async_helpers<T>::from_void_ptr(p) );
         }
         // Else: this (T) is async OR incoming 't' is async
         __TBB_ASSERT(false, "async_msg interface does not support 'pull' protocol in try_get()");
@@ -449,7 +449,7 @@ protected:
     virtual bool try_reserve_wrapper( void* p, bool is_async ) __TBB_override {
         // Both async OR both are NOT async
         if ( internal::async_helpers<T>::is_async_type == is_async ) {
-            return try_reserve( internal::async_helpers<T>::frovoid_ptr(p) );
+            return try_reserve( internal::async_helpers<T>::from_void_ptr(p) );
         }
         // Else: this (T) is async OR incoming 't' is async
         __TBB_ASSERT(false, "async_msg interface does not support 'pull' protocol in try_reserve()");
@@ -718,7 +718,7 @@ protected:
 
 #if __TBB_PREVIEW_MESSAGE_BASED_KEY_MATCHING
     template <typename K, typename T>
-    K key_fromessage( const T &t ) {
+    K key_from_message( const T &t ) {
         return t.key();
     }
 #endif /* __TBB_PREVIEW_MESSAGE_BASED_KEY_MATCHING */
@@ -2044,9 +2044,9 @@ template <typename T, typename Allocator=__TBB_DEFAULT_NODE_ALLOCATOR(T) >
 class buffer_node
     : public graph_node
 #if TBB_DEPRECATED_FLOW_NODE_ALLOCATOR
-    , public internal::reservable_itebuffer< T, Allocator >
+    , public internal::reservable_item_buffer< T, Allocator >
 #else
-    , public internal::reservable_itebuffer< T, cache_aligned_allocator<T> >
+    , public internal::reservable_item_buffer< T, cache_aligned_allocator<T> >
 #endif
     , public receiver<T>, public sender<T> {
 #if TBB_DEPRECATED_FLOW_NODE_ALLOCATOR
@@ -2082,7 +2082,7 @@ protected:
 
     friend class internal::forward_task_bypass< class_type >;
 
-    enum op_type {reg_succ, resucc, req_item, res_item, rel_res, con_res, put_item, try_fwd_task
+    enum op_type {reg_succ, rem_succ, req_item, res_item, rel_res, con_res, put_item, try_fwd_task
 #if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
         , add_blt_succ, del_blt_succ,
         add_blt_pred, del_blt_pred,
@@ -2141,7 +2141,7 @@ protected:
             op_list = op_list->next;
             switch (tmp->type) {
             case reg_succ: internal_reg_succ(tmp); try_forwarding = true; break;
-            case resucc: internal_resucc(tmp); break;
+            case rem_succ: internal_rem_succ(tmp); break;
             case req_item: internal_pop(tmp); break;
             case res_item: internal_reserve(tmp); break;
             case rel_res:  internal_release(tmp); try_forwarding = true; break;
@@ -2216,7 +2216,7 @@ protected:
     }
 
     //! Remove successor
-    virtual void internal_resucc(buffer_operation *op) {
+    virtual void internal_rem_succ(buffer_operation *op) {
         my_successors.remove_successor(*(op->r));
         __TBB_store_with_release(op->status, internal::SUCCEEDED);
     }
@@ -2275,8 +2275,8 @@ protected:
 private:
     void order() {}
 
-    bool is_itevalid() {
-        return this->my_itevalid(this->my_tail - 1);
+    bool is_item_valid() {
+        return this->my_item_valid(this->my_tail - 1);
     }
 
     void try_put_and_add_task(task*& last_task) {
@@ -2299,7 +2299,7 @@ protected:
     void internal_forward_task_impl(buffer_operation *op, derived_type* derived) {
         __TBB_ASSERT(static_cast<class_type*>(derived) == this, "'this' is not a base class for derived");
 
-        if (this->my_reserved || !derived->is_itevalid()) {
+        if (this->my_reserved || !derived->is_item_valid()) {
             __TBB_store_with_release(op->status, internal::FAILED);
             this->forwarder_busy = false;
             return;
@@ -2307,7 +2307,7 @@ protected:
         // Try forwarding, giving each successor a chance
         task * last_task = NULL;
         size_type counter = my_successors.size();
-        for (; counter > 0 && derived->is_itevalid(); --counter)
+        for (; counter > 0 && derived->is_item_valid(); --counter)
             derived->try_put_and_add_task(last_task);
 
         op->ltask = last_task;  // return task
@@ -2357,7 +2357,7 @@ protected:
 public:
     //! Constructor
     __TBB_NOINLINE_SYM explicit buffer_node( graph &g )
-        : graph_node(g), internal::reservable_itebuffer<T, internals_allocator>(), receiver<T>(),
+        : graph_node(g), internal::reservable_item_buffer<T, internals_allocator>(), receiver<T>(),
           sender<T>(), forwarder_busy(false)
     {
         my_successors.set_owner(this);
@@ -2375,7 +2375,7 @@ public:
 
     //! Copy constructor
     __TBB_NOINLINE_SYM buffer_node( const buffer_node& src )
-        : graph_node(src.my_graph), internal::reservable_itebuffer<T, internals_allocator>(),
+        : graph_node(src.my_graph), internal::reservable_item_buffer<T, internals_allocator>(),
           receiver<T>(), sender<T>(), forwarder_busy(false)
     {
         my_successors.set_owner(this);
@@ -2460,7 +2460,7 @@ public:
         It also calls r.remove_predecessor(*this) to remove this node as a predecessor. */
     bool remove_successor( successor_type &r ) __TBB_override {
         r.remove_predecessor(*this);
-        buffer_operation op_data(resucc);
+        buffer_operation op_data(rem_succ);
         op_data.r = &r;
         my_aggregator.execute(&op_data);
         // even though this operation does not cause a forward, if we are the handler, and
@@ -2551,7 +2551,7 @@ public:
 
 protected:
     void reset_node( reset_flags f) __TBB_override {
-        internal::reservable_itebuffer<T, internals_allocator>::reset();
+        internal::reservable_item_buffer<T, internals_allocator>::reset();
         // TODO: just clear structures
         if (f&rf_clear_edges) {
             my_successors.clear();
@@ -2582,8 +2582,8 @@ protected:
 private:
     template<typename, typename> friend class buffer_node;
 
-    bool is_itevalid() {
-        return this->my_itevalid(this->my_head);
+    bool is_item_valid() {
+        return this->my_item_valid(this->my_head);
     }
 
     void try_put_and_add_task(task*& last_task) {
@@ -2602,7 +2602,7 @@ protected:
     }
 
     void internal_pop(queue_operation *op) __TBB_override {
-        if ( this->my_reserved || !this->my_itevalid(this->my_head)){
+        if ( this->my_reserved || !this->my_item_valid(this->my_head)){
             __TBB_store_with_release(op->status, internal::FAILED);
         }
         else {
@@ -2611,7 +2611,7 @@ protected:
         }
     }
     void internal_reserve(queue_operation *op) __TBB_override {
-        if (this->my_reserved || !this->my_itevalid(this->my_head)) {
+        if (this->my_reserved || !this->my_item_valid(this->my_head)) {
             __TBB_store_with_release(op->status, internal::FAILED);
         }
         else {
@@ -2801,7 +2801,7 @@ protected:
     }
 
     typedef typename buffer_node<T, Allocator>::size_type size_type;
-    typedef typename buffer_node<T, Allocator>::itetype itetype;
+    typedef typename buffer_node<T, Allocator>::item_type item_type;
     typedef typename buffer_node<T, Allocator>::buffer_operation prio_operation;
 
     //! Tries to forward valid items to successors
@@ -2866,7 +2866,7 @@ private:
         __TBB_ASSERT(mark == this->my_tail, "mark unequal after heapify");
     }
 
-    bool is_itevalid() {
+    bool is_item_valid() {
         return this->my_tail > 0;
     }
 
@@ -2916,7 +2916,7 @@ private:
         this->destroy_item(0);
         if(this->my_tail > 1) {
             // push the last element down heap
-            __TBB_ASSERT(this->my_itevalid(this->my_tail - 1), NULL);
+            __TBB_ASSERT(this->my_item_valid(this->my_tail - 1), NULL);
             this->move_item(0,this->my_tail - 1);
         }
         --(this->my_tail);
@@ -3108,12 +3108,12 @@ public:
 
     //! Constructor
     limiter_node(graph &g,
-                 __TBB_DEPRECATED_LIMITER_ARG2(size_t threshold, int nudecrement_predecessors=0))
+                 __TBB_DEPRECATED_LIMITER_ARG2(size_t threshold, int num_decrement_predecessors=0))
         : graph_node(g), my_threshold(threshold), my_count(0),
           __TBB_DEPRECATED_LIMITER_ARG4(
               my_tries(0), decrement(),
-              init_decrement_predecessors(nudecrement_predecessors),
-              decrement(nudecrement_predecessors)) {
+              init_decrement_predecessors(num_decrement_predecessors),
+              decrement(num_decrement_predecessors)) {
         initialize();
     }
 
@@ -3986,8 +3986,8 @@ private:
     std::unique_ptr<input_ports_type> my_input_ports;
     std::unique_ptr<output_ports_type> my_output_ports;
 
-    static const size_t NUINPUTS = sizeof...(InputTypes);
-    static const size_t NUOUTPUTS = sizeof...(OutputTypes);
+    static const size_t NUM_INPUTS = sizeof...(InputTypes);
+    static const size_t NUM_OUTPUTS = sizeof...(OutputTypes);
 
 protected:
     void reset_node(reset_flags) __TBB_override {}
@@ -4006,13 +4006,13 @@ public:
 
     template<typename T1, typename T2>
     void set_external_ports(T1&& input_ports_tuple, T2&& output_ports_tuple) {
-        __TBB_STATIC_ASSERT(NUINPUTS == tbb::flow::tuple_size<input_ports_type>::value, "number of arguments does not match number of input ports");
-        __TBB_STATIC_ASSERT(NUOUTPUTS == tbb::flow::tuple_size<output_ports_type>::value, "number of arguments does not match number of output ports");
+        __TBB_STATIC_ASSERT(NUM_INPUTS == tbb::flow::tuple_size<input_ports_type>::value, "number of arguments does not match number of input ports");
+        __TBB_STATIC_ASSERT(NUM_OUTPUTS == tbb::flow::tuple_size<output_ports_type>::value, "number of arguments does not match number of output ports");
         my_input_ports = tbb::internal::make_unique<input_ports_type>(std::forward<T1>(input_ports_tuple));
         my_output_ports = tbb::internal::make_unique<output_ports_type>(std::forward<T2>(output_ports_tuple));
 
-        tbb::internal::fgt_internal_input_alias_helper<T1, NUINPUTS>::alias_port( this, input_ports_tuple);
-        tbb::internal::fgt_internal_output_alias_helper<T2, NUOUTPUTS>::alias_port( this, output_ports_tuple);
+        tbb::internal::fgt_internal_input_alias_helper<T1, NUM_INPUTS>::alias_port( this, input_ports_tuple);
+        tbb::internal::fgt_internal_output_alias_helper<T2, NUM_OUTPUTS>::alias_port( this, output_ports_tuple);
     }
 
     template< typename... NodeTypes >
@@ -4052,7 +4052,7 @@ public:
 
 private:
     std::unique_ptr<input_ports_type> my_input_ports;
-    static const size_t NUINPUTS = sizeof...(InputTypes);
+    static const size_t NUM_INPUTS = sizeof...(InputTypes);
 
 protected:
     void reset_node(reset_flags) __TBB_override {}
@@ -4071,11 +4071,11 @@ public:
 
    template<typename T>
    void set_external_ports(T&& input_ports_tuple) {
-       __TBB_STATIC_ASSERT(NUINPUTS == tbb::flow::tuple_size<input_ports_type>::value, "number of arguments does not match number of input ports");
+       __TBB_STATIC_ASSERT(NUM_INPUTS == tbb::flow::tuple_size<input_ports_type>::value, "number of arguments does not match number of input ports");
 
        my_input_ports = tbb::internal::make_unique<input_ports_type>(std::forward<T>(input_ports_tuple));
 
-       tbb::internal::fgt_internal_input_alias_helper<T, NUINPUTS>::alias_port( this, std::forward<T>(input_ports_tuple));
+       tbb::internal::fgt_internal_input_alias_helper<T, NUM_INPUTS>::alias_port( this, std::forward<T>(input_ports_tuple));
    }
 
     template< typename... NodeTypes >
@@ -4111,7 +4111,7 @@ public:
 
 private:
     std::unique_ptr<output_ports_type> my_output_ports;
-    static const size_t NUOUTPUTS = sizeof...(OutputTypes);
+    static const size_t NUM_OUTPUTS = sizeof...(OutputTypes);
 
 protected:
     void reset_node(reset_flags) __TBB_override {}
@@ -4130,11 +4130,11 @@ public:
 
    template<typename T>
    void set_external_ports(T&& output_ports_tuple) {
-       __TBB_STATIC_ASSERT(NUOUTPUTS == tbb::flow::tuple_size<output_ports_type>::value, "number of arguments does not match number of output ports");
+       __TBB_STATIC_ASSERT(NUM_OUTPUTS == tbb::flow::tuple_size<output_ports_type>::value, "number of arguments does not match number of output ports");
 
        my_output_ports = tbb::internal::make_unique<output_ports_type>(std::forward<T>(output_ports_tuple));
 
-       tbb::internal::fgt_internal_output_alias_helper<T, NUOUTPUTS>::alias_port( this, std::forward<T>(output_ports_tuple));
+       tbb::internal::fgt_internal_output_alias_helper<T, NUM_OUTPUTS>::alias_port( this, std::forward<T>(output_ports_tuple));
    }
 
     template<typename... NodeTypes >

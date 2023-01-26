@@ -17,11 +17,9 @@ void Fun()
 {
 	char * k = NOELLE_NEW char[10];
 }
-int main()
+void main()
 {
 	int * a = NOELLE_NEW int;
 	*a = 5;
 	Fun();
-
-	return 0;
 }

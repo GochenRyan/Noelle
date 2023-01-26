@@ -14,8 +14,8 @@
     limitations under the License.
 */
 
-#ifndef __TBB__flow_graph_itebuffer_impl_H
-#define __TBB__flow_graph_itebuffer_impl_H
+#ifndef __TBB__flow_graph_item_buffer_impl_H
+#define __TBB__flow_graph_item_buffer_impl_H
 
 #ifndef __TBB_flow_graph_H
 #error Do not #include this internal file directly; use public TBB headers instead.
@@ -37,15 +37,15 @@
 namespace internal {
 
     template <typename T, typename A=cache_aligned_allocator<T> >
-    class itebuffer {
+    class item_buffer {
     public:
-        typedef T itetype;
-        enum buffer_itestate { no_item=0, has_item=1, reserved_item=2 };
+        typedef T item_type;
+        enum buffer_item_state { no_item=0, has_item=1, reserved_item=2 };
     protected:
         typedef size_t size_type;
-        typedef typename aligned_pair<itetype, buffer_itestate>::type buffer_itetype;
-        typedef typename tbb::internal::allocator_rebind<A, buffer_itetype>::type allocator_type;
-        buffer_itetype *my_array;
+        typedef typename aligned_pair<item_type, buffer_item_state>::type buffer_item_type;
+        typedef typename tbb::internal::allocator_rebind<A, buffer_item_type>::type allocator_type;
+        buffer_item_type *my_array;
         size_type my_array_size;
         static const size_type initial_buffer_size = 4;
         size_type my_head;
@@ -53,40 +53,40 @@ namespace internal {
 
         bool buffer_empty() const { return my_head == my_tail; }
 
-        buffer_itetype &item(size_type i) {
-            __TBB_ASSERT(!(size_type(&(my_array[i&(my_array_size-1)].second))%alignment_of<buffer_itestate>::value),NULL);
-            __TBB_ASSERT(!(size_type(&(my_array[i&(my_array_size-1)].first))%alignment_of<itetype>::value), NULL);
+        buffer_item_type &item(size_type i) {
+            __TBB_ASSERT(!(size_type(&(my_array[i&(my_array_size-1)].second))%alignment_of<buffer_item_state>::value),NULL);
+            __TBB_ASSERT(!(size_type(&(my_array[i&(my_array_size-1)].first))%alignment_of<item_type>::value), NULL);
             return my_array[i & (my_array_size - 1) ];
         }
 
-        const buffer_itetype &item(size_type i) const {
-            __TBB_ASSERT(!(size_type(&(my_array[i&(my_array_size-1)].second))%alignment_of<buffer_itestate>::value), NULL);
-            __TBB_ASSERT(!(size_type(&(my_array[i&(my_array_size-1)].first))%alignment_of<itetype>::value), NULL);
+        const buffer_item_type &item(size_type i) const {
+            __TBB_ASSERT(!(size_type(&(my_array[i&(my_array_size-1)].second))%alignment_of<buffer_item_state>::value), NULL);
+            __TBB_ASSERT(!(size_type(&(my_array[i&(my_array_size-1)].first))%alignment_of<item_type>::value), NULL);
             return my_array[i & (my_array_size-1)];
         }
 
-        bool my_itevalid(size_type i) const { return (i < my_tail) && (i >= my_head) && (item(i).second != no_item); }
-        bool my_itereserved(size_type i) const { return item(i).second == reserved_item; }
+        bool my_item_valid(size_type i) const { return (i < my_tail) && (i >= my_head) && (item(i).second != no_item); }
+        bool my_item_reserved(size_type i) const { return item(i).second == reserved_item; }
 
         // object management in buffer
-        const itetype &get_my_item(size_t i) const {
-            __TBB_ASSERT(my_itevalid(i),"attempt to get invalid item");
-            itetype *itm = (tbb::internal::punned_cast<itetype *>(&(item(i).first)));
-            return *(const itetype *)itm;
+        const item_type &get_my_item(size_t i) const {
+            __TBB_ASSERT(my_item_valid(i),"attempt to get invalid item");
+            item_type *itm = (tbb::internal::punned_cast<item_type *>(&(item(i).first)));
+            return *(const item_type *)itm;
         }
 
         // may be called with an empty slot or a slot that has already been constructed into.
-        void set_my_item(size_t i, const itetype &o) {
+        void set_my_item(size_t i, const item_type &o) {
             if(item(i).second != no_item) {
                 destroy_item(i);
             }
-            new(&(item(i).first)) itetype(o);
+            new(&(item(i).first)) item_type(o);
             item(i).second = has_item;
         }
 
         // destructively-fetch an object from the buffer
-        void fetch_item(size_t i, itetype &o) {
-            __TBB_ASSERT(my_itevalid(i), "Trying to fetch an empty slot");
+        void fetch_item(size_t i, item_type &o) {
+            __TBB_ASSERT(my_item_valid(i), "Trying to fetch an empty slot");
             o = get_my_item(i);  // could have std::move assign semantics
             destroy_item(i);
         }
@@ -95,17 +95,17 @@ namespace internal {
         // the moved-from slot must exist and not be reserved.  The after, from will be empty,
         // to will be occupied but not reserved
         void move_item(size_t to, size_t from) {
-            __TBB_ASSERT(!my_itevalid(to), "Trying to move to a non-empty slot");
-            __TBB_ASSERT(my_itevalid(from), "Trying to move from an empty slot");
+            __TBB_ASSERT(!my_item_valid(to), "Trying to move to a non-empty slot");
+            __TBB_ASSERT(my_item_valid(from), "Trying to move from an empty slot");
             set_my_item(to, get_my_item(from));   // could have std::move semantics
             destroy_item(from);
 
         }
 
         // put an item in an empty slot.  Return true if successful, else false
-        bool place_item(size_t here, const itetype &me) {
+        bool place_item(size_t here, const item_type &me) {
 #if !TBB_DEPRECATED_SEQUENCER_DUPLICATES
-            if(my_itevalid(here)) return false;
+            if(my_item_valid(here)) return false;
 #endif
             set_my_item(here, me);
             return true;
@@ -113,35 +113,35 @@ namespace internal {
 
         // could be implemented with std::move semantics
         void swap_items(size_t i, size_t j) {
-            __TBB_ASSERT(my_itevalid(i) && my_itevalid(j), "attempt to swap invalid item(s)");
-            itetype temp = get_my_item(i);
+            __TBB_ASSERT(my_item_valid(i) && my_item_valid(j), "attempt to swap invalid item(s)");
+            item_type temp = get_my_item(i);
             set_my_item(i, get_my_item(j));
             set_my_item(j, temp);
         }
 
         void destroy_item(size_type i) {
-            __TBB_ASSERT(my_itevalid(i), "destruction of invalid item");
-            (tbb::internal::punned_cast<itetype *>(&(item(i).first)))->~itetype();
+            __TBB_ASSERT(my_item_valid(i), "destruction of invalid item");
+            (tbb::internal::punned_cast<item_type *>(&(item(i).first)))->~item_type();
             item(i).second = no_item;
         }
 
         // returns the front element
-        const itetype& front() const
+        const item_type& front() const
         {
-            __TBB_ASSERT(my_itevalid(my_head), "attempt to fetch head non-item");
+            __TBB_ASSERT(my_item_valid(my_head), "attempt to fetch head non-item");
             return get_my_item(my_head);
         }
 
         // returns  the back element
-        const itetype& back() const
+        const item_type& back() const
         {
-            __TBB_ASSERT(my_itevalid(my_tail - 1), "attempt to fetch head non-item");
+            __TBB_ASSERT(my_item_valid(my_tail - 1), "attempt to fetch head non-item");
             return get_my_item(my_tail - 1);
         }
 
         // following methods are for reservation of the front of a buffer.
-        void reserve_item(size_type i) { __TBB_ASSERT(my_itevalid(i) && !my_itereserved(i), "item cannot be reserved"); item(i).second = reserved_item; }
-        void release_item(size_type i) { __TBB_ASSERT(my_itereserved(i), "item is not reserved"); item(i).second = has_item; }
+        void reserve_item(size_type i) { __TBB_ASSERT(my_item_valid(i) && !my_item_reserved(i), "item cannot be reserved"); item(i).second = reserved_item; }
+        void release_item(size_type i) { __TBB_ASSERT(my_item_reserved(i), "item is not reserved"); item(i).second = has_item; }
 
         void destroy_front() { destroy_item(my_head); ++my_head; }
         void destroy_back() { destroy_item(my_tail-1); --my_tail; }
@@ -155,23 +155,23 @@ namespace internal {
         bool buffer_full() { return size() >= capacity(); }
 
         //! Grows the internal array.
-        void grow_my_array( size_t minimusize ) {
+        void grow_my_array( size_t minimum_size ) {
             // test that we haven't made the structure inconsistent.
             __TBB_ASSERT(capacity() >= my_tail - my_head, "total items exceed capacity");
             size_type new_size = my_array_size ? 2*my_array_size : initial_buffer_size;
-            while( new_size<minimusize )
+            while( new_size<minimum_size )
                 new_size*=2;
 
-            buffer_itetype* new_array = allocator_type().allocate(new_size);
+            buffer_item_type* new_array = allocator_type().allocate(new_size);
 
             // initialize validity to "no"
             for( size_type i=0; i<new_size; ++i ) { new_array[i].second = no_item; }
 
             for( size_type i=my_head; i<my_tail; ++i) {
-                if(my_itevalid(i)) {  // sequencer_node may have empty slots
+                if(my_item_valid(i)) {  // sequencer_node may have empty slots
                     // placement-new copy-construct; could be std::move
                     char *new_space = (char *)&(new_array[i&(new_size-1)].first);
-                    (void)new(new_space) itetype(get_my_item(i));
+                    (void)new(new_space) item_type(get_my_item(i));
                     new_array[i&(new_size-1)].second = item(i).second;
                 }
             }
@@ -182,7 +182,7 @@ namespace internal {
             my_array_size = new_size;
         }
 
-        bool push_back(itetype &v) {
+        bool push_back(item_type &v) {
             if(buffer_full()) {
                 grow_my_array(size() + 1);
             }
@@ -191,8 +191,8 @@ namespace internal {
             return true;
         }
 
-        bool pop_back(itetype &v) {
-            if (!my_itevalid(my_tail-1)) {
+        bool pop_back(item_type &v) {
+            if (!my_item_valid(my_tail-1)) {
                 return false;
             }
             v = this->back();
@@ -200,8 +200,8 @@ namespace internal {
             return true;
         }
 
-        bool pop_front(itetype &v) {
-            if(!my_itevalid(my_head)) {
+        bool pop_front(item_type &v) {
+            if(!my_item_valid(my_head)) {
                 return false;
             }
             v = this->front();
@@ -214,7 +214,7 @@ namespace internal {
         void clean_up_buffer(bool reset_pointers) {
             if (my_array) {
                 for( size_type i=my_head; i<my_tail; ++i ) {
-                    if(my_itevalid(i))
+                    if(my_item_valid(i))
                         destroy_item(i);
                 }
                 allocator_type().deallocate(my_array,my_array_size);
@@ -227,12 +227,12 @@ namespace internal {
 
     public:
         //! Constructor
-        itebuffer( ) : my_array(NULL), my_array_size(0),
+        item_buffer( ) : my_array(NULL), my_array_size(0),
             my_head(0), my_tail(0) {
             grow_my_array(initial_buffer_size);
         }
 
-        ~itebuffer() {
+        ~item_buffer() {
             clean_up_buffer(/*reset_pointers*/true);
         }
 
@@ -240,22 +240,22 @@ namespace internal {
 
     };
 
-    //! itebuffer with reservable front-end.  NOTE: if reserving, do not
+    //! item_buffer with reservable front-end.  NOTE: if reserving, do not
     //* complete operation with pop_front(); use consume_front().
     //* No synchronization built-in.
     template<typename T, typename A=cache_aligned_allocator<T> >
-    class reservable_itebuffer : public itebuffer<T, A> {
+    class reservable_item_buffer : public item_buffer<T, A> {
     protected:
-        using itebuffer<T, A>::my_itevalid;
-        using itebuffer<T, A>::my_head;
+        using item_buffer<T, A>::my_item_valid;
+        using item_buffer<T, A>::my_head;
 
     public:
-        reservable_itebuffer() : itebuffer<T, A>(), my_reserved(false) {}
-        void reset() {my_reserved = false; itebuffer<T,A>::reset(); }
+        reservable_item_buffer() : item_buffer<T, A>(), my_reserved(false) {}
+        void reset() {my_reserved = false; item_buffer<T,A>::reset(); }
     protected:
 
         bool reserve_front(T &v) {
-            if(my_reserved || !my_itevalid(this->my_head)) return false;
+            if(my_reserved || !my_item_valid(this->my_head)) return false;
             my_reserved = true;
             // reserving the head
             v = this->front();
@@ -280,4 +280,4 @@ namespace internal {
 
 }  // namespace internal
 
-#endif // __TBB__flow_graph_itebuffer_impl_H
+#endif // __TBB__flow_graph_item_buffer_impl_H

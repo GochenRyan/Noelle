@@ -21,7 +21,7 @@
 #error Do not #include this internal file directly; use public TBB headers instead.
 #endif
 
-#include "_flow_graph_itebuffer_impl.h"
+#include "_flow_graph_item_buffer_impl.h"
 
 //! @cond INTERNAL
 namespace internal {
@@ -31,14 +31,14 @@ namespace internal {
     using tbb::internal::aggregator;
 
      template< typename T, typename A >
-     class function_input_queue : public itebuffer<T,A> {
+     class function_input_queue : public item_buffer<T,A> {
      public:
          bool empty() const {
              return this->buffer_empty();
          }
 
          const T& front() const {
-             return this->itebuffer<T, A>::front();
+             return this->item_buffer<T, A>::front();
          }
 
          bool pop( T& t ) {
@@ -59,7 +59,7 @@ namespace internal {
     //  call and any handling of the result.
     template< typename Input, typename Policy, typename A, typename ImplType >
     class function_input_base : public receiver<Input>, tbb::internal::no_assign {
-        enum op_type {reg_pred, repred, try_fwd, tryput_bypass, app_body_bypass, occupy_concurrency
+        enum op_type {reg_pred, rem_pred, try_fwd, tryput_bypass, app_body_bypass, occupy_concurrency
 #if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
             , add_blt_pred, del_blt_pred,
             blt_pred_cnt, blt_pred_cpy   // create vector copies of preds and succs
@@ -128,7 +128,7 @@ namespace internal {
 
         //! Removes src from the list of cached predecessors.
         bool remove_predecessor( predecessor_type &src ) __TBB_override {
-            operation_type op_data(repred);
+            operation_type op_data(rem_pred);
             op_data.r = &src;
             my_aggregator.execute(&op_data);
             return true;
@@ -228,7 +228,7 @@ namespace internal {
         friend class internal::aggregating_functor<class_type, operation_type>;
         aggregator< handler_type, operation_type > my_aggregator;
 
-        task* perforqueued_requests() {
+        task* perform_queued_requests() {
             task* new_task = NULL;
             if(my_queue) {
                 if(!my_queue->empty()) {
@@ -261,7 +261,7 @@ namespace internal {
                         spawn_forward_task();
                     }
                     break;
-                case repred:
+                case rem_pred:
                     my_predecessors.remove(*(tmp->r));
                     __TBB_store_with_release(tmp->status, SUCCEEDED);
                     break;
@@ -270,7 +270,7 @@ namespace internal {
                         __TBB_ASSERT(my_max_concurrency != 0, NULL);
                         --my_concurrency;
                         if(my_concurrency<my_max_concurrency)
-                            tmp->bypass_t = perforqueued_requests();
+                            tmp->bypass_t = perform_queued_requests();
 
                         __TBB_store_with_release(tmp->status, SUCCEEDED);
                     }
@@ -329,7 +329,7 @@ namespace internal {
         void internal_forward(operation_type *op) {
             op->bypass_t = NULL;
             if (my_concurrency < my_max_concurrency || !my_max_concurrency)
-                op->bypass_t = perforqueued_requests();
+                op->bypass_t = perform_queued_requests();
             if(op->bypass_t)
                 __TBB_store_with_release(op->status, SUCCEEDED);
             else {

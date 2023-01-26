@@ -98,14 +98,14 @@ inline std::string device_info<std::string>(cl_device_id d, cl_device_info i) {
 }
 
 template <typename T>
-T platforinfo(cl_platforid p, cl_platforinfo i) {
+T platform_info(cl_platform_id p, cl_platform_info i) {
     T res;
     enforce_cl_retcode(clGetPlatformInfo(p, i, sizeof(res), &res, NULL), "Failed to get OpenCL platform information");
     return res;
 }
 
 template <>
-inline std::string platforinfo<std::string>(cl_platforid p, cl_platforinfo  i) {
+inline std::string platform_info<std::string>(cl_platform_id p, cl_platform_info  i) {
     size_t required;
     enforce_cl_retcode(clGetPlatformInfo(p, i, 0, NULL, &required), "Failed to get OpenCL platform information");
 
@@ -130,20 +130,20 @@ public:
 
     opencl_device( cl_device_id cl_d_id, device_id_type device_id ) : my_device_id( device_id ), my_cl_device_id( cl_d_id ), my_cl_command_queue( NULL ) {}
 
-    std::string platforprofile() const {
-        return platforinfo<std::string>( platforid(), CL_PLATFORPROFILE );
+    std::string platform_profile() const {
+        return platform_info<std::string>( platform_id(), CL_PLATFORM_PROFILE );
     }
-    std::string platforversion() const {
-        return platforinfo<std::string>( platforid(), CL_PLATFORVERSION );
+    std::string platform_version() const {
+        return platform_info<std::string>( platform_id(), CL_PLATFORM_VERSION );
     }
-    std::string platforname() const {
-        return platforinfo<std::string>( platforid(), CL_PLATFORNAME );
+    std::string platform_name() const {
+        return platform_info<std::string>( platform_id(), CL_PLATFORM_NAME );
     }
-    std::string platforvendor() const {
-        return platforinfo<std::string>( platforid(), CL_PLATFORVENDOR );
+    std::string platform_vendor() const {
+        return platform_info<std::string>( platform_id(), CL_PLATFORM_VENDOR );
     }
-    std::string platforextensions() const {
-        return platforinfo<std::string>( platforid(), CL_PLATFOREXTENSIONS );
+    std::string platform_extensions() const {
+        return platform_info<std::string>( platform_id(), CL_PLATFORM_EXTENSIONS );
     }
 
     template <typename T>
@@ -180,8 +180,8 @@ public:
 #endif /* CL_VERSION_2_0 */
             return false;
     }
-    std::array<size_t, 3> max_work_itesizes() const {
-        return device_info<std::array<size_t, 3>>( my_cl_device_id, CL_DEVICE_MAX_WORK_ITESIZES );
+    std::array<size_t, 3> max_work_item_sizes() const {
+        return device_info<std::array<size_t, 3>>( my_cl_device_id, CL_DEVICE_MAX_WORK_ITEM_SIZES );
     }
     size_t max_work_group_size() const {
         return device_info<size_t>( my_cl_device_id, CL_DEVICE_MAX_WORK_GROUP_SIZE );
@@ -239,8 +239,8 @@ public:
         my_cl_command_queue = cmd_queue;
     }
 
-    cl_platforid platforid() const {
-        return device_info<cl_platforid>( my_cl_device_id, CL_DEVICE_PLATFORM );
+    cl_platform_id platform_id() const {
+        return device_info<cl_platform_id>( my_cl_device_id, CL_DEVICE_PLATFORM );
     }
 
 private:
@@ -294,32 +294,32 @@ namespace internal {
 inline opencl_device_list find_available_devices() {
     opencl_device_list opencl_devices;
 
-    cl_uint nuplatforms;
-    enforce_cl_retcode(clGetPlatformIDs(0, NULL, &nuplatforms), "clGetPlatformIDs failed");
+    cl_uint num_platforms;
+    enforce_cl_retcode(clGetPlatformIDs(0, NULL, &num_platforms), "clGetPlatformIDs failed");
 
-    std::vector<cl_platforid> platforms(nuplatforms);
-    enforce_cl_retcode(clGetPlatformIDs(nuplatforms, platforms.data(), NULL), "clGetPlatformIDs failed");
+    std::vector<cl_platform_id> platforms(num_platforms);
+    enforce_cl_retcode(clGetPlatformIDs(num_platforms, platforms.data(), NULL), "clGetPlatformIDs failed");
 
-    cl_uint nudevices;
-    std::vector<cl_platforid>::iterator platforms_it = platforms.begin();
-    cl_uint nuall_devices = 0;
+    cl_uint num_devices;
+    std::vector<cl_platform_id>::iterator platforms_it = platforms.begin();
+    cl_uint num_all_devices = 0;
     while (platforms_it != platforms.end()) {
-        cl_int err = clGetDeviceIDs(*platforms_it, CL_DEVICE_TYPE_ALL, 0, NULL, &nudevices);
+        cl_int err = clGetDeviceIDs(*platforms_it, CL_DEVICE_TYPE_ALL, 0, NULL, &num_devices);
         if (err == CL_DEVICE_NOT_FOUND) {
             platforms_it = platforms.erase(platforms_it);
         }
         else {
             enforce_cl_retcode(err, "clGetDeviceIDs failed");
-            nuall_devices += nudevices;
+            num_all_devices += num_devices;
             ++platforms_it;
         }
     }
 
-    std::vector<cl_device_id> devices(nuall_devices);
+    std::vector<cl_device_id> devices(num_all_devices);
     std::vector<cl_device_id>::iterator devices_it = devices.begin();
     for (auto p = platforms.begin(); p != platforms.end(); ++p) {
-        enforce_cl_retcode(clGetDeviceIDs((*p), CL_DEVICE_TYPE_ALL, (cl_uint)std::distance(devices_it, devices.end()), &*devices_it, &nudevices), "clGetDeviceIDs failed");
-        devices_it += nudevices;
+        enforce_cl_retcode(clGetDeviceIDs((*p), CL_DEVICE_TYPE_ALL, (cl_uint)std::distance(devices_it, devices.end()), &*devices_it, &num_devices), "clGetDeviceIDs failed");
+        devices_it += num_devices;
     }
 
     for (auto d = devices.begin(); d != devices.end(); ++d) {
@@ -503,11 +503,11 @@ private:
 };
 
 template <typename K, typename T, typename Factory>
-K key_fromessage( const opencl_async_msg<T, Factory> &dmsg ) {
-    using tbb::flow::key_fromessage;
+K key_from_message( const opencl_async_msg<T, Factory> &dmsg ) {
+    using tbb::flow::key_from_message;
     const T &t = dmsg.data( false );
     __TBB_STATIC_ASSERT( true, "" );
-    return key_fromessage<K, T>( t );
+    return key_from_message<K, T>( t );
 }
 
 template <typename Factory>
@@ -604,7 +604,7 @@ class opencl_buffer_impl : public opencl_memory<Factory> {
 public:
     opencl_buffer_impl( size_t size, Factory& f ) : opencl_memory<Factory>( f ), my_size( size ) {
         cl_int err;
-        this->my_cl_mem = clCreateBuffer( this->my_factory->context(), CL_MEALLOC_HOST_PTR, size, NULL, &err );
+        this->my_cl_mem = clCreateBuffer( this->my_factory->context(), CL_MEM_ALLOC_HOST_PTR, size, NULL, &err );
         enforce_cl_retcode( err, "Failed to create an OpenCL buffer" );
     }
 
@@ -759,20 +759,20 @@ typename std::enable_if<!is_native_object_type<T>::value, T>::type get_native_ob
 template <typename T, typename Factory>
 typename std::enable_if<is_memory_object_type<T>::value>::type send_if_memory_object( opencl_device device, opencl_async_msg<T, Factory> &dmsg ) {
     const T &t = dmsg.data( false );
-    typedef typename T::memory_object_type meobj_t;
-    meobj_t meobj = t.memory_object();
-    opencl_async_msg<meobj_t, Factory> d( meobj );
+    typedef typename T::memory_object_type mem_obj_t;
+    mem_obj_t mem_obj = t.memory_object();
+    opencl_async_msg<mem_obj_t, Factory> d( mem_obj );
     if ( dmsg.get_event() ) d.set_event( *dmsg.get_event() );
-    meobj.send( device, d );
+    mem_obj.send( device, d );
     if ( d.get_event() ) dmsg.set_event( *d.get_event() );
 }
 
 template <typename T>
 typename std::enable_if<is_memory_object_type<T>::value>::type send_if_memory_object( opencl_device device, T &t ) {
-    typedef typename T::memory_object_type meobj_t;
-    meobj_t meobj = t.memory_object();
-    opencl_async_msg<meobj_t, typename meobj_t::opencl_factory_type> dmsg( meobj );
-    meobj.send( device, dmsg );
+    typedef typename T::memory_object_type mem_obj_t;
+    mem_obj_t mem_obj = t.memory_object();
+    opencl_async_msg<mem_obj_t, typename mem_obj_t::opencl_factory_type> dmsg( mem_obj );
+    mem_obj.send( device, dmsg );
 }
 
 template <typename T>
@@ -782,11 +782,11 @@ typename std::enable_if<!is_memory_object_type<T>::value>::type send_if_memory_o
 template <typename T, typename Factory>
 typename std::enable_if<is_memory_object_type<T>::value>::type receive_if_memory_object( const opencl_async_msg<T, Factory> &dmsg ) {
     const T &t = dmsg.data( false );
-    typedef typename T::memory_object_type meobj_t;
-    meobj_t meobj = t.memory_object();
-    opencl_async_msg<meobj_t, Factory> d( meobj );
+    typedef typename T::memory_object_type mem_obj_t;
+    mem_obj_t mem_obj = t.memory_object();
+    opencl_async_msg<mem_obj_t, Factory> d( mem_obj );
     if ( dmsg.get_event() ) d.set_event( *dmsg.get_event() );
-    meobj.receive( d );
+    mem_obj.receive( d );
     if ( d.get_event() ) dmsg.set_event( *d.get_event() );
 }
 
@@ -919,32 +919,32 @@ private:
     }
 
     // --------- Kernel argument & event list helpers --------- //
-    template <size_t NUARGS, typename T>
-    void process_one_arg( const kernel_type& kernel, std::array<cl_event, NUARGS>&, int&, int& place, const T& t ) {
+    template <size_t NUM_ARGS, typename T>
+    void process_one_arg( const kernel_type& kernel, std::array<cl_event, NUM_ARGS>&, int&, int& place, const T& t ) {
         auto p = get_native_object(t);
         enforce_cl_retcode( clSetKernelArg(kernel.my_cl_kernel, place++, sizeof(p), &p), "Failed to set a kernel argument" );
     }
 
-    template <size_t NUARGS, typename T, typename F>
-    void process_one_arg( const kernel_type& kernel, std::array<cl_event, NUARGS>& events, int& nuevents, int& place, const opencl_async_msg<T, F>& msg ) {
-        __TBB_ASSERT((static_cast<typename std::array<cl_event, NUARGS>::size_type>(nuevents) < events.size()), NULL);
+    template <size_t NUM_ARGS, typename T, typename F>
+    void process_one_arg( const kernel_type& kernel, std::array<cl_event, NUM_ARGS>& events, int& num_events, int& place, const opencl_async_msg<T, F>& msg ) {
+        __TBB_ASSERT((static_cast<typename std::array<cl_event, NUM_ARGS>::size_type>(num_events) < events.size()), NULL);
 
         const cl_event * const e = msg.get_event();
         if (e != NULL) {
-            events[nuevents++] = *e;
+            events[num_events++] = *e;
         }
 
-        process_one_arg( kernel, events, nuevents, place, msg.data(false) );
+        process_one_arg( kernel, events, num_events, place, msg.data(false) );
     }
 
-    template <size_t NUARGS, typename T, typename ...Rest>
-    void process_arg_list( const kernel_type& kernel, std::array<cl_event, NUARGS>& events, int& nuevents, int& place, const T& t, const Rest&... args ) {
-        process_one_arg( kernel, events, nuevents, place, t );
-        process_arg_list( kernel, events, nuevents, place, args... );
+    template <size_t NUM_ARGS, typename T, typename ...Rest>
+    void process_arg_list( const kernel_type& kernel, std::array<cl_event, NUM_ARGS>& events, int& num_events, int& place, const T& t, const Rest&... args ) {
+        process_one_arg( kernel, events, num_events, place, t );
+        process_arg_list( kernel, events, num_events, place, args... );
     }
 
-    template <size_t NUARGS>
-    void process_arg_list( const kernel_type&, std::array<cl_event, NUARGS>&, int&, int& ) {}
+    template <size_t NUM_ARGS>
+    void process_arg_list( const kernel_type&, std::array<cl_event, NUM_ARGS>&, int&, int& ) {}
     // ------------------------------------------- //
     template <typename T>
     void update_one_arg( cl_event, T& ) {}
@@ -966,11 +966,11 @@ public:
     template <typename ...Args>
     void send_kernel( opencl_device device, const kernel_type& kernel, const range_type& work_size, Args&... args ) {
         std::array<cl_event, sizeof...(Args)> events;
-        int nuevents = 0;
+        int num_events = 0;
         int place = 0;
-        process_arg_list( kernel, events, nuevents, place, args... );
+        process_arg_list( kernel, events, num_events, place, args... );
 
-        const cl_event e = send_kernel_impl( device, kernel.my_cl_kernel, work_size, nuevents, events.data() );
+        const cl_event e = send_kernel_impl( device, kernel.my_cl_kernel, work_size, num_events, events.data() );
 
         update_arg_list(e, args...);
 
@@ -990,7 +990,7 @@ public:
 
 private:
     cl_event send_kernel_impl( opencl_device device, const cl_kernel& kernel,
-        const range_type& work_size, cl_uint nuevents, cl_event* event_list ) {
+        const range_type& work_size, cl_uint num_events, cl_event* event_list ) {
         const typename range_type::nd_range_type g_offset = { { 0, 0, 0 } };
         const typename range_type::nd_range_type& g_size = work_size.global_range();
         const typename range_type::nd_range_type& l_size = work_size.local_range();
@@ -999,19 +999,19 @@ private:
         cl_event event;
         enforce_cl_retcode(
             clEnqueueNDRangeKernel( device.my_cl_command_queue, kernel, s,
-                g_offset.data(), g_size.data(), l_size[0] ? l_size.data() : NULL, nuevents, nuevents ? event_list : NULL, &event ),
+                g_offset.data(), g_size.data(), l_size[0] ? l_size.data() : NULL, num_events, num_events ? event_list : NULL, &event ),
             "Failed to enqueue a kernel" );
         return event;
     }
 
     // ------------------------------------------- //
     template <typename T>
-    bool get_event_froone_arg( cl_event&, const T& ) {
+    bool get_event_from_one_arg( cl_event&, const T& ) {
         return false;
     }
 
     template <typename T, typename F>
-    bool get_event_froone_arg( cl_event& e, const opencl_async_msg<T, F>& msg) {
+    bool get_event_from_one_arg( cl_event& e, const opencl_async_msg<T, F>& msg) {
         cl_event const *e_ptr = msg.get_event();
 
         if ( e_ptr != NULL ) {
@@ -1023,15 +1023,15 @@ private:
     }
 
     template <typename T, typename ...Rest>
-    bool get_event_froargs( cl_event& e, const T& t, const Rest&... args ) {
-        if ( get_event_froone_arg( e, t ) ) {
+    bool get_event_from_args( cl_event& e, const T& t, const Rest&... args ) {
+        if ( get_event_from_one_arg( e, t ) ) {
             return true;
         }
 
-        return get_event_froargs( e, args... );
+        return get_event_from_args( e, args... );
     }
 
-    bool get_event_froargs( cl_event& ) {
+    bool get_event_from_args( cl_event& ) {
         return false;
     }
     // ------------------------------------------- //
@@ -1064,7 +1064,7 @@ public:
     void finalize( opencl_device device, FinalizeFn fn, Args&... args ) {
         cl_event e;
 
-        if ( get_event_froargs( e, args... ) ) {
+        if ( get_event_from_args( e, args... ) ) {
             enforce_cl_retcode( clSetEventCallback( e, CL_COMPLETE, finalize_callback,
                 new finalize_fn_leaf<FinalizeFn>(fn) ), "Failed to set a callback" );
         }
@@ -1102,16 +1102,16 @@ private:
         }
 
         enforce_cl_retcode(my_devices.size() ? CL_SUCCESS : CL_INVALID_DEVICE, "No devices in the device list");
-        cl_platforid platforid = my_devices.begin()->platforid();
+        cl_platform_id platform_id = my_devices.begin()->platform_id();
         for (opencl_device_list::iterator it = ++my_devices.begin(); it != my_devices.end(); ++it)
-            enforce_cl_retcode(it->platforid() == platforid ? CL_SUCCESS : CL_INVALID_PLATFORM, "All devices should be in the same platform");
+            enforce_cl_retcode(it->platform_id() == platform_id ? CL_SUCCESS : CL_INVALID_PLATFORM, "All devices should be in the same platform");
 
         std::vector<cl_device_id> cl_device_ids;
         for (auto d = my_devices.begin(); d != my_devices.end(); ++d) {
             cl_device_ids.push_back((*d).my_cl_device_id);
         }
 
-        cl_context_properties context_properties[3] = { CL_CONTEXT_PLATFORM, (cl_context_properties)platforid, (cl_context_properties)NULL };
+        cl_context_properties context_properties[3] = { CL_CONTEXT_PLATFORM, (cl_context_properties)platform_id, (cl_context_properties)NULL };
         cl_int err;
         cl_context ctx = clCreateContext(context_properties,
             (cl_uint)cl_device_ids.size(),
@@ -1194,9 +1194,9 @@ struct default_device_selector {
 struct default_device_filter {
     opencl_device_list operator()(const opencl_device_list &devices) {
         opencl_device_list dl;
-        cl_platforid platforid = devices.begin()->platforid();
+        cl_platform_id platform_id = devices.begin()->platform_id();
         for (opencl_device_list::const_iterator it = devices.cbegin(); it != devices.cend(); ++it) {
-            if (it->platforid() == platforid) {
+            if (it->platform_id() == platform_id) {
                 dl.add(*it);
             }
         }
@@ -1225,7 +1225,7 @@ template <typename T, typename Factory>
 opencl_buffer<T, Factory>::opencl_buffer( size_t size ) : my_impl( std::make_shared<impl_type>( size*sizeof(T), opencl_info::default_factory() ) ) {}
 
 
-enum class opencl_progratype {
+enum class opencl_program_type {
     SOURCE,
     PRECOMPILED,
     SPIR
@@ -1236,14 +1236,14 @@ class __TBB_DEPRECATED_IN_VERBOSE_MODE opencl_program : tbb::internal::no_assign
 public:
     typedef typename Factory::kernel_type kernel_type;
 
-    opencl_program( Factory& factory, opencl_progratype type, const std::string& prograname ) : my_factory( factory ), my_type(type) , my_arg_str( prograname) {}
-    opencl_program( Factory& factory, const char* prograname ) : opencl_program( factory, std::string( prograname ) ) {}
-    opencl_program( Factory& factory, const std::string& prograname ) : opencl_program( factory, opencl_progratype::SOURCE, prograname ) {}
+    opencl_program( Factory& factory, opencl_program_type type, const std::string& program_name ) : my_factory( factory ), my_type(type) , my_arg_str( program_name) {}
+    opencl_program( Factory& factory, const char* program_name ) : opencl_program( factory, std::string( program_name ) ) {}
+    opencl_program( Factory& factory, const std::string& program_name ) : opencl_program( factory, opencl_program_type::SOURCE, program_name ) {}
 
-    opencl_program( opencl_progratype type, const std::string& prograname ) : opencl_program( opencl_info::default_factory(), type, prograname ) {}
-    opencl_program( const char* prograname ) : opencl_program( opencl_info::default_factory(), prograname ) {}
-    opencl_program( const std::string& prograname ) : opencl_program( opencl_info::default_factory(), prograname ) {}
-    opencl_program( opencl_progratype type ) : opencl_program( opencl_info::default_factory(), type ) {}
+    opencl_program( opencl_program_type type, const std::string& program_name ) : opencl_program( opencl_info::default_factory(), type, program_name ) {}
+    opencl_program( const char* program_name ) : opencl_program( opencl_info::default_factory(), program_name ) {}
+    opencl_program( const std::string& program_name ) : opencl_program( opencl_info::default_factory(), program_name ) {}
+    opencl_program( opencl_program_type type ) : opencl_program( opencl_info::default_factory(), type ) {}
 
     opencl_program( const opencl_program &src ) : my_factory( src.my_factory ), my_type( src.type ), my_arg_str( src.my_arg_str ), my_cl_program( src.my_cl_program ) {
         // Set my_do_once_flag to the called state.
@@ -1291,32 +1291,32 @@ private:
         std::string my_content;
     };
 
-    class opencl_prograbuilder {
+    class opencl_program_builder {
     public:
         typedef void (CL_CALLBACK *cl_callback_type)(cl_program, void*);
-        opencl_prograbuilder( Factory& f, const std::string& name, cl_program program,
-                                cl_uint nudevices, cl_device_id* device_list,
+        opencl_program_builder( Factory& f, const std::string& name, cl_program program,
+                                cl_uint num_devices, cl_device_id* device_list,
                                 const char* options, cl_callback_type callback,
                                 void* user_data ) {
-            cl_int err = clBuildProgram( program, nudevices, device_list, options,
+            cl_int err = clBuildProgram( program, num_devices, device_list, options,
                                          callback, user_data );
             if( err == CL_SUCCESS )
                 return;
             std::string str = std::string( "Failed to build program: " ) + name;
-            if ( err == CL_BUILD_PROGRAFAILURE ) {
+            if ( err == CL_BUILD_PROGRAM_FAILURE ) {
                 const opencl_device_list &devices = f.devices();
                 for ( auto d = devices.begin(); d != devices.end(); ++d ) {
                     std::cerr << "Build log for device: " << (*d).name() << std::endl;
                     size_t log_size;
                     cl_int query_err = clGetProgramBuildInfo(
-                        program, (*d).my_cl_device_id, CL_PROGRABUILD_LOG, 0, NULL,
+                        program, (*d).my_cl_device_id, CL_PROGRAM_BUILD_LOG, 0, NULL,
                         &log_size );
                     enforce_cl_retcode( query_err, "Failed to get build log size" );
                     if( log_size ) {
                         std::vector<char> output;
                         output.resize( log_size );
                         query_err = clGetProgramBuildInfo(
-                            program, (*d).my_cl_device_id, CL_PROGRABUILD_LOG,
+                            program, (*d).my_cl_device_id, CL_PROGRAM_BUILD_LOG,
                             output.size(), output.data(), NULL );
                         enforce_cl_retcode( query_err, "Failed to get build output" );
                         std::cerr << output.data() << std::endl;
@@ -1332,29 +1332,29 @@ private:
     class opencl_device_filter {
     public:
         template<typename Filter>
-        opencl_device_filter( cl_uint& nudevices, cl_device_id* device_list,
+        opencl_device_filter( cl_uint& num_devices, cl_device_id* device_list,
                               Filter filter, const char* message ) {
-            for ( cl_uint i = 0; i < nudevices; ++i )
+            for ( cl_uint i = 0; i < num_devices; ++i )
                 if ( filter(device_list[i]) ) {
-                    device_list[i--] = device_list[--nudevices];
+                    device_list[i--] = device_list[--num_devices];
                 }
-            if ( !nudevices )
+            if ( !num_devices )
                 enforce_cl_retcode( CL_DEVICE_NOT_AVAILABLE, message );
         }
     };
 
     void init( const std::string& ) const {
-        cl_uint nudevices;
-        enforce_cl_retcode( clGetContextInfo( my_factory.context(), CL_CONTEXT_NUDEVICES, sizeof( nudevices ), &nudevices, NULL ),
+        cl_uint num_devices;
+        enforce_cl_retcode( clGetContextInfo( my_factory.context(), CL_CONTEXT_NUM_DEVICES, sizeof( num_devices ), &num_devices, NULL ),
             "Failed to get OpenCL context info" );
-        if ( !nudevices )
+        if ( !num_devices )
             enforce_cl_retcode( CL_DEVICE_NOT_FOUND, "No supported devices found" );
-        cl_device_id *device_list = (cl_device_id *)alloca( nudevices*sizeof( cl_device_id ) );
-        enforce_cl_retcode( clGetContextInfo( my_factory.context(), CL_CONTEXT_DEVICES, nudevices*sizeof( cl_device_id ), device_list, NULL ),
+        cl_device_id *device_list = (cl_device_id *)alloca( num_devices*sizeof( cl_device_id ) );
+        enforce_cl_retcode( clGetContextInfo( my_factory.context(), CL_CONTEXT_DEVICES, num_devices*sizeof( cl_device_id ), device_list, NULL ),
             "Failed to get OpenCL context info" );
         const char *options = NULL;
         switch ( my_type ) {
-        case opencl_progratype::SOURCE: {
+        case opencl_program_type::SOURCE: {
             file_reader fr( my_arg_str );
             const char *s[] = { fr.content() };
             const size_t l[] = { fr.length() };
@@ -1362,25 +1362,25 @@ private:
             my_cl_program = clCreateProgramWithSource( my_factory.context(), 1, s, l, &err );
             enforce_cl_retcode( err, std::string( "Failed to create program: " ) + my_arg_str );
             opencl_device_filter(
-                nudevices, device_list,
+                num_devices, device_list,
                 []( const opencl_device& d ) -> bool {
                     return !d.compiler_available() || !d.linker_available();
                 }, "No one device supports building program from sources" );
-            opencl_prograbuilder(
-                my_factory, my_arg_str, my_cl_program, nudevices, device_list,
+            opencl_program_builder(
+                my_factory, my_arg_str, my_cl_program, num_devices, device_list,
                 options, /*callback*/ NULL, /*user data*/NULL );
             break;
         }
-        case opencl_progratype::SPIR:
+        case opencl_program_type::SPIR:
             options = "-x spir";
-        case opencl_progratype::PRECOMPILED: {
+        case opencl_program_type::PRECOMPILED: {
             file_reader fr( my_arg_str );
             std::vector<const unsigned char*> s(
-                nudevices, reinterpret_cast<const unsigned char*>(fr.content()) );
-            std::vector<size_t> l( nudevices, fr.length() );
-            std::vector<cl_int> bin_statuses( nudevices, -1 );
+                num_devices, reinterpret_cast<const unsigned char*>(fr.content()) );
+            std::vector<size_t> l( num_devices, fr.length() );
+            std::vector<cl_int> bin_statuses( num_devices, -1 );
             cl_int err;
-            my_cl_program = clCreateProgramWithBinary( my_factory.context(), nudevices,
+            my_cl_program = clCreateProgramWithBinary( my_factory.context(), num_devices,
                                                        device_list, l.data(), s.data(),
                                                        bin_statuses.data(), &err );
             if( err != CL_SUCCESS ) {
@@ -1392,8 +1392,8 @@ private:
                 enforce_cl_retcode( err, std::string( "Failed to create program, error " + std::to_string( err ) + " : " ) + my_arg_str +
                                     std::string( ", binary_statuses = " ) + statuses_str );
             }
-            opencl_prograbuilder(
-                my_factory, my_arg_str, my_cl_program, nudevices, device_list,
+            opencl_program_builder(
+                my_factory, my_arg_str, my_cl_program, num_devices, device_list,
                 options, /*callback*/ NULL, /*user data*/NULL );
             break;
         }
@@ -1403,7 +1403,7 @@ private:
     }
 
     Factory& my_factory;
-    opencl_progratype my_type;
+    opencl_program_type my_type;
     std::string my_arg_str;
     mutable cl_program my_cl_program;
     mutable std::once_flag my_do_once_flag;
@@ -1489,7 +1489,7 @@ using interface11::opencl_subbuffer;
 using interface11::opencl_device;
 using interface11::opencl_device_list;
 using interface11::opencl_program;
-using interface11::opencl_progratype;
+using interface11::opencl_program_type;
 using interface11::opencl_async_msg;
 using interface11::opencl_factory;
 using interface11::opencl_range;

@@ -183,7 +183,7 @@ namespace internal {
 
     private:
         // ----------- Aggregator ------------
-        enum op_type { reg_succ, resucc, try__put_task
+        enum op_type { reg_succ, rem_succ, try__put_task
 #if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
             , add_blt_succ, del_blt_succ,
              blt_succ_cnt, blt_succ_cpy
@@ -226,7 +226,7 @@ namespace internal {
                     __TBB_store_with_release(current->status, SUCCEEDED);
                     break;
 
-                case resucc:
+                case rem_succ:
                     my_successors.remove_successor(*(current->my_succ));
                     __TBB_store_with_release(current->status, SUCCEEDED);
                     break;
@@ -277,7 +277,7 @@ namespace internal {
         }
 
         bool remove_successor( successor_type &r) __TBB_override {
-            indexer_node_base_operation op_data(r, resucc);
+            indexer_node_base_operation op_data(r, rem_succ);
             my_aggregator.execute(&op_data);
             return op_data.status == SUCCEEDED;
         }

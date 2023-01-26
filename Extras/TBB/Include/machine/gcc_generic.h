@@ -72,7 +72,7 @@ inline T __TBB_machine_fetchadd##S( volatile void *ptr, T value ) {             
 #else
 // __TBB_GCC_VERSION >= 40700; use __atomic_* builtins available since gcc 4.7
 
-#define __TBB_compiler_fence()              __as_ __volatile__("": : :"memory")
+#define __TBB_compiler_fence()              __asm__ __volatile__("": : :"memory")
 // Acquire and release fence intrinsics in GCC might miss compiler fence.
 // Adding it at both sides of an intrinsic, as we do not know what reordering can be made.
 #define __TBB_acquire_consistency_helper()  __TBB_compiler_fence(); __atomic_thread_fence(__ATOMIC_ACQUIRE); __TBB_compiler_fence()

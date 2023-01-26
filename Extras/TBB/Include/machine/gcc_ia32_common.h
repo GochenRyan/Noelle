@@ -25,7 +25,7 @@ template <typename T>
 static inline intptr_t __TBB_machine_lg( T x ) {
     __TBB_ASSERT(x>0, "The logarithm of a non-positive value is undefined.");
     uintptr_t j, i = x;
-    __as_("bsr %1,%0" : "=r"(j) : "r"(i));
+    __asm__("bsr %1,%0" : "=r"(j) : "r"(i));
     return j;
 }
 #define __TBB_Log2(V)  __TBB_machine_lg(V)
@@ -43,7 +43,7 @@ static inline intptr_t __TBB_machine_lg( T x ) {
 //TODO: check if use of gcc __builtin_ia32_pause intrinsic gives a "some how" better performing code
 static inline void __TBB_machine_pause( int32_t delay ) {
     for (int32_t i = 0; i < delay; i++) {
-       __as_ __volatile__("pause;");
+       __asm__ __volatile__("pause;");
     }
     return;
 }
@@ -56,7 +56,7 @@ static inline tbb::internal::machine_tsc_t __TBB_machine_time_stamp() {
     return _rdtsc();
 #else
     tbb::internal::uint32_t hi, lo;
-    __as_ __volatile__("rdtsc" : "=d"(hi), "=a"(lo));
+    __asm__ __volatile__("rdtsc" : "=d"(hi), "=a"(lo));
     return (tbb::internal::machine_tsc_t( hi ) << 32) | lo;
 #endif
 }
@@ -75,16 +75,16 @@ private:
 public:
     bool operator!=( const cpu_ctl_env& ctl ) const { return mxcsr != ctl.mxcsr || x87cw != ctl.x87cw; }
     void get_env() {
-    #if __TBB_ICC_12_0_INL_ASFSTCW_BROKEN
+    #if __TBB_ICC_12_0_INL_ASM_FSTCW_BROKEN
         cpu_ctl_env loc_ctl;
-        __as_ __volatile__ (
+        __asm__ __volatile__ (
                 "stmxcsr %0\n\t"
                 "fstcw %1"
                 : "=m"(loc_ctl.mxcsr), "=m"(loc_ctl.x87cw)
         );
         *this = loc_ctl;
     #else
-        __as_ __volatile__ (
+        __asm__ __volatile__ (
                 "stmxcsr %0\n\t"
                 "fstcw %1"
                 : "=m"(mxcsr), "=m"(x87cw)
@@ -93,7 +93,7 @@ public:
         mxcsr &= MXCSR_CONTROL_MASK;
     }
     void set_env() const {
-        __as_ __volatile__ (
+        __asm__ __volatile__ (
                 "ldmxcsr %0\n\t"
                 "fldcw %1"
                 : : "m"(mxcsr), "m"(x87cw)

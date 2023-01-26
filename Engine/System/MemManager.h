@@ -28,35 +28,13 @@
 
 namespace Noelle
 {
-#ifdef USE_STL_TYPE_TRAIT
-#else
-	#if _MSC_VER >= 1400
-	#define HAS_TRIVIAL_CONSTRUCTOR(T) __has_trivial_constructor(T)
-	#define HAS_TRIVIAL_DESTRUCTOR(T) __has_trivial_destructor(T)
-	#define HAS_TRIVIAL_ASSIGN(T) __has_trivial_assign(T)
-	#define HAS_TRIVIAL_COPY(T) __has_trivial_copy(T)
-	#define IS_POD(T) __is_pod(T)
-	#define IS_ENUM(T) __is_enum(T)
-	#define IS_EMPTY(T) __is_empty(T)
-	#else
-	#define HAS_TRIVIAL_CONSTRUCTOR(T) false
-	#define HAS_TRIVIAL_DESTRUCTOR(T) false
-	#define HAS_TRIVIAL_ASSIGN(T) false
-	#define HAS_TRIVIAL_COPY(T) false
-	#define IS_POD(T) false
-	#define IS_ENUM(T) false
-	#define IS_EMPTY(T) false
-	#endif
-
-#endif
-
 	template< class T > inline T Align(const T Ptr, USIZE_TYPE Alignment)
 	{
 		return (T)(((USIZE_TYPE)Ptr + Alignment - 1) & ~(Alignment - 1));
 
 	}
 
-	class SYSTEAPI MemManager
+	class SYSTEM_API MemManager
 	{
 	public:
 		MemManager();
@@ -70,7 +48,7 @@ namespace Noelle
 
 #if WINDOWS_PLATFORM
 #if _DEBUG
-	class SYSTEAPI DebugMem : public MemManager
+	class SYSTEM_API DebugMem : public MemManager
 	{
 	public:
 		DebugMem();
@@ -97,29 +75,29 @@ namespace Noelle
 				{
 					pAddr[i] = nullptr;
 				}
-				pPrev = nullptr;
-				pNext = nullptr;
+				m_pPrev = nullptr;
+				m_pNext = nullptr;
 			}
 			void* pAddr[CALLSTACK_NUM];  // call stack information when allocating memory
-			USIZE_TYPE uiStackInfoNum;  // call stack layers
-			USIZE_TYPE uiSize;  // size of allocated memory
-			bool bIsArray;
-			bool bAlignment;
-			Block* pPrev;
-			Block* pNext;
+			USIZE_TYPE m_uiStackInfoNum;  // call stack layers
+			USIZE_TYPE m_uiSize;  // size of allocated memory
+			bool m_bIsArray;
+			bool m_bAlignment;
+			Block* m_pPrev;
+			Block* m_pNext;
 		};
 
-		Block* pHead;
-		Block* pTail;
+		Block* m_pHead;
+		Block* m_pTail;
 
-		USIZE_TYPE uiNumNewCalls; // the number of times "New" was called
-		USIZE_TYPE uiNumDeleteCalls;  // the number of times "Delete" was called
-		USIZE_TYPE uiNumBlocks;  // the number of current blocks 
-		USIZE_TYPE uiNumBytes;  // the number of current bytes
-		USIZE_TYPE uiMaxNumBytes;  // Maximum number of bytes requested
-		USIZE_TYPE uiMaxNumBlocks;  // Maximum number of blocks requested
+		USIZE_TYPE m_uiNumNewCalls; // the number of times "New" was called
+		USIZE_TYPE m_uiNumDeleteCalls;  // the number of times "Delete" was called
+		USIZE_TYPE m_uiNumBlocks;  // the number of current blocks 
+		USIZE_TYPE m_uiNumBytes;  // the number of current bytes
+		USIZE_TYPE m_uiMaxNumBytes;  // Maximum number of bytes requested
+		USIZE_TYPE m_uiMaxNumBlocks;  // Maximum number of blocks requested
 
-		USIZE_TYPE uiSizeRecord[RECORD_NUM];  // the number of memory requests recorded in the n power of 2 range
+		USIZE_TYPE m_uiSizeRecord[RECORD_NUM];  // the number of memory requests recorded in the n power of 2 range
 		void InsertBlock(Block* pBlock);
 		void RemoveBlock(Block* pBlock);
 		bool InitDbgHelpLib();
@@ -129,7 +107,7 @@ namespace Noelle
 		void FreeLeakMem();
 	};
 #elif _WIN64
-	class SYSTEAPI MemWin64 : public MemManager
+	class SYSTEM_API MemWin64 : public MemManager
 	{
 	public:
 		MemWin64();
@@ -138,7 +116,7 @@ namespace Noelle
 		virtual void Deallocate(char* pcAddr, USIZE_TYPE uiAlignment, bool bIsArray);
 	};
 #else
-	class SYSTEAPI MemWin32 : public MemManager
+	class SYSTEM_API MemWin32 : public MemManager
 	{
 	public:
 		MemWin32();
@@ -212,7 +190,7 @@ namespace Noelle
 
 		PoolInfo* CreateIndirect()
 		{
-			PoolInfo* indirect = (PoolInfo*)VirtualAlloc(nullptr, 2048 * sizeof(PoolInfo), MECOMMIT, PAGE_READWRITE);
+			PoolInfo* indirect = (PoolInfo*)VirtualAlloc(nullptr, 2048 * sizeof(PoolInfo), MEM_COMMIT, PAGE_READWRITE);
 			if (!indirect)
 			{
 				return nullptr;
@@ -222,80 +200,7 @@ namespace Noelle
 	};
 #endif
 #endif
-	class SYSTEAPI StackMem: public MemManager
-	{
-		template<class T>
-		friend class StackMemAlloc;
-	public:
-		StackMem(USIZE_TYPE uiDefaultChunkSize = 65536); 
-		~StackMem();
-		virtual void* Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArray);
-		virtual void Deallocate(char* pcAddr, USIZE_TYPE uiAlignment, bool bIsArray);
-	private:
-		struct TaggedMemory
-		{
-			TaggedMemory* next;
-			USIZE_TYPE size;
-			USIZE_TYPE data[1];
-		};
-
-		USIZE_TYPE defaultChunkSize;
-		BYTE* top;  // top of current Chunk
-		BYTE* end;  // end of current Chunk
-		TaggedMemory* topChunk;
-		TaggedMemory* unusedChunk;
-
-		/** The number of marks on this stack. */
-		INT numMarks;
-
-		/**
-		* Allocate a new chunk of memory of at least minSize size,
-		* and return it aligned to Align. Updates the memory stack's
-		* Chunks table and ActiveChunks counter.
-		*/
-		BYTE* AllocateNewChunk(USIZE_TYPE minSize);
-		
-		/*
-		* Remove this Chunk and Chunks before it 
-		*/
-		void FreeChunks(TaggedMemory* newTopChunk);
-	};
-	
-	template<class T>
-	class SYSTEAPI StackMemAlloc: public MemObject
-	{
-	public:
-		StackMemAlloc(USIZE_TYPE uiSize = 0, USIZE_TYPE uiAlignment = 0)
-		{
-			NOEL_ASSERT(uiSize > 0);
-			if (uiSize > 0)
-			{
-				/*
-				* Preserve context
-				*/
-				StackMem& stackMem = GetStackMemManager();
-				uiSize = uiSize;
-				top = stackMem.top;
-				savedChunk = stackMem.topChunk;
-				stackMem.numMarks++;
-
-				/*
-				* Allocate memory, call constructor
-				*/
-				pPtr = (T*)stackMem.Allocate(uiSize, uiAlignment, false);
-				NOEL_ASSERT(pPtr);
-				if ()
-			}
-		}
-		~StackMemAlloc();
-	private:
-		BYTE* top;
-		StackMem::TaggedMemory* savedChunk;
-		T* pPtr;
-		USIZE_TYPE uiSize; 
-	};
-
-	class SYSTEAPI CMem : public MemManager
+	class SYSTEM_API CMem : public MemManager
 	{
 	public:
 		CMem();
@@ -304,12 +209,11 @@ namespace Noelle
 		virtual void Deallocate(char* pcAddr, USIZE_TYPE uiAlignment, bool bIsArray);
 	};
 
-	class SYSTEAPI MemObject
+	class SYSTEM_API MemObject
 	{
 	public:
 		MemObject();
 		~MemObject();
-		static StackMem& GetStackMemManager();
 		static MemManager& GetMemManager();
 		static MemManager& GetCMemManager();
 	};

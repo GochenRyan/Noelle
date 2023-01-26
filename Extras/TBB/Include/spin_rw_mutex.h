@@ -26,7 +26,7 @@ namespace tbb {
 
 #if __TBB_TSX_AVAILABLE
 namespace interface8 { namespace internal {
-    class x86_rtrw_mutex;
+    class x86_rtm_rw_mutex;
 }}
 #endif
 
@@ -85,7 +85,7 @@ public:
         It also nicely provides the "node" for queuing locks. */
     class scoped_lock : internal::no_copy {
 #if __TBB_TSX_AVAILABLE
-        friend class tbb::interface8::internal::x86_rtrw_mutex;
+        friend class tbb::interface8::internal::x86_rtm_rw_mutex;
 #endif
     public:
         //! Construct lock that has not acquired a mutex.
@@ -225,7 +225,7 @@ __TBB_DEFINE_PROFILING_SET_NAME(spin_rw_mutex)
 } // namespace tbb
 
 #if __TBB_TSX_AVAILABLE
-#include "internal/_x86_rtrw_mutex_impl.h"
+#include "internal/_x86_rtm_rw_mutex_impl.h"
 #endif
 
 namespace tbb {
@@ -240,7 +240,7 @@ namespace interface8 {
     contended but the data it protects are not.
     @ingroup synchronization */
 #if __TBB_TSX_AVAILABLE
-typedef interface7::internal::padded_mutex<tbb::interface8::internal::x86_rtrw_mutex,true> speculative_spin_rw_mutex;
+typedef interface7::internal::padded_mutex<tbb::interface8::internal::x86_rtm_rw_mutex,true> speculative_spin_rw_mutex;
 #else
 typedef interface7::internal::padded_mutex<tbb::spin_rw_mutex,true> speculative_spin_rw_mutex;
 #endif

@@ -505,7 +505,7 @@ public:
                          uintptr_t t = default_traits )
         : my_kind(relation_with_parent)
         , my_version_and_traits(3 | t)
-        , my_name(internal::CUSTOCTX)
+        , my_name(internal::CUSTOM_CTX)
     {
         init();
     }

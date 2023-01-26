@@ -26,13 +26,13 @@
 #define __TBB_WORDSIZE 8
 #define __TBB_ENDIANNESS __TBB_ENDIAN_LITTLE
 
-#define __TBB_compiler_fence() __as_ __volatile__("": : :"memory")
+#define __TBB_compiler_fence() __asm__ __volatile__("": : :"memory")
 #define __TBB_control_consistency_helper() __TBB_compiler_fence()
 #define __TBB_acquire_consistency_helper() __TBB_compiler_fence()
 #define __TBB_release_consistency_helper() __TBB_compiler_fence()
 
 #ifndef __TBB_full_memory_fence
-#define __TBB_full_memory_fence() __as_ __volatile__("mfence": : :"memory")
+#define __TBB_full_memory_fence() __asm__ __volatile__("mfence": : :"memory")
 #endif
 
 #define __TBB_MACHINE_DEFINE_ATOMICS(S,T,X)                                          \
@@ -40,7 +40,7 @@ static inline T __TBB_machine_cmpswp##S (volatile void *ptr, T value, T comparan
 {                                                                                    \
     T result;                                                                        \
                                                                                      \
-    __as_ __volatile__("lock\ncmpxchg" X " %2,%1"                                  \
+    __asm__ __volatile__("lock\ncmpxchg" X " %2,%1"                                  \
                           : "=a"(result), "=m"(*(volatile T*)ptr)                    \
                           : "q"(value), "0"(comparand), "m"(*(volatile T*)ptr)       \
                           : "memory");                                               \
@@ -50,7 +50,7 @@ static inline T __TBB_machine_cmpswp##S (volatile void *ptr, T value, T comparan
 static inline T __TBB_machine_fetchadd##S(volatile void *ptr, T addend)              \
 {                                                                                    \
     T result;                                                                        \
-    __as_ __volatile__("lock\nxadd" X " %0,%1"                                     \
+    __asm__ __volatile__("lock\nxadd" X " %0,%1"                                     \
                           : "=r"(result),"=m"(*(volatile T*)ptr)                     \
                           : "0"(addend), "m"(*(volatile T*)ptr)                      \
                           : "memory");                                               \
@@ -60,7 +60,7 @@ static inline T __TBB_machine_fetchadd##S(volatile void *ptr, T addend)         
 static inline  T __TBB_machine_fetchstore##S(volatile void *ptr, T value)            \
 {                                                                                    \
     T result;                                                                        \
-    __as_ __volatile__("lock\nxchg" X " %0,%1"                                     \
+    __asm__ __volatile__("lock\nxchg" X " %0,%1"                                     \
                           : "=r"(result),"=m"(*(volatile T*)ptr)                     \
                           : "0"(value), "m"(*(volatile T*)ptr)                       \
                           : "memory");                                               \
@@ -75,11 +75,11 @@ __TBB_MACHINE_DEFINE_ATOMICS(8,int64_t,"q")
 #undef __TBB_MACHINE_DEFINE_ATOMICS
 
 static inline void __TBB_machine_or( volatile void *ptr, uint64_t value ) {
-    __as_ __volatile__("lock\norq %1,%0" : "=m"(*(volatile uint64_t*)ptr) : "r"(value), "m"(*(volatile uint64_t*)ptr) : "memory");
+    __asm__ __volatile__("lock\norq %1,%0" : "=m"(*(volatile uint64_t*)ptr) : "r"(value), "m"(*(volatile uint64_t*)ptr) : "memory");
 }
 
 static inline void __TBB_machine_and( volatile void *ptr, uint64_t value ) {
-    __as_ __volatile__("lock\nandq %1,%0" : "=m"(*(volatile uint64_t*)ptr) : "r"(value), "m"(*(volatile uint64_t*)ptr) : "memory");
+    __asm__ __volatile__("lock\nandq %1,%0" : "=m"(*(volatile uint64_t*)ptr) : "r"(value), "m"(*(volatile uint64_t*)ptr) : "memory");
 }
 
 #define __TBB_AtomicOR(P,V) __TBB_machine_or(P,V)

@@ -241,7 +241,7 @@ protected:
     using size_type = std::size_t;
     using difference_type = std::ptrdiff_t;
 
-    using randolevel_generator_type = typename traits_type::randolevel_generator_type;
+    using random_level_generator_type = typename traits_type::random_level_generator_type;
     using node_allocator_type = typename std::allocator_traits<allocator_type>::template rebind_alloc<uint8_t>;
     using node_allocator_traits = typename std::allocator_traits<allocator_type>::template rebind_traits<uint8_t>;
     using node_ptr = list_node_type*;
@@ -948,7 +948,7 @@ private:
     }
 
     /** Generate random level */
-    size_type randolevel() {
+    size_type random_level() {
         return my_rnd_generator();
     }
 
@@ -959,7 +959,7 @@ private:
     /** Creates new node */
     template <typename... Args>
     node_ptr create_node(Args&&... args) {
-        size_type levels = randolevel();
+        size_type levels = random_level();
 
         size_type sz = calc_node_size(levels);
 
@@ -1053,7 +1053,7 @@ private:
 
     node_allocator_type my_node_allocator;
     key_compare my_compare;
-    randolevel_generator_type my_rnd_generator;
+    random_level_generator_type my_rnd_generator;
     node_ptr dummy_head;
 
     template<typename OtherTraits>
