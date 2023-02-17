@@ -620,6 +620,47 @@ void MemWin32::Deallocate(char* pcAddr, USIZE_TYPE uiAlignment, bool bIsArray)
 }
 #endif
 
+StackMem::StackMem(USIZE_TYPE uiDefaultChunkSize = 65536)
+{
+	NOEL_ASSERT(uiDefaultChunkSize > sizeof(TaggedMemory));
+	m_uiDefaultChunkSize = uiDefaultChunkSize;
+	m_pTop = nullptr;
+	m_pEnd = nullptr;
+	m_pTopChunk = nullptr;
+	m_iNumMarks = 0;
+}
+
+StackMem::~StackMem()
+{
+	FreeChunks(nullptr);
+	while (m_pUnusedChunk)
+	{
+		TaggedMemory* temp = m_pUnusedChunk;
+		m_pUnusedChunk = m_pUnusedChunk->m_pNext;
+		MemObject::GetMemManager().Deallocate((char*)temp, 0, true);
+	}
+	NOEL_ASSERT(numMarks == 0);
+}
+
+void* StackMem::Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArray)
+{
+
+
+}
+
+void StackMem::Deallocate(char* pcAddr, USIZE_TYPE uiAlignment, bool bIsArray)
+{
+}
+
+BYTE* StackMem::AllocateNewChunk(USIZE_TYPE minSize)
+{
+}
+
+void StackMem::FreeChunks(TaggedMemory* newTopChunk)
+{
+}
+
+
 CMem::CMem()
 {
 
@@ -645,6 +686,13 @@ void CMem::Deallocate(char* pcAddr, USIZE_TYPE uiAlignment, bool bIsArray)
 		return free(pcAddr);
 	else
 		return _aligned_free(pcAddr);
+}
+
+MemManager& MemObject::GetStackMemManager()
+{
+	// todo: multithread
+	static StackMem g_StackMemManager;
+	return g_StackMemManager;
 }
 
 

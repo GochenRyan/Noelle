@@ -28,10 +28,44 @@
 
 namespace Noelle
 {
+#ifdef USE_STL_TYPE_TRAIT
+	#define HAS_TRIVIAL_CONSTRUCTOR(T) std::is_trivially_constructible_v<T>
+	#define HAS_TRIVIAL_DESTRUCTOR(T) std::is_trivially_destructible_v<T>
+	#define HAS_TRIVIAL_ASSIGN(T) std::is_trivially_assignable_v<T>
+	#define HAS_TRIVIAL_COPY(T) std::is_trivially_copyable_v<T>
+	#define IS_POD(T) std::is_pod_v<T>
+	#define IS_ENUM(T) std::is_enum_v<T>
+	#define IS_EMPTY(T) std::is_empty_v<T>
+
+	template<typename T> struct ValueBase
+	{
+		enum { NeedsConstructor = !HAS_TRIVIAL_CONSTRUCTOR(T) && !IS_POD(T)};
+		enum { NeedsDestructor = !HAS_TRIVIAL_DESTRUCTOR(T) && !IS_POD(T)};
+	};
+#else
+	#if _MSC_VER >= 1400
+	#define HAS_TRIVIAL_CONSTRUCTOR(T) __has_trivial_constructor(T)
+	#define HAS_TRIVIAL_DESTRUCTOR(T) __has_trivial_destructor(T)
+	#define HAS_TRIVIAL_ASSIGN(T) __has_trivial_assign(T)
+	#define HAS_TRIVIAL_COPY(T) __has_trivial_copy(T)
+	#define IS_POD(T) __is_pod(T)
+	#define IS_ENUM(T) __is_enum(T)
+	#define IS_EMPTY(T) __is_empty(T)
+	#else
+	#define HAS_TRIVIAL_CONSTRUCTOR(T) false
+	#define HAS_TRIVIAL_DESTRUCTOR(T) false
+	#define HAS_TRIVIAL_ASSIGN(T) false
+	#define HAS_TRIVIAL_COPY(T) false
+	#define IS_POD(T) false
+	#define IS_ENUM(T) false
+	#define IS_EMPTY(T) false
+	#endif
+
+#endif
+
 	template< class T > inline T Align(const T Ptr, USIZE_TYPE Alignment)
 	{
 		return (T)(((USIZE_TYPE)Ptr + Alignment - 1) & ~(Alignment - 1));
-
 	}
 
 	class SYSTEM_API MemManager
@@ -200,6 +234,79 @@ namespace Noelle
 	};
 #endif
 #endif
+	class SYSTEM_API StackMem: public MemManager
+	{
+		template<class T>
+		friend class StackMemAlloc;
+	public:
+		StackMem(USIZE_TYPE uiDefaultChunkSize = 65536); 
+		~StackMem();
+		virtual void* Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArray);
+		virtual void Deallocate(char* pcAddr, USIZE_TYPE uiAlignment, bool bIsArray);
+	private:
+		struct TaggedMemory
+		{
+			TaggedMemory* m_pNext;
+			USIZE_TYPE m_uiSize;
+			USIZE_TYPE m_uiData[1];
+		};
+
+		USIZE_TYPE m_uiDefaultChunkSize;
+		BYTE* m_pTop;  // top of current Chunk
+		BYTE* m_pEnd;  // end of current Chunk
+		TaggedMemory* m_pTopChunk;
+		TaggedMemory* m_pUnusedChunk;
+
+		/** The number of marks on this stack. */
+		INT m_iNumMarks;
+
+		/**
+		* Allocate a new chunk of memory of at least minSize size,
+		* and return it aligned to Align. Updates the memory stack's
+		* Chunks table and ActiveChunks counter.
+		*/
+		BYTE* AllocateNewChunk(USIZE_TYPE minSize);
+
+		/*
+		* Remove this Chunk and Chunks before it 
+		*/
+		void FreeChunks(TaggedMemory* newTopChunk);
+	};
+
+	template<class T>
+	class SYSTEM_API StackMemAlloc: public MemObject
+	{
+	public:
+		StackMemAlloc(USIZE_TYPE uiSize = 0, USIZE_TYPE uiAlignment = 0)
+		{
+			NOEL_ASSERT(uiSize > 0);
+			if (uiSize > 0)
+			{
+				/*
+				* Preserve context
+				*/
+				StackMem& stackMem = GetStackMemManager();
+				m_uiSize = uiSize;
+				m_pTop = stackMem.top;
+				m_pSavedChunk = stackMem.topChunk;
+				stackMem.numMarks++;
+
+				/*
+				* Allocate memory, call constructor
+				*/
+				m_pPtr = (T*)stackMem.Allocate(uiSize, uiAlignment, false);
+				NOEL_ASSERT(pPtr);
+				if ()
+			}
+		}
+		~StackMemAlloc();
+	private:
+		BYTE* m_pTop;
+		StackMem::TaggedMemory* m_pSavedChunk;
+		T* m_pPtr;
+		USIZE_TYPE m_uiSize; 
+	};
+
 	class SYSTEM_API CMem : public MemManager
 	{
 	public:
@@ -216,25 +323,8 @@ namespace Noelle
 		~MemObject();
 		static MemManager& GetMemManager();
 		static MemManager& GetCMemManager();
+		static MemManager& GetStackMemManager();
 	};
 }
 
-inline void* operator new (USIZE_TYPE uiSize)
-{
-	return Noelle::MemObject::GetMemManager().Allocate(uiSize, false, false);
-}
-
-inline void* operator new[](USIZE_TYPE uiSize)
-{
-	return Noelle::MemObject::GetMemManager().Allocate(uiSize, false, true);
-}
-
-inline void operator delete (void* pvAddr)
-{
-	Noelle::MemObject::GetMemManager().Deallocate((char*)pvAddr, false, false);
-}
-
-inline void operator delete[](void* pvAddr)
-{
-	Noelle::MemObject::GetMemManager().Deallocate((char*)pvAddr, false, true);
-}
+#include "MemManager.inl"
