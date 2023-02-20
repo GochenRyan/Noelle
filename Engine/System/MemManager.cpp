@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #include "MemManager.h"
-#include "System.h"
 using namespace Noelle;
 
 MemManager::MemManager()
@@ -131,7 +130,7 @@ bool DebugMem::GetFileAndLine(const void* pAddress, TCHAR szFile[MAX_PATH], int&
 #ifdef  _UNICODE
 		NoelMbsToWcs(szFile, MAX_PATH, Line.FileName, MAX_PATH);
 #else
-		StrCopy(szFile, MAX_PATH, Line.FileName);
+		NeolStrCopy(szFile, MAX_PATH, Line.FileName);
 #endif
 		line = Line.LineNumber;
 
@@ -620,13 +619,14 @@ void MemWin32::Deallocate(char* pcAddr, USIZE_TYPE uiAlignment, bool bIsArray)
 }
 #endif
 
-StackMem::StackMem(USIZE_TYPE uiDefaultChunkSize = 65536)
+StackMem::StackMem(USIZE_TYPE uiDefaultChunkSize)
 {
 	NOEL_ASSERT(uiDefaultChunkSize > sizeof(TaggedMemory));
 	m_uiDefaultChunkSize = uiDefaultChunkSize;
 	m_pTop = nullptr;
 	m_pEnd = nullptr;
 	m_pTopChunk = nullptr;
+	m_pUnusedChunk = nullptr;
 	m_iNumMarks = 0;
 }
 
@@ -639,25 +639,78 @@ StackMem::~StackMem()
 		m_pUnusedChunk = m_pUnusedChunk->m_pNext;
 		MemObject::GetMemManager().Deallocate((char*)temp, 0, true);
 	}
-	NOEL_ASSERT(numMarks == 0);
+	NOEL_ASSERT(m_iNumMarks == 0);
 }
 
 void* StackMem::Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArray)
 {
+	// res is the old top
+	BYTE* res = m_pTop;
+	if (uiAlignment > 0)
+		res = Align<BYTE*>(m_pTop, uiAlignment);
 
+	m_pTop = res + uiSize;
 
-}
+	if (m_pTop > m_pEnd)
+	{
+		// Make sure to allocate memory that can be aligned
+		AllocateNewChunk(uiSize + uiAlignment);
+		res = m_pTop;
+		if (uiAlignment > 0)
+			res = Align<BYTE*>(m_pTop, uiAlignment);
+		m_pTop = res + uiSize;
+	}
 
-void StackMem::Deallocate(char* pcAddr, USIZE_TYPE uiAlignment, bool bIsArray)
-{
+	return res;
 }
 
 BYTE* StackMem::AllocateNewChunk(USIZE_TYPE minSize)
 {
+	TaggedMemory* pChunk = NULL;
+	for (TaggedMemory** link = &m_pUnusedChunk; *link; link = &(*link)->m_pNext)
+	{
+		// Find existing chunk.
+		if ((*link)->m_uiSize >= minSize)
+		{
+			pChunk = *link;
+			*link = (*link)->m_pNext;
+			break;
+		}
+	}
+
+	if (!pChunk)
+	{
+		// Create new chunk.
+		USIZE_TYPE uiDataSize = Max(minSize, m_uiDefaultChunkSize - sizeof(TaggedMemory));
+		pChunk = (TaggedMemory*)MemObject::GetMemManager().Allocate(uiDataSize + sizeof(TaggedMemory), 0, true);
+		pChunk->m_uiSize = uiDataSize;
+	}
+
+	pChunk->m_pNext = m_pTopChunk;
+	m_pTopChunk = pChunk;
+	m_pTop = pChunk->m_uiData;
+	m_pEnd = m_pTop + pChunk->m_uiSize;
+	return m_pTop;
 }
 
 void StackMem::FreeChunks(TaggedMemory* newTopChunk)
 {
+	while (m_pTopChunk != newTopChunk)
+	{
+		TaggedMemory* removeTrunk = m_pTopChunk;
+		m_pTopChunk = m_pTopChunk->m_pNext;
+		removeTrunk->m_pNext = m_pUnusedChunk;
+		m_pUnusedChunk = removeTrunk;
+	}
+
+	m_pTop = nullptr;
+	m_pEnd = nullptr;
+
+	if (m_pTopChunk)
+	{
+		m_pTop = m_pTopChunk->m_uiData;
+		m_pEnd = m_pTop + m_pTopChunk->m_uiSize;
+	}
 }
 
 
@@ -688,7 +741,7 @@ void CMem::Deallocate(char* pcAddr, USIZE_TYPE uiAlignment, bool bIsArray)
 		return _aligned_free(pcAddr);
 }
 
-MemManager& MemObject::GetStackMemManager()
+StackMem& MemObject::GetStackMemManager()
 {
 	// todo: multithread
 	static StackMem g_StackMemManager;
@@ -714,4 +767,15 @@ MemManager& MemObject::GetCMemManager()
 {
 	static CMem g_MemManager;
 	return g_MemManager;
+}
+
+MemObject::MemObject()
+{
+	GetCMemManager();
+	GetMemManager();
+	GetStackMemManager();
+}
+MemObject::~MemObject()
+{
+
 }

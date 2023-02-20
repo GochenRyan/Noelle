@@ -14,10 +14,10 @@
 
 #pragma once
 #include "Platform.h"
-#include "System.h"
 #if WINDOWS_PLATFORM
 #include <tchar.h>
 #include <memory.h>
+#include <assert.h>
 #include <atlsimpstr.h>
 #endif
 
@@ -54,6 +54,16 @@ namespace Noelle
 #else
 		static_assert(0, "No Implement!");;
 		return NULL;
+#endif
+	}
+
+	inline void NeolStrCopy(TCHAR* pDest, unsigned int uiCount, const TCHAR* pSource)
+	{
+#ifdef WINDOWS_PLATFORM
+		_tcscpy_s(pDest, uiCount, pSource);
+#else
+		static_assert(0, "No Implement!");;
+		return;
 #endif
 	}
 
@@ -99,4 +109,42 @@ namespace Noelle
 		return;
 #endif
 	}
+
+	template<typename T>
+	inline T ABS(T t)
+	{
+		return t < 0 ? -t : t;
+	}
+	template<typename T>
+	inline T Min(T t0, T t1)
+	{
+		return t0 < t1 ? t0 : t1;
+	}
+	template<typename T>
+	inline T Max(T t0, T t1)
+	{
+		return t0 > t1 ? t0 : t1;
+	}
+	template<typename T>
+	inline T Clamp(T Value, T Max, T Min)
+	{
+		if (Value >= Max)
+		{
+			return Max;
+		}
+		if (Value <= Min)
+		{
+			return Min;
+		}
+		return Value;
+	}
+	template <class T>
+	inline void Swap(T& t1, T& t2)
+	{
+		T temp;
+		temp = t1;
+		t1 = t2;
+		t2 = temp;
+	}
+#define BIT(i) (1 << i)
 }

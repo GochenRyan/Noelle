@@ -1,0 +1,6 @@
+target("Sample2")
+    set_kind("binary")
+    add_files("*.cpp")
+    add_deps("System")
+    add_includedirs("$(projectdir)/Engine/System")
+    set_group("Samples")

@@ -80,6 +80,15 @@ namespace Noelle
 		virtual void Deallocate(char* pcAddr, USIZE_TYPE uiAlignment, bool bIsArray) = 0;
 	};
 
+	class SYSTEM_API CMem : public MemManager
+	{
+	public:
+		CMem();
+		~CMem();
+		virtual void* Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArray);
+		virtual void Deallocate(char* pcAddr, USIZE_TYPE uiAlignment, bool bIsArray);
+	};
+
 #if WINDOWS_PLATFORM
 #if _DEBUG
 	class SYSTEM_API DebugMem : public MemManager
@@ -241,14 +250,17 @@ namespace Noelle
 	public:
 		StackMem(USIZE_TYPE uiDefaultChunkSize = 65536); 
 		~StackMem();
-		virtual void* Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArray);
-		virtual void Deallocate(char* pcAddr, USIZE_TYPE uiAlignment, bool bIsArray);
+		void* Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArray);
+		void Deallocate(char* pcAddr, USIZE_TYPE uiAlignment, bool bIsArray)
+		{
+
+		}
 	private:
 		struct TaggedMemory
 		{
 			TaggedMemory* m_pNext;
 			USIZE_TYPE m_uiSize;
-			USIZE_TYPE m_uiData[1];
+			BYTE m_uiData[1]; // flexible array member
 		};
 
 		USIZE_TYPE m_uiDefaultChunkSize;
@@ -273,6 +285,16 @@ namespace Noelle
 		void FreeChunks(TaggedMemory* newTopChunk);
 	};
 
+	class SYSTEM_API MemObject
+	{
+	public:
+		MemObject();
+		~MemObject();
+		static MemManager& GetMemManager();
+		static MemManager& GetCMemManager();
+		static StackMem& GetStackMemManager();
+	};
+
 	template<class T>
 	class SYSTEM_API StackMemAlloc: public MemObject
 	{
@@ -287,43 +309,58 @@ namespace Noelle
 				*/
 				StackMem& stackMem = GetStackMemManager();
 				m_uiSize = uiSize;
-				m_pTop = stackMem.top;
-				m_pSavedChunk = stackMem.topChunk;
-				stackMem.numMarks++;
+				m_pTop = stackMem.m_pTop;
+				m_pSavedChunk = stackMem.m_pTopChunk;
+				stackMem.m_iNumMarks++;
 
 				/*
 				* Allocate memory, call constructor
 				*/
-				m_pPtr = (T*)stackMem.Allocate(uiSize, uiAlignment, false);
-				NOEL_ASSERT(pPtr);
-				if ()
+				m_pPtr = (T*)stackMem.Allocate(uiSize * sizeof(T), uiAlignment, false);
+				NOEL_ASSERT(m_pPtr);
+				
+				if (ValueBase<T>::NeedsConstructor)
+				{
+					for (int i = 0; i < uiSize; ++i)
+					{
+						NOELLE_NEW(m_pPtr + i)T();
+					}
+				}
 			}
 		}
-		~StackMemAlloc();
+
+		~StackMemAlloc()
+		{
+			if (m_uiSize > 0)
+			{
+				for (int i = 0; i < m_uiSize; ++i)
+				{
+					(m_pPtr + i)->~T();
+				}
+			}
+
+			StackMem& stackMem = GetStackMemManager();
+			stackMem.m_iNumMarks--;
+
+			if (m_pSavedChunk != stackMem.m_pTopChunk)
+			{
+				stackMem.FreeChunks(m_pSavedChunk);
+			}
+
+			stackMem.m_pTop = m_pTop;
+			m_pTop = nullptr;
+		}
+
+		inline T* GetPtr() const
+		{
+			return m_pPtr;
+		}
+
 	private:
 		BYTE* m_pTop;
 		StackMem::TaggedMemory* m_pSavedChunk;
 		T* m_pPtr;
 		USIZE_TYPE m_uiSize; 
-	};
-
-	class SYSTEM_API CMem : public MemManager
-	{
-	public:
-		CMem();
-		~CMem();
-		virtual void* Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArray);
-		virtual void Deallocate(char* pcAddr, USIZE_TYPE uiAlignment, bool bIsArray);
-	};
-
-	class SYSTEM_API MemObject
-	{
-	public:
-		MemObject();
-		~MemObject();
-		static MemManager& GetMemManager();
-		static MemManager& GetCMemManager();
-		static MemManager& GetStackMemManager();
 	};
 }
 
