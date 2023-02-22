@@ -8,6 +8,8 @@ add_defines("SYSTEM_EXPORTS")
 
 includes("Engine/System")
 
+includes("Engine/Editor")
+
 includes("Samples/Sample1")
 
 includes("Samples/Sample2")
