@@ -1,27 +1,25 @@
 #pragma once
 #include "System.h"
-namespace VSEngine2
+#include <chrono>
+namespace Noelle
 {
-	class VSSYSTEM_API VSTimer
+	class SYSTEM_API Timer
 	{
 	private:
-		bool m_bUseLargeTime;
-		__int64 m_int64OneSecondTicks;
-		__int64 m_int64TimeTickStartCounts;
-		unsigned long m_ulTimeStart;
+		unsigned long long m_ulTimeStart;
 		int m_iFrameCount;
 		double m_fFPS;
 		double m_fTime,m_fLastFPSTime,m_fTimeSlice;
 		double m_fDetTime, m_fLastTime;
 		void InitGameTime();
 	public:
-		VSTimer();
-		~VSTimer();
+		Timer();
+		~Timer();
 	
 		double GetGamePlayTime();
 		void UpdateFPS();
 		inline double GetFPS(){return m_fFPS;}
-		static VSTimer * ms_pTimer;
+		static Timer * m_pTimer;
 		double GetDetTime(){ return m_fDetTime; }
 		int GetRandSeed();
 	};

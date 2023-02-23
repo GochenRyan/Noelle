@@ -1,11 +1,10 @@
 #include "Timer.h"
-#include <MMSystem.h>
 using namespace Noelle;
-Timer * Timer::ms_pTimer = NULL;
+Timer * Timer::m_pTimer = nullptr;
 Timer::Timer()
 {
 	InitGameTime();
-	ms_pTimer = this;
+	m_pTimer = this;
 }
 
 Timer::~Timer()
@@ -22,33 +21,17 @@ void Timer::InitGameTime()
 	m_fTimeSlice = 0;
 	m_fLastTime = 0;
 	m_fDetTime = 0;
-	if(QueryPerformanceFrequency((LARGE_INTEGER*) &m_int64OneSecondTicks))
-	{
-		m_bUseLargeTime=true;
-		QueryPerformanceCounter((LARGE_INTEGER*) &m_int64TimeTickStartCounts);
-	}
-	else
-	{
-		m_bUseLargeTime = false;
-		m_ulTimeStart = timeGetTime();
-	}
+	m_ulTimeStart = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
+
 int Timer::GetRandSeed()
 {
-	return ((LARGE_INTEGER*)&m_int64TimeTickStartCounts)->LowPart;
+	return ((LARGE_INTEGER*)&m_ulTimeStart)->LowPart;
 }
+
 double Timer::GetGamePlayTime()
-{  //·µ»ØÒÑ½øÐÐµÄÊ±¼ä,µ¥Î»ºÁÃë
-	__int64 int64TimeCurrentCounts;
-	if(m_bUseLargeTime)
-	{
-		QueryPerformanceCounter((LARGE_INTEGER*) &int64TimeCurrentCounts);
-		return ((int64TimeCurrentCounts - m_int64TimeTickStartCounts)*(1.0 / m_int64OneSecondTicks)*1000.0);
-	}
-	else
-	{
-		return ((timeGetTime() - m_ulTimeStart));  //timeGetTimeº¯Êý·µ»ØµÄÊ±¼äµ¥Î»ÎªºÁÃë
-	}
+{
+	return (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - m_ulTimeStart);
 }
 
 void Timer::UpdateFPS()
