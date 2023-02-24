@@ -1,5 +1,6 @@
 target("System")
     set_kind("shared")
+    -- set_targetdir("$(projectdir)/libs/System")
     add_defines("SYSTEM_EXPORTS")
     add_includedirs("$(projectdir)/Extras/TBB/include")
     add_linkdirs("$(projectdir)/Extras/TBB/Lib")

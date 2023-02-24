@@ -1,11 +1,23 @@
 target("Editor")
     set_kind("binary")
 
-    add_includedirs("$(projectdir)/Engine/System")
-    add_includedirs("$(projectdir)/Vendor/imgui")
-    add_includedirs("$(projectdir)/Vendor/glfw/include")
-    add_includedirs("$(projectdir)/Extras/glad/include")
-    add_linkdirs("$(projectdir)/Vendor/imgui/examples/libs")
+    add_includedirs(
+        "$(projectdir)/Engine/System",
+        "$(projectdir)/Vendor/imgui",
+        "$(projectdir)/Vendor/glfw/include",
+        "$(projectdir)/Extras/glad/include"
+    )
+
+    add_subdirs(
+        "$(projectdir)/Engine/System",
+        "$(projectdir)/Vendor/imgui",
+        "$(projectdir)/Vendor/glfw",
+        "$(projectdir)/Extras/glad"
+    )
+
+    if is_plat("windows") then
+        add_links("$(buildir)/windows/$(arch)/$(mode)/*.lib")
+    end
 
     add_headerfiles("*.h")
     add_headerfiles("ImGui/*.h")

@@ -8,6 +8,7 @@ add_defines("SYSTEM_EXPORTS")
 
 includes("Vendor/glfw")
 includes("Vendor/imgui")
+includes("Extras/glad")
 
 includes("Engine/System")
 includes("Engine/Editor")
