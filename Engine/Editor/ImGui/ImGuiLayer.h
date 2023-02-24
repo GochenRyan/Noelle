@@ -5,11 +5,11 @@ namespace Noelle {
     {
     public:
         ImGuiLayer();
-        ~ImGuiLayer() = default;
+        ~ImGuiLayer();
 
         virtual void OnAttach() override;
         virtual void OnDetach() override;
-        virtual void OnEvent(Event& e) override;
+        virtual void OnImGuiRender() override;
 
         void Begin();
         void End();

@@ -6,10 +6,11 @@ set_languages("cxx20")
 
 add_defines("SYSTEM_EXPORTS")
 
-includes("Engine/System")
+includes("Vendor/glfw")
+includes("Vendor/imgui")
 
+includes("Engine/System")
 includes("Engine/Editor")
 
 includes("Samples/Sample1")
-
 includes("Samples/Sample2")
