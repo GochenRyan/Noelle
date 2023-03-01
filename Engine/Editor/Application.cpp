@@ -6,6 +6,9 @@
 int main()
 {
     std::unique_ptr<Noelle::ImGuiLayer> imGuiLayer{new Noelle::ImGuiLayer()};
+    if (imGuiLayer->CreateglfwWindow() == -1)
+        return -1;
+        
     while (true)
     {
         imGuiLayer->OnAttach();

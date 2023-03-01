@@ -1,14 +1,5 @@
 #include "ImGuiLayer.h"
 
-#include "imgui.h"
-#include "backends/imgui_impl_glfw.h"
-#include "backends/imgui_impl_opengl3.h"
-
-// TEMPORARY
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-
-
 namespace Noelle {
 	ImGuiLayer::ImGuiLayer()
 		: Layer("ImGuiLayer")
@@ -18,8 +9,20 @@ namespace Noelle {
 	{
 	}
 
+	int ImGuiLayer::CreateglfwWindow()
+	{
+		if (!glfwInit())
+			return -1;
+		
+		m_window = glfwCreateWindow(1920, 1080, "Noelle", NULL, NULL);
+		
+		if (!m_window)
+			return -1;
+	}
+
 	void ImGuiLayer::OnAttach()
 	{
+		glfwMakeContextCurrent(m_window);
 		// Setup Dear ImGui context
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
@@ -43,11 +46,12 @@ namespace Noelle {
 			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 		}
 
-		GLFWwindow* window = glfwCreateWindow(800, 600, "Noelle", NULL, NULL);
+
+		
 		// GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetNativeWindow());
 
 		// Setup Platform/Renderer bindings
-		ImGui_ImplGlfw_InitForOpenGL(window, true);
+		ImGui_ImplGlfw_InitForOpenGL(m_window, true);
 		ImGui_ImplOpenGL3_Init("#version 410");
 	}
 
