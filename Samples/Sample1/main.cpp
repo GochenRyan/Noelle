@@ -24,6 +24,7 @@ void main()
 {
 	int * a = NOELLE_NEW int;
 	*a = 5;
+	delete a;
 	Fun();
 
 	std::vector<int> vec;

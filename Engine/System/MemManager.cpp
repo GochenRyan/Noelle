@@ -256,6 +256,8 @@ DebugMem::~DebugMem()
 
 void* DebugMem::Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArray)
 {
+	std::lock_guard<std::mutex> lock(m_mtx);
+
 	m_uiNumNewCalls++;
 
 	// 
@@ -318,6 +320,8 @@ void* DebugMem::Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArra
 
 void DebugMem::Deallocate(char* pcAddr, USIZE_TYPE uiAlignment, bool bIsArray)
 {
+	std::lock_guard<std::mutex> lock(m_mtx);
+	
 	m_uiNumDeleteCalls++;
 	pcAddr -= sizeof(USIZE_TYPE);
 
@@ -498,7 +502,8 @@ MemWin32::~MemWin32()
 
 void* MemWin32::Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArray)
 {
-	// TODO: multithread
+	std::lock_guard<std::mutex> lock(m_mtx);
+
 	FreeMem* free;
 	if (uiSize < POOL_MAX)
 	{
@@ -582,9 +587,11 @@ void* MemWin32::Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArra
 
 void MemWin32::Deallocate(char* pcAddr, USIZE_TYPE uiAlignment, bool bIsArray)
 {
+	std::lock_guard<std::mutex> lock(m_mtx);
+
 	// TODO: mutithread
 	NOEL_ASSERT(pcAddr);
-	PoolInfo* pool = &poolIndirect[(DWORD)pcAddr >> 27][((DWORD)free >> 16) & 2047];
+	PoolInfo* pool = &poolIndirect[(DWORD)pcAddr >> 27][((DWORD)pcAddr >> 16) & 2047];
 	NOEL_ASSERT(pool->bytes != 0);
 	if (pool->table != &osTable)
 	{
@@ -726,6 +733,8 @@ CMem::~CMem()
 
 void* CMem::Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArray)
 {
+	std::lock_guard<std::mutex> lock(m_mtx);
+
 	if (uiAlignment == 0)
 		return malloc(uiSize);
 	else
@@ -735,6 +744,8 @@ void* CMem::Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArray)
 
 void CMem::Deallocate(char* pcAddr, USIZE_TYPE uiAlignment, bool bIsArray)
 {
+	std::lock_guard<std::mutex> lock(m_mtx);
+
 	if (uiAlignment == 0)
 		return free(pcAddr);
 	else

@@ -40,3 +40,4 @@ Engine/System/libs/System/System.exp
 Engine/System/libs/System/System.ilk
 Engine/System/libs/System/System.lib
 lib/*
+output/*

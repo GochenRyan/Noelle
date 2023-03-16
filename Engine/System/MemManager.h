@@ -19,6 +19,7 @@
 #include <Windows.h>
 #endif // WINDOWS_PLATFORM
 #include <new.h>
+#include <mutex>
 #define NOELLE_NEW new
 #define NOELLE_DELETE delete
 #define USE_STL_TYPE_TRAIT
@@ -78,6 +79,8 @@ namespace Noelle
 		virtual void* Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArray) = 0;
 		// Deallocate memory
 		virtual void Deallocate(char* pcAddr, USIZE_TYPE uiAlignment, bool bIsArray) = 0;
+	protected:
+		std::mutex m_mtx;
 	};
 
 	class SYSTEM_API CMem : public MemManager

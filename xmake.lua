@@ -14,5 +14,5 @@ includes("Vendor/imgui")
 includes("Engine/System")
 includes("Engine/Editor")
 
--- includes("Samples/Sample1")
--- includes("Samples/Sample2")
+includes("Samples/Sample1")
+includes("Samples/Sample2")
