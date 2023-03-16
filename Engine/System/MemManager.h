@@ -80,7 +80,7 @@ namespace Noelle
 		// Deallocate memory
 		virtual void Deallocate(char* pcAddr, USIZE_TYPE uiAlignment, bool bIsArray) = 0;
 	protected:
-		std::mutex m_mtx;
+		static std::mutex m_mtx;
 	};
 
 	class SYSTEM_API CMem : public MemManager

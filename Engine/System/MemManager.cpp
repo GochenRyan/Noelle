@@ -15,6 +15,8 @@
 #include "MemManager.h"
 using namespace Noelle;
 
+std::mutex MemManager::m_mtx;
+
 MemManager::MemManager()
 {
 
