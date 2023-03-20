@@ -34,14 +34,19 @@ namespace Noelle {
 			return -1;
 	}
 
+	bool ImGuiLayer::ShouldCloseWindow()
+	{
+		return glfwWindowShouldClose(m_window);
+	}
+
 	void ImGuiLayer::OnAttach()
 	{
-		
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 		glfwMakeContextCurrent(m_window);
+		gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 		glfwSwapInterval(1);  // Enable vsync
 
 		// Setup Dear ImGui context
@@ -70,6 +75,8 @@ namespace Noelle {
 		// Setup Platform/Renderer bindings
 		ImGui_ImplGlfw_InitForOpenGL(m_window, true);
 		ImGui_ImplOpenGL3_Init("#version 410");
+
+		m_clearColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 	}
 
 	void ImGuiLayer::OnDetach()
@@ -81,6 +88,8 @@ namespace Noelle {
 	
 	void ImGuiLayer::Begin()
 	{
+		glfwPollEvents();
+
 		// Start the Dear ImGui frame
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
@@ -94,6 +103,13 @@ namespace Noelle {
 
 		// Rendering
 		ImGui::Render();
+
+		int displayW, displayH;
+        glfwGetFramebufferSize(m_window, &displayW, &displayH);
+        glViewport(0, 0, displayW, displayH);
+        glClearColor(m_clearColor.x, m_clearColor.y, m_clearColor.z, m_clearColor.w);
+        glClear(GL_COLOR_BUFFER_BIT);
+
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
@@ -111,41 +127,5 @@ namespace Noelle {
 	{
 		static bool show = true;
 		ImGui::ShowDemoWindow(&show);
-
-		static bool show_another_window = false;
-		m_clearColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
-		// 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
-        {
-            static float f = 0.0f;
-            static int counter = 0;
-
-            ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
-
-            ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-            ImGui::Checkbox("Demo Window", &show);      // Edit bools storing our window open/close state
-            ImGui::Checkbox("Another Window", &show_another_window);
-
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-            ImGui::ColorEdit3("clear color", (float*)&m_clearColor); // Edit 3 floats representing a color
-
-            if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-                counter++;
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
-
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-            ImGui::End();
-        }
-
-		// 3. Show another simple window.
-        if (show_another_window)
-        {
-            ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-            ImGui::Text("Hello from another window!");
-            if (ImGui::Button("Close Me"))
-                show_another_window = false;
-            ImGui::End();
-        }
 	}
 }

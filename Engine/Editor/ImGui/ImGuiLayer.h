@@ -31,6 +31,7 @@ namespace Noelle {
         ImGuiLayer();
         ~ImGuiLayer();
         int CreateglfwWindow();
+        bool ShouldCloseWindow();
 
         virtual void OnAttach() override;
         virtual void OnDetach() override;

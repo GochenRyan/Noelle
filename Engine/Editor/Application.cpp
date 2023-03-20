@@ -23,7 +23,7 @@ int main()
         return -1;
     
     imGuiLayer->OnAttach();
-    while (true)
+    while (!imGuiLayer->ShouldCloseWindow())
     {
         imGuiLayer->Begin();
         imGuiLayer->OnImGuiRender();
