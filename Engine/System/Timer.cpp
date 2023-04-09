@@ -40,7 +40,7 @@ void Timer::InitGameTime()
 
 int Timer::GetRandSeed()
 {
-	return ((LARGE_INTEGER*)&m_ulTimeStart)->LowPart;
+	return static_cast<unsigned long>(m_ulTimeStart & 0xFFFFFFFF);
 }
 
 double Timer::GetGamePlayTime()
