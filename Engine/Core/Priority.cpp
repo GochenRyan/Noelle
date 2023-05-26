@@ -12,13 +12,3 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "Layer.h"
-
-namespace Noelle {
-
-	Layer::Layer(const std::string& debugName)
-		: m_DebugName(debugName)
-	{
-	}
-	
-}

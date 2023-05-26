@@ -6,3 +6,27 @@
 	path = Vendor/glfw
 	url = https://github.com/GochenRyan/glfw.git
 	branch = master
+[submodule "Vendor/freetype"]
+	path = Vendor/freetype
+	url = https://github.com/GochenRyan/freetype.git
+	branch = master
+[submodule "Vendor/SDL"]
+	path = Vendor/SDL
+	url = https://github.com/GochenRyan/SDL.git
+	branch = main
+[submodule "Vendor/bgfx"]
+	path = Vendor/bgfx
+	url = https://github.com/GochenRyan/bgfx.git
+	branch = master
+[submodule "Vendor/bx"]
+	path = Vendor/bx
+	url = https://github.com/GochenRyan/bx.git
+	branch = master
+[submodule "Vendor/bimg"]
+	path = Vendor/bimg
+	url = https://github.com/GochenRyan/bimg.git
+	branch = master
+[submodule "Vendor/yalantinglibs"]
+	path = Vendor/yalantinglibs
+	url = https://github.com/GochenRyan/yalantinglibs.git
+	branch = main
