@@ -1,5 +1,6 @@
 target("Sample2")
     set_kind("binary")
+    add_defines("SYSTEM_EXPORTS")
     add_files("*.cpp")
     add_deps("System")
     add_includedirs("$(projectdir)/Engine/System")

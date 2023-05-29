@@ -4,10 +4,10 @@
 
 #include <inttypes.h>
 
+struct SDL_Window;
+
 namespace NoelleEditor
 {
-    struct SDL_Window;
-
     class Window
     {
     public:

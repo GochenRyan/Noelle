@@ -2,11 +2,11 @@
 
 #include <string>
 
-class RenderContext;
-class RenderTarget;
-
 namespace NoelleEditor
 {
+	class RenderContext;
+	class RenderTarget;
+
 	class Renderer
 	{
 	public:

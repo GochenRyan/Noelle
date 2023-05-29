@@ -11,12 +11,32 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+#define NOMINMAX
 #include <System.h>
-#include <Timer.h>
-#include "ImGui/ImGuiLayer.h"
-#include "GLFW/glfw3.h"
+#undef NOMINMAX
+#include "ImGuiContextInstance.h"
+#include "Timer.h"
 
+
+#include "Window.h"
+
+
+#include "imgui.h"
+#include "MainMenu.h"
+#include "ImGuiRenderer.h"
+
+
+#include <bgfx/bgfx.h>
+#include <bgfx/platform.h>
+#include <bgfx/embedded_shader.h>
+
+#include <bx/math.h>
+#include "RenderContext.h"
+
+using namespace Noelle;
 using namespace NoelleEditor;
+
+static bgfx::TextureHandle g_FontTexture = BGFX_INVALID_HANDLE;
 
 int main()
 {

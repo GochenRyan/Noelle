@@ -33,7 +33,7 @@
 .vscode
 .xmake
 build
-vsxmake2019
+vsxmake*
 *.pdb
 Engine/System/libs/System/System.dll
 Engine/System/libs/System/System.exp

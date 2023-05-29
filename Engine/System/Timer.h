@@ -20,21 +20,25 @@ namespace Noelle
 	class SYSTEM_API Timer
 	{
 	private:
+		std::chrono::steady_clock::time_point m_tpTimeStart;
 		unsigned long long m_ulTimeStart;
 		int m_iFrameCount;
-		double m_fFPS;
-		double m_fTime,m_fLastFPSTime,m_fTimeSlice;
-		double m_fDetTime, m_fLastTime;
+		float m_fFPS;
+		std::chrono::duration<float> m_fLastFPSTime;
+		float m_fTimeSlice;
+		std::chrono::duration<float> m_fTime;
+		std::chrono::duration<float> m_fLastTime;
+		float m_fDetTime;
 		void InitGameTime();
 	public:
 		Timer();
 		~Timer();
-	
-		double GetGamePlayTime();
+
+		std::chrono::duration<float> GetGamePlayTime();
 		void UpdateFPS();
-		inline double GetFPS(){return m_fFPS;}
+		inline float GetFPS(){return m_fFPS;}
 		static Timer * m_pTimer;
-		double GetDetTime(){ return m_fDetTime; }
+		float GetDetTime(){ return m_fDetTime; }
 		int GetRandSeed();
 	};
 }

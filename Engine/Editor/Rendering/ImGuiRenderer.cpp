@@ -1,15 +1,7 @@
 #include "ImGuiRenderer.h"
-
 #include "RenderContext.h"
 
-#include "Math.hpp"
-
 #include <imgui.h>
-
-#define GLM_LEFT_HANDED
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
 #include <bx/math.h>
 
 using namespace NoelleEditor;

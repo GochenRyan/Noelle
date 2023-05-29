@@ -1,5 +1,5 @@
 #include "RenderContext.h"
-#include "VertexLayoutUtility.h"
+#include "Utility/VertexLayoutUtility.h"
 
 #include <bgfx/bgfx.h>
 #include <bimg/decode.h>

@@ -10,11 +10,11 @@
 
 struct ImGuiContext;
 
-class ImGuiBaseLayer;
-class SceneWorld;
-
 namespace NoelleEditor
 {
+	class ImGuiBaseLayer;
+	class SceneWorld;
+
 	class ImGuiContextInstance
 	{
 	public:

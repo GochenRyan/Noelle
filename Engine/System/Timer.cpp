@@ -14,7 +14,8 @@
 
 #include "Timer.h"
 using namespace Noelle;
-Timer * Timer::m_pTimer = nullptr;
+Timer* Timer::m_pTimer = nullptr;
+
 Timer::Timer()
 {
 	InitGameTime();
@@ -30,12 +31,14 @@ void Timer::InitGameTime()
 {
 	m_iFrameCount = 0;
 	m_fFPS = 0;
-	m_fTime = 0;
-	m_fLastFPSTime = 0;
+	m_fLastFPSTime = {};
 	m_fTimeSlice = 0;
-	m_fLastTime = 0;
+	m_tpTimeStart = std::chrono::steady_clock::now();
+	m_ulTimeStart = std::chrono::duration_cast<std::chrono::milliseconds>(m_tpTimeStart.time_since_epoch()).count();
+	m_fLastTime = {};
+	m_fTime = {};
 	m_fDetTime = 0;
-	m_ulTimeStart = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	
 }
 
 int Timer::GetRandSeed()
@@ -43,18 +46,17 @@ int Timer::GetRandSeed()
 	return static_cast<unsigned long>(m_ulTimeStart & 0xFFFFFFFF);
 }
 
-double Timer::GetGamePlayTime()
+std::chrono::duration<float> Timer::GetGamePlayTime()
 {
-	return (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - m_ulTimeStart);
+	return std::chrono::steady_clock::now() - m_tpTimeStart;
 }
 
 void Timer::UpdateFPS()
 {
-
-	m_fTime = GetGamePlayTime() * 0.001;
-	m_fDetTime = m_fTime - m_fLastTime;
+	m_fTime = GetGamePlayTime();
+	m_fDetTime = (m_fTime - m_fLastTime).count();
 	m_fLastTime = m_fTime;
-	if (m_fTime - m_fLastFPSTime > 1.0f)
+	if ((m_fTime - m_fLastFPSTime).count() > 1.0f)
 	{
 		m_fLastFPSTime = m_fTime;
 		m_fFPS = m_iFrameCount;
@@ -65,17 +67,3 @@ void Timer::UpdateFPS()
 		m_iFrameCount++;
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

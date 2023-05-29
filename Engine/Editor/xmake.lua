@@ -33,6 +33,10 @@ target("Editor")
         "$(projectdir)/Vendor/bimg/3rdparty/",
         -- inner
         "ImGui/",
+        "Layer/",
+        "Rendering/",
+        "Window/",
+        "$(projectdir)/Engine/DataStruct/",
         "$(projectdir)/Engine/System/"
     )
 

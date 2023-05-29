@@ -1,7 +1,7 @@
 #pragma once
 
 #include "RenderTarget.h"
-#include "VertexAttribute.h"
+#include "Utility/VertexAttribute.h"
 #include "Window.h"
 
 #include "StringCrc.h"
