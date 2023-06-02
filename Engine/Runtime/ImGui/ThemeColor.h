@@ -1,6 +1,6 @@
 #pragma once
 
-namespace NoelleEditor
+namespace Noelle
 {
 	enum class ThemeColor
 	{

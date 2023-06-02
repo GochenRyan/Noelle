@@ -1,12 +1,12 @@
 #pragma once
 
-#include "ThemeColor.h"
+#include "ImGui/ThemeColor.h"
 
 #include <inttypes.h>
 #include <memory>
 #include <string>
 #include <vector>
-#include "Localization.h"
+#include "ImGui/Localization.h"
 
 struct ImGuiContext;
 
@@ -47,12 +47,12 @@ namespace NoelleEditor
 
 		void OnResize(uint16_t width, uint16_t height);
 
-		void LoadFontFiles(const std::vector<std::string>& ttfFileNames, Language language);
+		void LoadFontFiles(const std::vector<std::string>& ttfFileNames, Noelle::Language language);
 
 		void SetWindowPosOffset(float x, float y) { m_windowPosOffsetX = x; m_windowPosOffsetY = y; }
 
-		ThemeColor GetImGuiThemeColor() const { return m_themeColor; }
-		void SetImGuiThemeColor(ThemeColor theme);
+		Noelle::ThemeColor GetImGuiThemeColor() const { return m_themeColor; }
+		void SetImGuiThemeColor(Noelle::ThemeColor theme);
 
 		void SetSceneWorld(SceneWorld* pSceneWorld) { m_pSceneWorld = pSceneWorld; }
 		SceneWorld* GetSceneWorld() const { return m_pSceneWorld; }
@@ -66,7 +66,7 @@ namespace NoelleEditor
 	private:
 		SceneWorld* m_pSceneWorld = nullptr;
 		ImGuiContext* m_pImGuiContext = nullptr;
-		ThemeColor m_themeColor;
+		Noelle::ThemeColor m_themeColor;
 
 		float m_windowPosOffsetX = 0.0f;
 		float m_windowPosOffsetY = 0.0f;

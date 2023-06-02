@@ -27,7 +27,7 @@ namespace NoelleEditor
 		RenderContext& operator=(RenderContext&&) = delete;
 		~RenderContext();
 
-		void Init(std::unique_ptr<Window>& window);
+		void Init();
 		void OnResize(uint16_t width, uint16_t height);
 		void BeginFrame();
 		void EndFrame();

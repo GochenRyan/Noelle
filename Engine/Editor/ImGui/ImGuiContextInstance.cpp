@@ -411,7 +411,7 @@ void ImGuiContextInstance::OnResize(uint16_t width, uint16_t height)
 	io.DisplaySize.y = height;
 }
 
-void ImGuiContextInstance::LoadFontFiles(const std::vector<std::string>& ttfFileNames, Language language)
+void ImGuiContextInstance::LoadFontFiles(const std::vector<std::string>& ttfFileNames, Noelle::Language language)
 {
 	TempSwitchContextScope tempSwitchScope(this);
 
@@ -434,29 +434,29 @@ void ImGuiContextInstance::LoadFontFiles(const std::vector<std::string>& ttfFile
 		{
 		// Glyph ranges for Chinese Simplied have issues on showing some characters.
 		// So let's use the bigger Glyph ranges including tradional characters.
-		case Language::ChineseSimplied:
-		case Language::ChineseTraditional:
+		case Noelle::Language::ChineseSimplied:
+		case Noelle::Language::ChineseTraditional:
 			pGlyphRanges = io.Fonts->GetGlyphRangesChineseFull();
 			break;
-		case Language::Cyrillic:
+		case Noelle::Language::Cyrillic:
 			pGlyphRanges = io.Fonts->GetGlyphRangesCyrillic();
 			break;
-		case Language::Greek:
+		case Noelle::Language::Greek:
 			pGlyphRanges = io.Fonts->GetGlyphRangesGreek();
 			break;
-		case Language::Japanese:
+		case Noelle::Language::Japanese:
 			pGlyphRanges = io.Fonts->GetGlyphRangesJapanese();
 			break;
-		case Language::Korean:
+		case Noelle::Language::Korean:
 			pGlyphRanges = io.Fonts->GetGlyphRangesKorean();
 			break;
-		case Language::Thai:
+		case Noelle::Language::Thai:
 			pGlyphRanges = io.Fonts->GetGlyphRangesThai();
 			break;
-		case Language::Vitnam:
+		case Noelle::Language::Vitnam:
 			pGlyphRanges = io.Fonts->GetGlyphRangesVietnamese();
 			break;
-		case Language::English:
+		case Noelle::Language::English:
 		default:
 			break;
 		}
@@ -536,14 +536,14 @@ void ImGuiContextInstance::SetImGuiStyles()
 	}
 }
 
-void ImGuiContextInstance::SetImGuiThemeColor(ThemeColor theme)
+void ImGuiContextInstance::SetImGuiThemeColor(Noelle::ThemeColor theme)
 {
 	TempSwitchContextScope tempSwitchScope(this);
 
 	m_themeColor = theme;
 
 	ImVec4* colours = ImGui::GetStyle().Colors;
-	if (ThemeColor::Black == theme)
+	if (Noelle::ThemeColor::Black == theme)
 	{
 		ImGui::StyleColorsDark();
 		colours[ImGuiCol_Text] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
@@ -602,11 +602,11 @@ void ImGuiContextInstance::SetImGuiThemeColor(ThemeColor theme)
 		colours[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
 		colours[ImGuiCol_ModalWindowDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
 	}
-	else if (ThemeColor::Classic == theme)
+	else if (Noelle::ThemeColor::Classic == theme)
 	{
 		ImGui::StyleColorsClassic();
 	}
-	else if (ThemeColor::Dark == theme)
+	else if (Noelle::ThemeColor::Dark == theme)
 	{
 		ImGui::StyleColorsDark();
 		constexpr float max = 255.0f;
@@ -664,7 +664,7 @@ void ImGuiContextInstance::SetImGuiThemeColor(ThemeColor theme)
 		colours[ImGuiCol_DockingEmptyBg] = ImVec4(0.33f, 0.33f, 0.33f, 1.00f);
 		colours[ImGuiCol_DockingPreview] = ImVec4(0.33f, 0.33f, 0.33f, 1.00f);
 	}
-	else if (ThemeColor::Grey == theme)
+	else if (Noelle::ThemeColor::Grey == theme)
 	{
 		ImGui::StyleColorsDark();
 		colours[ImGuiCol_Text] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
@@ -718,7 +718,7 @@ void ImGuiContextInstance::SetImGuiThemeColor(ThemeColor theme)
 		colours[ImGuiCol_TabUnfocusedActive] = ImVec4(0.33f, 0.33f, 0.33f, 1.00f);
 		colours[ImGuiCol_DockingPreview] = ImVec4(0.85f, 0.85f, 0.85f, 0.28f);
 	}
-	else if (ThemeColor::Light == theme)
+	else if (Noelle::ThemeColor::Light == theme)
 	{
 		ImGui::StyleColorsLight();
 		colours[ImGuiCol_Text] = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);

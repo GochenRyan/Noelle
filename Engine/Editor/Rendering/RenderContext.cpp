@@ -36,25 +36,13 @@ RenderContext::~RenderContext()
 	bgfx::shutdown();
 }
 
-void RenderContext::Init(std::unique_ptr<Window>& window)
+void RenderContext::Init()
 {
 	bgfx::Init initDesc;
-	// initDesc.platformData.nwh = window->GetNativeHandle();
-	// initDesc.platformData.ndt = nullptr;
-	// initDesc.resolution.width = window->GetWidth();
-	// initDesc.resolution.height = window->GetHeight();
-	// initDesc.resolution.reset = BGFX_RESET_MSAA_X16 | BGFX_RESET_VSYNC;
 
 	bgfx::init(initDesc);
 
 	bgfx::setDebug(BGFX_DEBUG_NONE);
-	// bgfx::setViewRect(0, 0, 0, uint16_t(window->GetWidth()), uint16_t(window->GetHeight()));
-    // bgfx::setViewClear(0
-    //     , BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH
-    //     , 0x303030ff
-    //     , 1.0f
-    //     , 0
-    // );
 }
 
 void RenderContext::Shutdown()

@@ -17,6 +17,7 @@ includes("Vendor/bgfx")
 includes("Vendor/imgui")
 
 includes("Engine/System")
+includes("Engine/Runtime")
 includes("Engine/Editor")
 
 includes("Samples/Sample1")

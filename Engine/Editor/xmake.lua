@@ -9,7 +9,8 @@ target("Editor")
         "libGlad",
         "SDL3",
         -- inner
-        "System"
+        "System",
+        "Runtime"
     )
 
     add_headerfiles(
@@ -37,6 +38,7 @@ target("Editor")
         "Rendering/",
         "Window/",
         "$(projectdir)/Engine/DataStruct/",
+        "$(projectdir)/Engine/Runtime/",
         "$(projectdir)/Engine/System/"
     )
 

@@ -37,7 +37,7 @@ namespace Noelle
 		std::chrono::duration<float> GetGamePlayTime();
 		void UpdateFPS();
 		inline float GetFPS(){return m_fFPS;}
-		static Timer * m_pTimer;
+		static Timer * ms_pTimer;
 		float GetDetTime(){ return m_fDetTime; }
 		int GetRandSeed();
 	};

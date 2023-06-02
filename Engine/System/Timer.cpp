@@ -14,12 +14,12 @@
 
 #include "Timer.h"
 using namespace Noelle;
-Timer* Timer::m_pTimer = nullptr;
+Timer* Timer::ms_pTimer = nullptr;
 
 Timer::Timer()
 {
 	InitGameTime();
-	m_pTimer = this;
+	ms_pTimer = this;
 }
 
 Timer::~Timer()

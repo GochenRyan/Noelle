@@ -1,4 +1,4 @@
-#include "ThemeColor.h"
+#include "ImGui/ThemeColor.h"
 #include "MainMenu.h"
 #include "ImGuiContextInstance.h"
 #include "Input.h"
@@ -75,8 +75,8 @@ void MainMenu::EditMenu()
 		{
 			// It is not convenient in C++ to loop enum except define an extra array to wrap them.
 			// C++ 20/23 ranges may look better but still needs std::iota inside its implementation.
-			for (ThemeColor theme = ThemeColor::Black; theme < ThemeColor::Count;
-				theme = static_cast<ThemeColor>(static_cast<int>(theme) + 1))
+			for (Noelle::ThemeColor theme = Noelle::ThemeColor::Black; theme < Noelle::ThemeColor::Count;
+				theme = static_cast<Noelle::ThemeColor>(static_cast<int>(theme) + 1))
 			{
 				ImGuiContextInstance* pImGuiContextInstance = reinterpret_cast<ImGuiContextInstance*>(io.UserData);
 				if (ImGui::MenuItem(GetThemeColorName(theme), "", pImGuiContextInstance->GetImGuiThemeColor() == theme))

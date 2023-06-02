@@ -1,3 +1,5 @@
+#pragma once
+
 #include "ImGuiBaseLayer.h"
 
 namespace NoelleEditor
