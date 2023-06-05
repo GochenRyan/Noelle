@@ -22,7 +22,7 @@
 int main(int argc, char* argv[])
 {
     Noelle::EngineInitArgs initArgs;
-	initArgs.pTitle = "CatDogEditor";
+	initArgs.pTitle = "Noelle";
 	initArgs.pIconFilePath = "editor_icon.png";
 	initArgs.language = Noelle::Language::ChineseSimplied;
 	initArgs.width = 1920;
