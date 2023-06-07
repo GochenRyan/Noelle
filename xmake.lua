@@ -5,6 +5,11 @@ set_languages("cxx20")
 add_cxxflags("/Zc:__cplusplus")
 add_ldflags("/NODEFAULTLIB:LIBCMTD")
 
+if is_mode("debug") then
+    add_cxflags("-D _DEBUG")
+    set_runtimes("MDd")
+end
+
 set_targetdir("lib")
 
 includes("Vendor/glfw")

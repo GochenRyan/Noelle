@@ -80,7 +80,7 @@ namespace Noelle
 		// Deallocate memory
 		virtual void Deallocate(char* pcAddr, USIZE_TYPE uiAlignment, bool bIsArray) = 0;
 	protected:
-		static std::mutex m_mtx;
+		static std::recursive_mutex m_mtx;
 	};
 
 	class SYSTEM_API CMem : public MemManager
@@ -93,7 +93,7 @@ namespace Noelle
 	};
 
 #if WINDOWS_PLATFORM
-#if _DEBUG
+#ifdef _DEBUG
 	class SYSTEM_API DebugMem : public MemManager
 	{
 	public:
@@ -299,7 +299,7 @@ namespace Noelle
 	};
 
 	template<class T>
-	class SYSTEM_API StackMemAlloc: public MemObject
+	class StackMemAlloc: public MemObject
 	{
 	public:
 		StackMemAlloc(USIZE_TYPE uiSize = 0, USIZE_TYPE uiAlignment = 0)

@@ -12,25 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #define NOMINMAX
-#include <System.h>
+#include "MemManager.h"
 #undef NOMINMAX
 
 #include <Application/Engine.h>
+#include <Application/Command.h>
+
 #include "Application.h"
 
 
 int main(int argc, char* argv[])
 {
-    Noelle::EngineInitArgs initArgs;
-	initArgs.pTitle = "Noelle";
-	initArgs.pIconFilePath = "editor_icon.png";
-	initArgs.language = Noelle::Language::ChineseSimplied;
-	initArgs.width = 1920;
-	initArgs.height = 1080;
+	Noelle::StackMemAlloc<Noelle::EngineInitArgs> initArgs(1);
+	initArgs.GetPtr()->pTitle = "Noelle";
+	initArgs.GetPtr()->pIconFilePath = "editor_icon.png";
+	initArgs.GetPtr()->language = Noelle::Language::ChineseSimplied;
+	initArgs.GetPtr()->width = 1920;
+	initArgs.GetPtr()->height = 1080;
 
     Noelle::Engine* pEngine = Noelle::Engine::Create(std::make_unique<NoelleEditor::Application>());
 
-    pEngine->Init(std::move(initArgs));
+    pEngine->Init(*(initArgs.GetPtr()));
 	pEngine->Run();
 	Noelle::Engine::Destroy(pEngine);
 

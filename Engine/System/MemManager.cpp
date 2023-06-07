@@ -15,7 +15,7 @@
 #include "MemManager.h"
 using namespace Noelle;
 
-std::mutex MemManager::m_mtx;
+std::recursive_mutex MemManager::m_mtx;
 
 MemManager::MemManager()
 {
@@ -27,7 +27,7 @@ MemManager::~MemManager()
 }
 
 
-#if _DEBUG
+#ifdef _DEBUG
 #if WINDOWS_PLATFORM
 #include <DbgHelp.h>
 typedef BOOL
@@ -258,7 +258,7 @@ DebugMem::~DebugMem()
 
 void* DebugMem::Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArray)
 {
-	std::lock_guard<std::mutex> lock(m_mtx);
+	std::lock_guard<std::recursive_mutex> lock(m_mtx);
 
 	m_uiNumNewCalls++;
 
@@ -322,7 +322,7 @@ void* DebugMem::Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArra
 
 void DebugMem::Deallocate(char* pcAddr, USIZE_TYPE uiAlignment, bool bIsArray)
 {
-	std::lock_guard<std::mutex> lock(m_mtx);
+	std::lock_guard<std::recursive_mutex> lock(m_mtx);
 	
 	m_uiNumDeleteCalls++;
 	pcAddr -= sizeof(USIZE_TYPE);
@@ -504,7 +504,7 @@ MemWin32::~MemWin32()
 
 void* MemWin32::Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArray)
 {
-	std::lock_guard<std::mutex> lock(m_mtx);
+	std::lock_guard<std::recursive_mutex> lock(m_mtx);
 
 	FreeMem* free;
 	if (uiSize < POOL_MAX)
@@ -589,7 +589,7 @@ void* MemWin32::Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArra
 
 void MemWin32::Deallocate(char* pcAddr, USIZE_TYPE uiAlignment, bool bIsArray)
 {
-	std::lock_guard<std::mutex> lock(m_mtx);
+	std::lock_guard<std::recursive_mutex> lock(m_mtx);
 
 	// TODO: mutithread
 	NOEL_ASSERT(pcAddr);
@@ -735,7 +735,7 @@ CMem::~CMem()
 
 void* CMem::Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArray)
 {
-	std::lock_guard<std::mutex> lock(m_mtx);
+	std::lock_guard<std::recursive_mutex> lock(m_mtx);
 
 	if (uiAlignment == 0)
 		return malloc(uiSize);
@@ -746,7 +746,7 @@ void* CMem::Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArray)
 
 void CMem::Deallocate(char* pcAddr, USIZE_TYPE uiAlignment, bool bIsArray)
 {
-	std::lock_guard<std::mutex> lock(m_mtx);
+	std::lock_guard<std::recursive_mutex> lock(m_mtx);
 
 	if (uiAlignment == 0)
 		return free(pcAddr);
@@ -765,7 +765,7 @@ StackMem& MemObject::GetStackMemManager()
 MemManager& MemObject::GetMemManager()
 {
 #if WINDOWS_PLATFORM
-#if _DEBUG
+#ifdef _DEBUG
 	static DebugMem g_MemManager;
 #elif _WIN64
 	static MemWin64 g_MemManager;

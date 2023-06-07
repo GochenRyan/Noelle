@@ -15,17 +15,17 @@
 #include <MemManager.h>
 #include <vector>
 #include <memory>
+#include <iostream>
 
 void Fun()
 {
 	char * k = NOELLE_NEW char[10];
 }
-void main()
+int main()
 {
 	int * a = NOELLE_NEW int;
 	*a = 5;
 	delete a;
-	Fun();
 
 	std::vector<int> vec;
 	vec.push_back(1);
@@ -34,4 +34,7 @@ void main()
 	std::unique_ptr<int> sp1(NOELLE_NEW int(5));
 
 	sp0 = move(sp1);
+	Fun();
+
+	return 0;
 }
