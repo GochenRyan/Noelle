@@ -12,6 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#pragma once
-#include <MemManager.h>
+#include "ClassInfo.h"
 
+inline uint32_t ClassInfo::GetName() const
+{
+    return m_uiName;
+}
+
+inline bool ClassInfo::IsSameType(const ClassInfo& Type) const
+{
+	return (&Type == this);
+}
+
+inline bool ClassInfo::IsDerived(const ClassInfo& Type) const
+{
+    const ClassInfo* temp = this;
+    while(!temp->IsSameType(Type))
+    {
+        if (temp->m_pBase)
+        {
+            temp = temp->m_pBase;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    return true;
+}
