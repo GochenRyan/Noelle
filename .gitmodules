@@ -30,3 +30,7 @@
 	path = Vendor/yalantinglibs
 	url = https://github.com/GochenRyan/yalantinglibs.git
 	branch = main
+[submodule "Vendor/spdlog"]
+	path = Vendor/spdlog
+	url = https://github.com/GochenRyan/spdlog.git
+	branch = v1.x

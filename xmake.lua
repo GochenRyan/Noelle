@@ -20,6 +20,7 @@ includes("Vendor/bx")
 includes("Vendor/bimg")
 includes("Vendor/bgfx")
 includes("Vendor/imgui")
+includes("Vendor/spdlog")
 
 includes("Engine/System")
 includes("Engine/Graphic")
