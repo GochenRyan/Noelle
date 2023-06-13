@@ -21,7 +21,7 @@
 namespace NoelleGraphic
 {
     class Object;
-    typedef std::function<Object*()> CreateObjectFunc;
+    using CreateObjectFunc = std::function<Object*()>;
 
     class GRAPHIC_API ClassInfo
     {

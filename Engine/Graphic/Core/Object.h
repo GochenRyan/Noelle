@@ -15,6 +15,7 @@
 #pragma once
 #include "Graphic.h"
 #include "ClassInfo.h"
+#include "ClassInfo.marc"
 
 #include <unordered_map>
 #include <functional>
@@ -22,22 +23,18 @@
 namespace NoelleGraphic
 {
     class Object;
-    typedef std::function<Object*()> CreateObjectFunc;
+    using CreateObjectFunc = std::function<Object*()>;
 
     class GRAPHIC_API Object
     {
     public:
         virtual ~Object() = 0;
-        virtual ClassInfo& GetType() const
-        {
-            return ms_type;
-        }
+        DECLARE_CLASSINFO
         inline bool IsSameType(const ClassInfo& Type) const;
         inline bool IsDerived(const ClassInfo& Type) const;
         inline bool IsSameType(const Object* pObject) const;
         inline bool IsDerived(const Object* pObject) const;
         static bool ms_bRegisterFactory;
-        static ClassInfo ms_type;
         static std::unordered_map<uint32_t, CreateObjectFunc> ms_classFactory;
     protected:
         Object(){}

@@ -19,6 +19,7 @@
 #include "Core/ClassInfo.h"
 #include "StringCrc.h"
 #include "Core/Object.h"
+#include "Core/ClassInfo.marc"
 
 
 #include <iostream>
@@ -30,11 +31,7 @@ class A: public Object
 public:
     A(){}
     virtual ~A(){}
-    virtual ClassInfo& GetType() const
-    {
-        return ms_type;
-    }
-    static ClassInfo ms_type;
+    DECLARE_CLASSINFO
 };
 
 class B: public A
@@ -42,16 +39,11 @@ class B: public A
 public:
     B(){}
     virtual ~B(){}
-    virtual ClassInfo& GetType() const
-    {
-        return ms_type;
-    }
-    static ClassInfo ms_type;
+    DECLARE_CLASSINFO
 };
 
-
-ClassInfo A::ms_type(StringCrc("A"), &Object::ms_type, nullptr);
-ClassInfo B::ms_type(StringCrc("B"), &A::ms_type, nullptr);
+IMPLEMENT_CLASSINFO_NOCREATEFUNC(A, Object)
+IMPLEMENT_CLASSINFO_NOCREATEFUNC(B, A)
 
 int main()
 {
@@ -59,5 +51,6 @@ int main()
     B* b = new B();
 
     bool bDerived = b->IsDerived(a);
+    std::cin.get();
 	return 0;
 }

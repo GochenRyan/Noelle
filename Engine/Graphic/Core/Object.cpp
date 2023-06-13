@@ -17,7 +17,7 @@
 
 using namespace NoelleGraphic;
 
-ClassInfo Object::ms_type(StringCrc("Object"), nullptr, nullptr);
+IMPLEMENT_CLASSINFO_NOPARENT_NOCREATEFUNC(Object)
 
 Object::~Object()
 {
