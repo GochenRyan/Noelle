@@ -12,19 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "Object.h"
-#include "StringCrc.h"
+#include <unordered_set>
 
-using namespace NoelleGraphic;
-
-IMPLEMENT_CLASSINFO_NOPARENT_NOCREATEFUNC(Object)
-
-Object::Object()
+namespace NoelleGraphic
 {
-    GetFastObjManager().AddObject(this);
-}
+    class Object;
+    class FastObjManager
+    {
+    public:
+        FastObjManager();
+        ~FastObjManager();
+        void AddObject(Object* obj);
+        void DeleteObject(Object* obj);
+        bool IsClear();
+        unsigned int GetObjectNum();
+    private:
+        std::unordered_set<Object*> m_objectSet;
+    };
 
-Object::~Object()
-{
-    GetFastObjManager().DeleteObject(this);
 }

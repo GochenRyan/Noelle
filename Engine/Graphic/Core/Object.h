@@ -16,6 +16,7 @@
 #include "Graphic.h"
 #include "ClassInfo.h"
 #include "ClassInfo.marc"
+#include "FastObjManager.h"
 
 #include <unordered_map>
 #include <functional>
@@ -28,6 +29,7 @@ namespace NoelleGraphic
     class GRAPHIC_API Object
     {
     public:
+        Object();
         virtual ~Object() = 0;
         DECLARE_CLASSINFO
         inline bool IsSameType(const ClassInfo& Type) const;
@@ -36,8 +38,13 @@ namespace NoelleGraphic
         inline bool IsDerived(const Object* pObject) const;
         static bool ms_bRegisterFactory;
         static std::unordered_map<uint32_t, CreateObjectFunc> ms_classFactory;
-    protected:
-        Object(){}
+        
+        friend class FastObjManager;
+        static FastObjManager& GetFastObjManager()
+        {
+            static FastObjManager ms_objManager;
+            return ms_objManager;
+        }
     };
 
     #include "Object.inl"

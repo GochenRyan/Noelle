@@ -51,6 +51,8 @@ int main()
     B* b = new B();
 
     bool bDerived = b->IsDerived(a);
-    std::cin.get();
+
+    delete a;
+    delete b;
 	return 0;
 }

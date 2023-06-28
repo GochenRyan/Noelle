@@ -12,19 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "Object.h"
-#include "StringCrc.h"
+#include "FastObjManager.h"
 
 using namespace NoelleGraphic;
 
-IMPLEMENT_CLASSINFO_NOPARENT_NOCREATEFUNC(Object)
-
-Object::Object()
+FastObjManager::FastObjManager()
 {
-    GetFastObjManager().AddObject(this);
 }
 
-Object::~Object()
+FastObjManager::~FastObjManager()
 {
-    GetFastObjManager().DeleteObject(this);
+}
+
+void FastObjManager::AddObject(Object* obj)
+{
+    m_objectSet.insert(obj);
+}
+
+void FastObjManager::DeleteObject(Object* obj)
+{
+    m_objectSet.erase(obj);
+}
+
+bool FastObjManager::IsClear()
+{
+    return m_objectSet.size() == 0;
+}
+
+unsigned int FastObjManager::GetObjectNum()
+{
+    return m_objectSet.size();
 }
