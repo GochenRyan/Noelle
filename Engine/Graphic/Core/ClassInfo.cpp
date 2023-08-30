@@ -27,3 +27,29 @@ ClassInfo::~ClassInfo()
 {
     m_pBase = nullptr;
 }
+
+Property* ClassInfo::GetProperty(unsigned int uiIndex) const
+{
+    return m_PropertyArray[uiIndex].get();
+}
+
+unsigned int ClassInfo::GetPropertyNum() const
+{
+    return m_PropertyArray.size();
+}
+
+void ClassInfo::AddProperty(std::unique_ptr<Property> property)
+{
+    m_PropertyArray.emplace_back(std::move(property));
+}
+
+void ClassInfo::AddProperty(ClassInfo& classinfo)
+{
+    for (const auto& property : classinfo.m_PropertyArray) 
+    {
+        Property* newProperty = property->GetInstance();
+        newProperty->Clone(property.get());
+        m_PropertyArray.emplace_back(std::make_unique<Property>(std::move(*newProperty)));
+        newProperty = nullptr;
+    }
+}

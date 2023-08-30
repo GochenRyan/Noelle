@@ -15,7 +15,9 @@
 #pragma once
 #include "Graphic.h"
 #include "StringCrc.h"
+#include "Property.h"
 
+#include <memory>
 #include <functional>
 
 namespace NoelleGraphic
@@ -26,7 +28,12 @@ namespace NoelleGraphic
     class GRAPHIC_API ClassInfo
     {
     public:
+        ClassInfo() = delete;
         ClassInfo(const StringCrc& nameCrc, ClassInfo* pBase, CreateObjectFunc COF);
+        ClassInfo(const ClassInfo&) = delete;
+		ClassInfo& operator=(const ClassInfo&) = delete;
+		ClassInfo(ClassInfo&&) = default;
+		ClassInfo& operator=(ClassInfo&&) = default;
         ~ClassInfo();
 
         inline uint32_t GetName() const;
@@ -35,12 +42,18 @@ namespace NoelleGraphic
         inline ClassInfo* GetBase() const
         {
             return m_pBase;
-        } 
+        }
+
+        Property* GetProperty(unsigned int uiIndex) const;
+        unsigned int GetPropertyNum() const;
+        void AddProperty(std::unique_ptr<Property> property);
+        void AddProperty(ClassInfo& classinfo);
 
     private:
         uint32_t m_uiName;
         ClassInfo* m_pBase;
         CreateObjectFunc m_createFunc;
+        std::vector<std::unique_ptr<Property>> m_PropertyArray;
     };
 
     #include "ClassInfo.inl"
