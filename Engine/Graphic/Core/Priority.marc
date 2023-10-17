@@ -12,3 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#define DECLARE_PRIORITY \
+public:\
+	static Priority ms_Priority;
+
+#define IMPLEMENT_PRIORITY(classname) \
+	Priority classname::ms_Priority;
+
+#define ADD_PRIORITY(classname)\
+	if(!ms_Priority.AddDependencyPriority(&classname::ms_Priority)) \
+		return 0;

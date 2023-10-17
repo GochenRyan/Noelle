@@ -12,30 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "Object.h"
-#include "StringCrc.h"
-#include "Context.h"
+#include "Application/Command.h"
+#include "Core/Context.h"
 
-#include "Property.marc"
+#include <spdlog/spdlog.h>
 
-using namespace NoelleGraphic;
+#include <memory>
 
-IMPLEMENT_CLASSINFO_NOPARENT_NOCREATEFUNC(Object)
 
-std::unordered_map<uint32_t, CreateObjectFunc> Object::ms_ClassFactory;
-
-IMPLEMENT_INITIAL_NO_CLASS_FACTORY_BEGIN(Object)
-IMPLEMENT_INITIAL_NO_CLASS_FACTORY_END
-ADD_PROPERTY_ROOT_BEGIN(Object)
-REGISTER_PROPERTY(m_uiFlag, Flag, Property::F_CLONE)
-ADD_PROPERTY_END
-
-Object::Object()
+int main(int argc, char* argv[])
 {
-    GetFastObjManager().AddObject(this);
-}
+    spdlog::info("Property Sample 1");
+    std::unique_ptr<Noelle::Command> commands =  std::make_unique<Noelle::Command>(argc, argv);
 
-Object::~Object()
-{
-    GetFastObjManager().DeleteObject(this);
+    NoelleGraphic::Context::Initialize();
+    NoelleGraphic::Context::Terminal();
 }

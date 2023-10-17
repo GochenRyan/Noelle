@@ -15,8 +15,11 @@
 #pragma once
 #include "Graphic.h"
 #include "ClassInfo.h"
-#include "ClassInfo.marc"
 #include "FastObjManager.h"
+#include "Priority.h"
+
+#include "ClassInfo.marc"
+#include "Initial.marc"
 
 #include <unordered_map>
 #include <functional>
@@ -32,12 +35,15 @@ namespace NoelleGraphic
         Object();
         virtual ~Object() = 0;
         DECLARE_CLASSINFO
+        
         inline bool IsSameType(const ClassInfo& Type) const;
         inline bool IsDerived(const ClassInfo& Type) const;
         inline bool IsSameType(const Object* pObject) const;
         inline bool IsDerived(const Object* pObject) const;
         static bool ms_bRegisterFactory;
-        static std::unordered_map<uint32_t, CreateObjectFunc> ms_classFactory;
+        static std::unordered_map<uint32_t, CreateObjectFunc> ms_ClassFactory;
+        
+        DECLARE_INITIAL_NO_CLASS_FACTORY
         
         friend class FastObjManager;
         static FastObjManager& GetFastObjManager()
@@ -45,6 +51,21 @@ namespace NoelleGraphic
             static FastObjManager ms_objManager;
             return ms_objManager;
         }
+        
+        enum //Object Flag
+        {
+            OF_REACH = 0x01,
+            OF_UNREACH = 0x02,
+            OF_PendingKill = 0x04,
+            OF_GCObject = 0x08,
+            OF_RootObject = 0x10,
+            OF_MAX
+        };
+        inline void SetFlag(unsigned int uiFlag);
+        inline void ClearFlag(unsigned int uiFlag);
+        inline bool IsHasFlag(unsigned int uiFlag);
+
+        unsigned int m_uiFlag;
     };
 
     #include "Object.inl"

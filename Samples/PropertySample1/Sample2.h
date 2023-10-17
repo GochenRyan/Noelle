@@ -12,30 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "Object.h"
-#include "StringCrc.h"
-#include "Context.h"
+#pragma once
+#include "Core/Object.h" 
+#include "Core/Context.h"
+#include "Core/ClassInfo.marc"
+#include "Core/Initial.marc"
+#include "Core/Property.marc"
+#include "Core/Priority.marc"
+#include "Core/ClassInfo.h"
 
-#include "Property.marc"
-
-using namespace NoelleGraphic;
-
-IMPLEMENT_CLASSINFO_NOPARENT_NOCREATEFUNC(Object)
-
-std::unordered_map<uint32_t, CreateObjectFunc> Object::ms_ClassFactory;
-
-IMPLEMENT_INITIAL_NO_CLASS_FACTORY_BEGIN(Object)
-IMPLEMENT_INITIAL_NO_CLASS_FACTORY_END
-ADD_PROPERTY_ROOT_BEGIN(Object)
-REGISTER_PROPERTY(m_uiFlag, Flag, Property::F_CLONE)
-ADD_PROPERTY_END
-
-Object::Object()
+class Sample2: public NoelleGraphic::Object
 {
-    GetFastObjManager().AddObject(this);
-}
+public:
+    Sample2(){}
+    virtual ~Sample2(){}
+    DECLARE_CLASSINFO
+    DECLARE_INITIAL
 
-Object::~Object()
-{
-    GetFastObjManager().DeleteObject(this);
-}
+    static bool TestInitFunction();
+    static bool TestTerminalFunction();
+};

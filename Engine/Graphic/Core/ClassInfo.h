@@ -47,7 +47,9 @@ namespace NoelleGraphic
         Property* GetProperty(unsigned int uiIndex) const;
         unsigned int GetPropertyNum() const;
         void AddProperty(std::unique_ptr<Property> property);
+        void AddProperty(Property* property);
         void AddProperty(ClassInfo& classinfo);
+        void ClearProperty();
 
     private:
         uint32_t m_uiName;

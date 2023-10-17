@@ -38,6 +38,7 @@ namespace NoelleGraphic
 
     class Property
     {
+    public:
         enum // Property type 
         {
             PT_VALUE,
@@ -80,20 +81,29 @@ namespace NoelleGraphic
 
         virtual bool Clone(const Property* property)
         {
-            m_pOwner = property->m_pOwner;
-            m_Name = property->m_Name;
-            m_uiFlag = property->m_uiFlag;
-            m_uiOffset = property->m_uiOffset;
-            return true;
+            if (property->GetType() == GetType() && GetType())
+            {
+                m_pOwner = property->m_pOwner;
+                m_Name = property->m_Name;
+                m_uiFlag = property->m_uiFlag;
+                m_uiOffset = property->m_uiOffset;
+                return true;
+            }
+            return false;
         }
 
         virtual void Serialize()
         {
         }
 
-        std::string GetName() const
+        inline const std::string GetName() const
         {
             return m_Name;
+        }
+
+        inline ClassInfo* GetType() const
+        {
+            return m_pOwner;
         }
 
         unsigned int GetFlag()
@@ -155,11 +165,15 @@ namespace NoelleGraphic
         EnumProperty& operator=(const EnumProperty&) = delete;
         EnumProperty& operator=(EnumProperty&&) = default;
 
-        virtual void Clone(const Property* property)
+        virtual bool Clone(const Property* property)
         {
-            EnumProperty& tmp = static_cast<EnumProperty&>(property);
-            Property::Clone(tmp);
-            m_EnumName = tmp.m_EnumName;
+            EnumProperty* tmp = (EnumProperty*)property;
+            if (Property::Clone(tmp))
+            {
+                m_EnumName = tmp->m_EnumName;
+                return true;
+            }
+            return false;
         }
 
         virtual bool SetValue(void* pObj, T& pDataSrc) const
@@ -222,13 +236,17 @@ namespace NoelleGraphic
         DataProperty& operator=(const DataProperty&) = delete;
         DataProperty& operator=(DataProperty&&) = default;
 
-        virtual void Clone(const Property* property)
+        virtual bool Clone(const Property* property)
         {
-            DataProperty<T, NumType>& tmp = static_cast<DataProperty<T, NumType>&>(property);
-            Property::Clone(tmp);
-            m_bDynamicCreate = tmp.m_bDynamicCreate;
-            m_uiDataNum = tmp.m_uiDataNum;
-            m_uiNumOffset = tmp.m_uiNumOffset;
+            DataProperty<T, NumType>* tmp = (DataProperty<T, NumType>*)property;
+            if (Property::Clone(tmp))
+            {
+                m_bDynamicCreate = tmp->m_bDynamicCreate;
+                m_uiDataNum = tmp->m_uiDataNum;
+                m_uiNumOffset = tmp->m_uiNumOffset;
+                return true;
+            }
+            return false;
         }
 
         virtual Property* GetInstance()
@@ -268,14 +286,20 @@ namespace NoelleGraphic
         RangeProperty& operator=(const RangeProperty&) = delete;
         RangeProperty& operator=(RangeProperty&&) = default;
 
-        virtual void Clone(const Property* property)
+        virtual bool Clone(const Property* property)
         {
-            RangeProperty<T>& tmp = static_cast<RangeProperty<T>&>(property);
-            Property::Clone(tmp);
-            m_LowValue = tmp.m_LowValue;
-            m_HighValue = tmp.m_HighValue;
-            m_Step = tmp.m_Step;
-            m_bRange = tmp.m_bRange;
+            RangeProperty<T>* tmp = (RangeProperty<T>*)(property);
+            if (Property::Clone(tmp))
+            {
+                m_LowValue = tmp->m_LowValue;
+                m_HighValue = tmp->m_HighValue;
+                m_Step = tmp->m_Step;
+                m_bRange = tmp->m_bRange;
+                tmp = nullptr;
+                return true;
+            }
+            tmp = nullptr;
+            return false;
         }
 
         virtual Property* GetInstance()
@@ -541,4 +565,25 @@ namespace NoelleGraphic
         }
     };
 
+    class PropertyCreator
+    {
+    public:
+		template<class ValueType>
+		static AutoPropertyCreator<ValueType>& GetAutoPropertyCreator(ValueType& valueTypeDummyRef)
+		{
+			static AutoPropertyCreator<ValueType> apc;
+			return apc;
+		}
+		template<class ValueType,class NumType>
+		static DataPropertyCreator<ValueType,NumType>& GetAutoPropertyCreator(ValueType*& valueTypeDummyRef, NumType& valueNumTypeDummyRef)
+		{
+			static DataPropertyCreator<ValueType,NumType> apc;
+			return apc;
+		}
+		template<class ValueType>
+		static Property* CreateEnumProperty(ValueType& valueTypeDummyRef, const std::string& Name, const std::string& EnumName, ClassInfo& pOwner, unsigned int uiFlag, unsigned int uiOffset)
+		{
+			return new EnumProperty<ValueType>(pOwner, Name, EnumName, uiFlag, uiOffset);
+		}
+    };
 }

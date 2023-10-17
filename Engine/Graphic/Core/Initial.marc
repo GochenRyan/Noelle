@@ -1,0 +1,132 @@
+// Copyright 2023 Gaocheng Ran <rangaocheng@outlook.com>
+
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#define DECLARE_INITIAL \
+public: \
+    static bool RegisterMainFactory(); \
+    static bool InitialClassFactory(); \
+    static NoelleGraphic::Object* FactoryFunc(); \
+    static bool ms_bRegisterMainFactory; \
+    static bool InitialProperty(NoelleGraphic::ClassInfo*); \
+    static bool TerminalProperty();
+
+#define IMPLEMENT_INITIAL_BEGIN(classname) \
+    static bool gs_bStreamRegistered_##classname = classname::RegisterMainFactory(); \
+    bool classname::ms_bRegisterMainFactory = false; \
+    bool classname::InitialClassFactory() \
+    { \
+        ms_ClassFactory.insert({ms_Type.GetName(), FactoryFunc}); \
+        return true; \
+    } \
+    NoelleGraphic::Object* classname::FactoryFunc() \
+    { \
+        return new classname; \
+    } \
+    bool classname::RegisterMainFactory() \
+    { \
+        if (!ms_bRegisterMainFactory) \
+        {
+
+#define IMPLEMENT_INITIAL_END \
+            NoelleGraphic::Context::AddInitialFunction(InitialClassFactory); \
+            NoelleGraphic::Context::AddInitialPropertyFunction(InitialProperty); \
+            NoelleGraphic::Context::AddTerminalPropertyFunction(TerminalProperty); \
+            ms_bRegisterMainFactory = true; \
+        } \
+        return ms_bRegisterMainFactory; \
+    }
+
+#define DECLARE_INITIAL_NO_CLASS_FACTORY \
+public: \
+		static bool RegisterMainFactory(); \
+		static bool ms_bRegisterMainFactory; \
+		static bool InitialProperty(NoelleGraphic::ClassInfo*); \
+		static bool TerminalProperty();
+
+#define IMPLEMENT_INITIAL_NO_CLASS_FACTORY_BEGIN(classname) \
+    static bool gs_bStreamRegistered_##classname = classname::RegisterMainFactory(); \
+    bool classname::ms_bRegisterMainFactory = false; \
+    bool classname::RegisterMainFactory() \
+    { \
+        if (!ms_bRegisterMainFactory) \
+        {
+
+#define IMPLEMENT_INITIAL_NO_CLASS_FACTORY_END \
+            NoelleGraphic::Context::AddInitialPropertyFunction(InitialProperty); \
+            NoelleGraphic::Context::AddTerminalPropertyFunction(TerminalProperty); \
+            ms_bRegisterMainFactory = true; \
+        } \
+        return ms_bRegisterMainFactory; \
+    }
+
+#define NO_PROPERTY(classname) \
+    bool classname::TerminalProperty() \
+    { \
+        ms_Type.ClearProperty(); \
+        return true; \
+    } \
+    bool classname::InitialProperty(NoelleGraphic::ClassInfo*) \
+    { \
+        return true; \
+    }
+    
+
+#define ADD_PROPERTY_BEGIN(classname, baseclassname) \
+    bool classname::TerminalProperty() \
+    { \
+        ms_Type.ClearProperty(); \
+        return true; \
+    } \
+    bool classname::InitialProperty(NoelleGraphic::ClassInfo* pType) \
+    { \
+        classname* dummyPtr = nullptr; \
+        NoelleGraphic::Property* activeProperty = nullptr; \
+        if (!pType) \
+        { \
+            pType = &ms_Type; \
+        } \
+        baseclassname::InitialProperty(pType);
+
+#define ADD_PROPERTY_ROOT_BEGIN(classname) \
+    bool classname::TerminalProperty() \
+    { \
+        ms_Type.ClearProperty(); \
+        return true; \
+    } \
+    bool classname::InitialProperty(NoelleGraphic::ClassInfo* pType) \
+    { \
+        classname* dummyPtr = nullptr; \
+        NoelleGraphic::Property* activeProperty = nullptr; \
+        if (!pType) \
+        { \
+            pType = &ms_Type; \
+        }
+
+#define ADD_PROPERTY_END \
+        return true;\
+    }
+
+#define ADD_INITIAL_FUNCTION(functionname) \
+    NoelleGraphic::Context::AddInitialFunction(functionname);
+
+#define ADD_INITIAL_FUNCTION_WITH_PRIORITY(functionname) \
+    NoelleGraphic::Context::AddInitialFunction(functionname, &ms_Priority);
+
+#define ADD_TERMINAL_FUNCTION(functionname) \
+    NoelleGraphic::Context::AddTerminalFunction(functionname);
+
+#define ADD_TERMINAL_FUNCTION_WITH_PRIORITY(functionname) \
+    NoelleGraphic::Context::AddTerminalFunction(functionname, &ms_Priority);
+
+

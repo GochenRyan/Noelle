@@ -13,21 +13,26 @@
 // limitations under the License.
 
 #define DECLARE_CLASSINFO \
-public:\
-    virtual ClassInfo& GetType() const\
-    {\
-        return ms_type;\
-    }\
-    static ClassInfo ms_type;
+public: \
+    virtual NoelleGraphic::ClassInfo& GetType() const \
+    { \
+        return ms_Type; \
+    } \
+    static NoelleGraphic::ClassInfo ms_Type; \
+    static NoelleGraphic::Priority ms_Priority;
 
 #define IMPLEMENT_CLASSINFO(ClassName, BaseClassName) \
-ClassInfo ClassName::ms_type(StringCrc(#ClassName), &BaseClassName::ms_type, ClassName::FactoryFunc);
+NoelleGraphic::ClassInfo ClassName::ms_Type(StringCrc(#ClassName), &BaseClassName::ms_Type, ClassName::FactoryFunc); \
+NoelleGraphic::Priority ClassName::ms_Priority;
 
 #define IMPLEMENT_CLASSINFO_NOPARENT(ClassName) \
-ClassInfo ClassName::ms_type(StringCrc(#ClassName), nullptr, ClassName::FactoryFunc);
+NoelleGraphic::ClassInfo ClassName::ms_Type(StringCrc(#ClassName), nullptr, ClassName::FactoryFunc); \
+NoelleGraphic::Priority ClassName::ms_Priority;
 
 #define IMPLEMENT_CLASSINFO_NOCREATEFUNC(ClassName, BaseClassName) \
-ClassInfo ClassName::ms_type(StringCrc(#ClassName), &BaseClassName::ms_type, nullptr);
+NoelleGraphic::ClassInfo ClassName::ms_Type(StringCrc(#ClassName), &BaseClassName::ms_Type, nullptr); \
+NoelleGraphic::Priority ClassName::ms_Priority;
 
 #define IMPLEMENT_CLASSINFO_NOPARENT_NOCREATEFUNC(ClassName) \
-ClassInfo ClassName::ms_type(StringCrc(#ClassName), nullptr, nullptr);
+NoelleGraphic::ClassInfo ClassName::ms_Type(StringCrc(#ClassName), nullptr, nullptr); \
+NoelleGraphic::Priority ClassName::ms_Priority;

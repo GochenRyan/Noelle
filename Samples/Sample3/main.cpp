@@ -19,7 +19,10 @@
 #include "Core/ClassInfo.h"
 #include "StringCrc.h"
 #include "Core/Object.h"
+#include "Core/Context.h"
+
 #include "Core/ClassInfo.marc"
+#include "Core/Initial.marc"
 
 
 #include <iostream>
@@ -32,6 +35,7 @@ public:
     A(){}
     virtual ~A(){}
     DECLARE_CLASSINFO
+    DECLARE_INITIAL_NO_CLASS_FACTORY
 };
 
 class B: public A
@@ -40,10 +44,21 @@ public:
     B(){}
     virtual ~B(){}
     DECLARE_CLASSINFO
+    DECLARE_INITIAL_NO_CLASS_FACTORY
 };
 
 IMPLEMENT_CLASSINFO_NOCREATEFUNC(A, Object)
+IMPLEMENT_INITIAL_NO_CLASS_FACTORY_BEGIN(A)
+IMPLEMENT_INITIAL_NO_CLASS_FACTORY_END
+ADD_PROPERTY_BEGIN(A, Object)
+ADD_PROPERTY_END
+
 IMPLEMENT_CLASSINFO_NOCREATEFUNC(B, A)
+IMPLEMENT_INITIAL_NO_CLASS_FACTORY_BEGIN(B)
+IMPLEMENT_INITIAL_NO_CLASS_FACTORY_END
+ADD_PROPERTY_BEGIN(B, A)
+ADD_PROPERTY_END
+
 
 int main()
 {

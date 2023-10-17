@@ -34,6 +34,21 @@ inline bool Object::IsDerived(const Object* pObject) const
     return pObject && GetType().IsDerived(pObject->GetType());
 }
 
+inline void Object::SetFlag(unsigned int uiFlag)
+{
+    m_uiFlag |= uiFlag;
+}
+
+inline void Object::ClearFlag(unsigned int uiFlag)
+{
+    m_uiFlag &= ~uiFlag;
+}
+
+inline bool Object::IsHasFlag(unsigned int uiFlag)
+{
+    return (m_uiFlag & uiFlag) != 0;
+}
+
 
 template<class T>
 T* StaticCast(Object* pObject)
@@ -50,11 +65,11 @@ const T* StaticCast(const Object* pObject)
 template<class T>
 T* DynamicCast(Object* pObject)
 {
-    return pObject && pObject.IsDerived(T::ms_type) ? (T*)pObject: nullptr;
+    return pObject && pObject.IsDerived(T::ms_Type) ? (T*)pObject: nullptr;
 }
 
 template<class T>
 const T* DynamicCast(const Object* pObject)
 {
-    return pObject && pObject.IsDerived(T::ms_type) ? (const T*)pObject: nullptr;
+    return pObject && pObject.IsDerived(T::ms_Type) ? (const T*)pObject: nullptr;
 }

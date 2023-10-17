@@ -53,3 +53,14 @@ void ClassInfo::AddProperty(ClassInfo& classinfo)
         newProperty = nullptr;
     }
 }
+
+void ClassInfo::AddProperty(Property* property)
+{
+    m_PropertyArray.emplace_back(std::make_unique<Property>(std::move(*property)));
+    property = nullptr;
+}
+
+void ClassInfo::ClearProperty()
+{
+    m_PropertyArray.clear();
+}
