@@ -1,5 +1,5 @@
 # Noelle
-A mini game engine built in cpp.
+A mini game engine built in cpp (WIP).
 
 # Target
 An engine designed for multi-person collaboration, easy to use for programmer, designer and artist. Of course, the current task is to make it run first...
@@ -19,9 +19,9 @@ xmake project -k vsxmake
     - Other platform
 - Basic data structure
 - Math library
-- Object system
+- Object system💦
 - Rendering system
-- Editor
+- Editor💦
     - **Visual debugging**
 - Resource management
 - Scene management
