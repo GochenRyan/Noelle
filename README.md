@@ -23,6 +23,8 @@ xmake project -k vsxmake
 - Rendering system
 - Editor💦
     - **Visual debugging**
+        - Bullet time
+        - Locate code
 - Resource management
 - Scene management
 - Animation system
