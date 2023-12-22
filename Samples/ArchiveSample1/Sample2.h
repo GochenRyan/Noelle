@@ -12,31 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "ClassInfo.h"
+#pragma once
+#include "Core/Object.h" 
+#include "Core/Context.h"
+#include "Core/ClassInfo.marc"
+#include "Core/Initial.marc"
+#include "Core/Property.marc"
+#include "Core/Priority.marc"
+#include "Core/ClassInfo.h"
 
-inline StringCrc ClassInfo::GetName() const
+class Sample2: public NoelleGraphic::Object
 {
-    return m_crcName;
-}
+public:
+    Sample2(){}
+    virtual ~Sample2(){}
+    DECLARE_CLASSINFO
+    DECLARE_INITIAL
 
-inline bool ClassInfo::IsSameType(const ClassInfo& Type) const
-{
-	return (&Type == this);
-}
+    static bool TestInitFunction();
+    static bool TestTerminalFunction();
+};
 
-inline bool ClassInfo::IsDerived(const ClassInfo& Type) const
+namespace NoelleGraphic
 {
-    const ClassInfo* temp = this;
-    while(!temp->IsSameType(Type))
-    {
-        if (temp->m_pBase)
-        {
-            temp = temp->m_pBase;
-        }
-        else
-        {
-            return false;
-        }
-    }
-    return true;
+    TYPE_MARCO(Sample2)
 }

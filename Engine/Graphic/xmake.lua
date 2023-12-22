@@ -2,7 +2,8 @@ target("Graphic")
     set_kind("shared")
 
     add_deps(
-        "System"
+        "System",
+        "spdlog"
     )
 
     add_defines("GRAPHIC_EXPORTS")
@@ -12,7 +13,9 @@ target("Graphic")
     add_includedirs(
         "$(projectdir)/Engine/DataStruct/",
         "$(projectdir)/Engine/Graphic/",
-        "$(projectdir)/Engine/System/")
+        "$(projectdir)/Engine/System/",
+        "$(projectdir)/Vendor/spdlog/include/"
+    )
     add_linkdirs("$(projectdir)/lib/")
 
     set_group("Engine")

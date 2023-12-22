@@ -14,47 +14,47 @@
 
 #define REGISTER_ENUM_PROPERTY(varName, enumName, reflectName, flag) \
 { \
-    activeProperty = NoelleGraphic::PropertyCreator::CreateEnumProperty( \
+    activeProperty = std::move(NoelleGraphic::PropertyCreator::CreateEnumProperty( \
         dummyPtr->varName, _T(#reflectName), _T(#enumName), ms_Type, \
-        flag, (size_t)((char*)&(dummyPtr->varName) - (char*)dummyPtr)); \
-    pType->AddProperty(activeProperty); \
+        flag, (size_t)((char*)&(dummyPtr->varName) - (char*)dummyPtr))); \
+    pType->AddProperty(std::move(activeProperty)); \
 }
 
 #define REGISTER_PROPERTY_DATA(varName, varNumName, reflectName) \
 { \
-    activeProperty = NoelleGraphic::PropertyCreator::GetAutoPropertyCreator( \
+    activeProperty = std::move(NoelleGraphic::PropertyCreator::GetAutoPropertyCreator( \
         dummyPtr->varName, dummyPtr->varNumName).CreateProperty( \
             ms_Type, _T(#reflectName), \
             (size_t)((char*)&(dummyPtr->varName) - (char*)dummyPtr), \
-            (size_t)((char*)&(dummyPtr->varNumName) - (char*)dummyPtr)); \
-    pType->AddProperty(activeProperty); \
+            (size_t)((char*)&(dummyPtr->varNumName) - (char*)dummyPtr))); \
+    pType->AddProperty(std::move(activeProperty)); \
 }
 
 #define REGISTER_PROPERTY_FIXED_DATA(varName, Num, reflectName, bDynamicCreate) \
 { \
     unsigned int NumType = 0; \
-    activeProperty = NoelleGraphic::PropertyCreator::GetAutoPropertyCreator( \
+    activeProperty = std::move(NoelleGraphic::PropertyCreator::GetAutoPropertyCreator( \
         dummyPtr->varName, NumType).CreateProperty( \
             ms_Type, _T(#reflectName), \
             (size_t)((char*)&(dummyPtr->varName) - (char*)dummyPtr), \
-            Num, bDynamicCreate); \
-    pType->AddProperty(activeProperty); \
+            bDynamicCreate, Num)); \
+    pType->AddProperty(std::move(activeProperty)); \
 }
 
 #define REGISTER_PROPERTY(varName, reflectName, flag) \
 { \
-    activeProperty = NoelleGraphic::PropertyCreator::GetAutoPropertyCreator( \
+    activeProperty = std::move(NoelleGraphic::PropertyCreator::GetAutoPropertyCreator( \
         dummyPtr->varName).CreateProperty( \
             ms_Type, _T(#reflectName), \
-            flag, (size_t)((char*)&(dummyPtr->varName) - (char*)dummyPtr)); \
-    pType->AddProperty(activeProperty); \
+            flag, (size_t)((char*)&(dummyPtr->varName) - (char*)dummyPtr))); \
+    pType->AddProperty(std::move(activeProperty)); \
 }
 
 #define REGISTER_PROPERTY_RANGE(varName, reflectName, High, Low, Step, flag) \
 { \
-    activeProperty = NoelleGraphic::PropertyCreator::GetAutoPropertyCreator( \
+    activeProperty = std::move(NoelleGraphic::PropertyCreator::GetAutoPropertyCreator( \
         dummyPtr->varName).CreateProperty( \
              ms_Type, _T(#reflectName) \
-             flag, (size_t)((char*)&(dummyPtr->varName) - (char*)dummyPtr), Low, High, Step); \
-    pType->AddProperty(activeProperty); \
+             flag, (size_t)((char*)&(dummyPtr->varName) - (char*)dummyPtr), Low, High, Step)); \
+    pType->AddProperty(std::move(activeProperty)); \
 }

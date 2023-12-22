@@ -18,6 +18,4 @@ rem clean spdlog
 cd /d %VENDOR_PATH%\\spdlog
 cmake -E remove_directory build
 cmake -E remove_directory lib
-
-
-
+xmake f -c

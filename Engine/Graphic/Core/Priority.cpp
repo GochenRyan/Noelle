@@ -51,6 +51,7 @@ bool Priority::AddDependencyPriority(Priority* pOther)
 
     m_uiPriorityNum = 0;  // Set it to 0 to be able to update later
     m_DependencyPriorityList.push_back(pOther);
+    return true;
 }
 
 bool Priority::operator < (Priority& other)

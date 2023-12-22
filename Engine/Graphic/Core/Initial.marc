@@ -26,7 +26,7 @@ public: \
     bool classname::ms_bRegisterMainFactory = false; \
     bool classname::InitialClassFactory() \
     { \
-        ms_ClassFactory.insert({ms_Type.GetName(), FactoryFunc}); \
+        ms_ClassFactory.insert({ms_Type.GetName().Value(), FactoryFunc}); \
         return true; \
     } \
     NoelleGraphic::Object* classname::FactoryFunc() \
@@ -91,7 +91,7 @@ public: \
     bool classname::InitialProperty(NoelleGraphic::ClassInfo* pType) \
     { \
         classname* dummyPtr = nullptr; \
-        NoelleGraphic::Property* activeProperty = nullptr; \
+        std::unique_ptr<NoelleGraphic::Property> activeProperty = nullptr; \
         if (!pType) \
         { \
             pType = &ms_Type; \
@@ -107,7 +107,7 @@ public: \
     bool classname::InitialProperty(NoelleGraphic::ClassInfo* pType) \
     { \
         classname* dummyPtr = nullptr; \
-        NoelleGraphic::Property* activeProperty = nullptr; \
+        std::unique_ptr<NoelleGraphic::Property> activeProperty = nullptr; \
         if (!pType) \
         { \
             pType = &ms_Type; \
@@ -128,5 +128,3 @@ public: \
 
 #define ADD_TERMINAL_FUNCTION_WITH_PRIORITY(functionname) \
     NoelleGraphic::Context::AddTerminalFunction(functionname, &ms_Priority);
-
-

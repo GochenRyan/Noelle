@@ -1,0 +1,82 @@
+// Copyright 2023 Gaocheng Ran <rangaocheng@outlook.com>
+
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#pragma once
+
+#include "MemManager.h"
+
+#include <memory>
+#include <string>
+
+using namespace Noelle;
+
+namespace NoelleGraphic
+{
+#define DEFINE_TYPE(TypeName) \
+    template<typename T> struct TIs##TypeName##Type { enum {Value = false}; }; \
+    template<typename T> struct TIs##TypeName##PointerType { enum {Value = false}; }; \
+    template<typename T> struct TIs##TypeName##UniquePointerType { enum {Value = false}; }; \
+    template<typename T> struct TIs##TypeName##SharedPointerType { enum {Value = false}; };
+
+#define DEFINE_TYPE_INSTANCE(TypeName, ClassName) \
+    class ClassName; \
+    template<> struct TIs##TypeName##Type<ClassName> { enum {Value = true}; }; \
+    template<> struct TIs##TypeName##PointerType<ClassName*> { enum {Value = true}; }; \
+    template<> struct TIs##TypeName##PointerType<const ClassName*> { enum {Value = true}; }; \
+    template<> struct TIs##TypeName##UniquePointerType<std::unique_ptr<ClassName>> { enum {Value = true}; }; \
+    template<> struct TIs##TypeName##UniquePointerType<const std::unique_ptr<ClassName>> { enum {Value = true}; }; \
+    template<> struct TIs##TypeName##SharedPointerType<std::shared_ptr<ClassName>> { enum {Value = true}; }; \
+    template<> struct TIs##TypeName##SharedPointerType<const std::shared_ptr<ClassName>> { enum {Value = true}; };
+
+DEFINE_TYPE(Noelle)
+
+#define TYPE_MARCO(ClassName) \
+	DEFINE_TYPE_INSTANCE(Noelle,ClassName)
+
+template<typename T> struct TIsNoNeedLoop { enum { Value = IS_ENUM(T) || TIsArithmeticType<T>::Value }; };
+    
+template<typename T> struct TIsNeedGC {
+    enum
+    {
+        Value = TIsNoelleType<T>::Value ||
+                TIsNoellePointerType<T>::Value ||
+                TIsNoelleUniquePointerType<T>::Value ||
+                TIsNoelleSharedPointerType<T>::Value
+    };
+};
+
+template <typename T> struct T_Custom_Has_Comparison_Operators
+{
+    enum { Value = false };
+};
+
+template <typename T>
+struct T_Has_Comparison_Operators
+{
+    enum { Value = std::is_arithmetic<T>::value || T_Custom_Has_Comparison_Operators<T>::Value };
+};
+
+template <typename T>
+struct TIsStringType
+{
+    enum { Value = false };
+};
+
+template<>
+struct TIsStringType<std::string>
+{
+    enum { Value = true };
+};
+
+}

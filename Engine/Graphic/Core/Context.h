@@ -16,10 +16,12 @@
 #include "Graphic.h"
 #include "Priority.h"
 #include "ClassInfo.h"
+#include "ObjectDefines.h"
 
 #include <memory>
 #include <functional>
 #include <vector>
+#include <unordered_map>
 
 namespace NoelleGraphic
 {
@@ -28,6 +30,8 @@ namespace NoelleGraphic
 
     class GRAPHIC_API Context
     {
+        friend class TypeRegister;
+
     public:
         static void AddInitialPropertyFunction(FunctionProperty func);
         static void AddTerminalPropertyFunction(Function func);
@@ -36,8 +40,14 @@ namespace NoelleGraphic
         static void AddTerminalFunction(Function func);
         static void AddTerminalFunction(Function func, Priority* p);
 
+        static bool GetTypeIDByClassInfo(ClassInfo* pType, uint32_t& uiTypeID);
+        static bool GetClassInfoByTypeID(const uint32_t& uiTypeID, ClassInfo*& pType);
+
         static bool Initialize();
         static bool Terminal();
+
+        Context(){}
+        ~Context() {}
 
         class FuncElement
         {
@@ -49,6 +59,12 @@ namespace NoelleGraphic
             {
                 Func = func;
                 pPriority = p;
+            }
+
+            ~FuncElement()
+            {
+                Func = nullptr;
+                pPriority = nullptr;
             }
 
             bool operator == (const FuncElement other) const
@@ -120,5 +136,7 @@ namespace NoelleGraphic
         static std::vector<std::unique_ptr<FunctionProperty>> m_InitialFunctionPropertyArray;
         static std::vector<std::unique_ptr<FuncElement>> m_InitialFuncElementArray;
         static std::vector<std::unique_ptr<FuncElement>> m_TerminalFuncElementArray;
+
+        static std::unordered_map<uint32_t, ClassInfo*> m_TypeIDMap;
     };
 }

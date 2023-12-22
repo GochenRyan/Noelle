@@ -22,6 +22,7 @@ std::vector<std::unique_ptr<Function>> Context::m_TerminalFunctionArray;
 std::vector<std::unique_ptr<FunctionProperty>> Context::m_InitialFunctionPropertyArray;
 std::vector<std::unique_ptr<Context::FuncElement>> Context::m_InitialFuncElementArray;
 std::vector<std::unique_ptr<Context::FuncElement>> Context::m_TerminalFuncElementArray;
+std::unordered_map<uint32_t, ClassInfo*> Context::m_TypeIDMap;
 
 void Context::AddInitialPropertyFunction(FunctionProperty func)
 {
@@ -67,6 +68,8 @@ void Context::AddTerminalFunction(Function func, Priority* p)
 
 bool Context::Initialize()
 {
+    TypeRegister::Register();
+
     for (std::unique_ptr<FunctionProperty>& func : m_InitialFunctionPropertyArray)
     {
         if (!(*func)(nullptr))
@@ -120,5 +123,27 @@ bool Context::Terminal()
         }
     }
 
+    return true;
+}
+
+bool Context::GetTypeIDByClassInfo(ClassInfo* pType, uint32_t& uiTypeID)
+{
+    for (std::pair<uint32_t, ClassInfo*> kv : m_TypeIDMap)
+    {
+        if (kv.second == pType)
+        {
+            uiTypeID = kv.first;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool Context::GetClassInfoByTypeID(const uint32_t& uiTypeID, ClassInfo*& pType)
+{
+    if (!m_TypeIDMap.contains(uiTypeID))
+        return false;
+
+    pType = m_TypeIDMap[uiTypeID];
     return true;
 }

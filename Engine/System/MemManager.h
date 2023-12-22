@@ -43,6 +43,11 @@ namespace Noelle
 		enum { NeedsConstructor = !HAS_TRIVIAL_CONSTRUCTOR(T) && !IS_POD(T)};
 		enum { NeedsDestructor = !HAS_TRIVIAL_DESTRUCTOR(T) && !IS_POD(T)};
 	};
+
+	template<typename T> struct TIsArithmeticType
+	{
+		enum { Value = std::is_arithmetic<T>::value };
+	};
 #else
 	#if _MSC_VER >= 1400
 	#define HAS_TRIVIAL_CONSTRUCTOR(T) __has_trivial_constructor(T)
@@ -62,6 +67,34 @@ namespace Noelle
 	#define IS_EMPTY(T) false
 	#endif
 
+	template<typename T> struct TIsIntegralType { enum { Value = false }; };
+
+	template<> struct TIsIntegralType<unsigned char> { enum { Value = true }; };
+	template<> struct TIsIntegralType<unsigned short> { enum { Value = true }; };
+	template<> struct TIsIntegralType<unsigned int> { enum { Value = true }; };
+	template<> struct TIsIntegralType<unsigned long> { enum { Value = true }; };
+
+	template<> struct TIsIntegralType<signed char> { enum { Value = true }; };
+	template<> struct TIsIntegralType<signed short> { enum { Value = true }; };
+	template<> struct TIsIntegralType<signed int> { enum { Value = true }; };
+	template<> struct TIsIntegralType<signed long> { enum { Value = true }; };
+
+	template<> struct TIsIntegralType<bool> { enum { Value = true }; };
+	template<> struct TIsIntegralType<char> { enum { Value = true }; };
+
+	// compilers we support define wchar_t as a native type
+#if !_MSC_VER || defined(_NATIVE_WCHAR_T_DEFINED)
+	template<> struct TIsIntegralType<wchar_t> { enum { Value = true }; };
+#endif
+
+	// C99, but all compilers we use support it
+	template<> struct TIsIntegralType<unsigned long long> { enum { Value = true }; };
+	template<> struct TIsIntegralType<signed long long> { enum { Value = true }; };
+
+	template<typename T> struct TIsArithmeticType
+	{
+		enum { Value = TIsIntegralType<T>::Value || TIsFloatType<T>::Value };
+	};
 #endif
 
 	template< class T > inline T Align(const T Ptr, USIZE_TYPE Alignment)

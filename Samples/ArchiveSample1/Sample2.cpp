@@ -12,31 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "ClassInfo.h"
+#include "Sample2.h"
 
-inline StringCrc ClassInfo::GetName() const
+#include <spdlog/spdlog.h>
+
+IMPLEMENT_CLASSINFO(Sample2, NoelleGraphic::Object)
+NO_PROPERTY(Sample2)
+IMPLEMENT_INITIAL_BEGIN(Sample2)
+ADD_INITIAL_FUNCTION_WITH_PRIORITY(Sample2::TestInitFunction)
+ADD_TERMINAL_FUNCTION(Sample2::TestTerminalFunction)
+IMPLEMENT_INITIAL_END
+
+IMPLEMENT_REGISTER_TYPE_ID(9998, ::Sample2)
+
+
+bool Sample2::TestInitFunction()
 {
-    return m_crcName;
+    spdlog::info("Sample2::TestInitFunction");
+    return true;
 }
 
-inline bool ClassInfo::IsSameType(const ClassInfo& Type) const
+bool Sample2::TestTerminalFunction()
 {
-	return (&Type == this);
-}
-
-inline bool ClassInfo::IsDerived(const ClassInfo& Type) const
-{
-    const ClassInfo* temp = this;
-    while(!temp->IsSameType(Type))
-    {
-        if (temp->m_pBase)
-        {
-            temp = temp->m_pBase;
-        }
-        else
-        {
-            return false;
-        }
-    }
+    spdlog::info("Sample2::TestTerminalFunction");
     return true;
 }

@@ -14,10 +14,13 @@
 
 #pragma once
 #include "Platform.h"
-#if WINDOWS_PLATFORM
-#include <tchar.h>
+
+#include <cstring>
 #include <memory.h>
 #include <assert.h>
+
+#if WINDOWS_PLATFORM
+#include <tchar.h>
 #include <atlsimpstr.h>
 #endif
 
@@ -30,9 +33,18 @@
 namespace Noelle
 {
 #ifdef _DEBUG
-#define NOEL_ASSERT(Expression)\
-	{\
-		 assert(Expression);\
+#define NOEL_ASSERTM(Expression, Msg) \
+	{ \
+		 assert(((void)Msg, Expression)); \
+	}
+#else
+#define NOEL_ASSERTM(Expression, Msg)
+#endif
+
+#ifdef _DEBUG
+#define NOEL_ASSERT(Expression) \
+	{ \
+		 assert(Expression); \
 	}
 #else
 #define NOEL_ASSERT(Expression)
@@ -107,6 +119,25 @@ namespace Noelle
 #else
 		static_assert(0, "No Implement!");;
 		return;
+#endif
+	}
+
+	inline bool NoelMemCpy(void* pDest, const void* pSrc, USIZE_TYPE uiCountSize, USIZE_TYPE uiDestBufferSize = 0)
+	{
+		NOEL_ASSERTM(uiDestBufferSize >= uiCountSize || uiDestBufferSize == 0, "Destination buffer is too small.");
+
+		if (!uiDestBufferSize)
+			uiDestBufferSize = uiCountSize;
+#if defined(_MSC_VER)
+		return (memcpy_s(pDest, uiDestBufferSize, pSrc, uiCountSize) == 0);
+#else
+		if (uiDestBufferSize >= uiCountSize)
+		{
+			size_t copiedBytes = memcpy(pDest, pSrc, uiCountSize);
+			return copiedBytes == uiCountSize;
+		}
+		else
+			std::cerr << "Error: Destination buffer is too small." << std::endl;
 #endif
 	}
 

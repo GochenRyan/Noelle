@@ -18,7 +18,7 @@ using namespace NoelleGraphic;
 
 ClassInfo::ClassInfo(const StringCrc& nameCrc, ClassInfo* pBase, CreateObjectFunc COF)
 {
-    m_uiName = nameCrc.Value();
+    m_crcName = nameCrc;
     m_pBase = pBase;
     m_createFunc = COF;
 }
@@ -47,20 +47,14 @@ void ClassInfo::AddProperty(ClassInfo& classinfo)
 {
     for (const auto& property : classinfo.m_PropertyArray) 
     {
-        Property* newProperty = property->GetInstance();
+        std::unique_ptr<Property> newProperty = property->GetInstance();
         newProperty->Clone(property.get());
-        m_PropertyArray.emplace_back(std::make_unique<Property>(std::move(*newProperty)));
+        m_PropertyArray.emplace_back(std::move(newProperty));
         newProperty = nullptr;
     }
 }
 
-void ClassInfo::AddProperty(Property* property)
-{
-    m_PropertyArray.emplace_back(std::make_unique<Property>(std::move(*property)));
-    property = nullptr;
-}
-
 void ClassInfo::ClearProperty()
 {
-    m_PropertyArray.clear();
+    //m_PropertyArray.clear();
 }

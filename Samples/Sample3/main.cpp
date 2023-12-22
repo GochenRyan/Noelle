@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#define NOMINMAX
+
 #include <MemManager.h>
-#undef NOMINMAX
+
 
 #include "Core/ClassInfo.h"
 #include "StringCrc.h"

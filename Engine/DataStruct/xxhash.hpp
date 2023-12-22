@@ -1641,7 +1641,7 @@ namespace xxh
 			size_t pos = 0;
 			while (pos < secret_size)
 			{
-				size_t const copy_len = std::min(secret_size - pos, seed_size);
+				size_t const copy_len = (std::min)(secret_size - pos, seed_size);
 				memcpy((uint8_t*)secret_buffer + pos, custom_seed, copy_len);
 				pos += copy_len;
 			}

@@ -17,13 +17,16 @@
  * Use a series of Property classes to collect class property info.
  * Property has
  *  owner,
- *  name,
+ *  nameCrc,
  *  type,
  *  offset
 */
 
 #pragma once
 #include "System.h"
+#include "MemManager.h"
+#include "Stream/Stream.h"
+#include "Type.marc"
 
 #include <memory>
 #include <string>
@@ -41,9 +44,9 @@ namespace NoelleGraphic
     public:
         enum // Property type 
         {
-            PT_VALUE,
+            PT_VALUE, // Others
             PT_ENUM,
-            PT_DATA,
+            PT_DATA,  // Pointer to store data
             PT_ARRAY,
             PT_MAP,
             PT_MAX
@@ -55,7 +58,7 @@ namespace NoelleGraphic
             F_CLONE = 0X02,
             F_COPY = 0X04,
             F_SAVE_LOAD_CLONE = 0X03,
-            F_SAVE_LOAD_COPY = 0X03,
+            F_SAVE_LOAD_COPY = 0X05,
             F_REFLECT_NAME = 0X08,
             F_MAX
         };
@@ -67,8 +70,8 @@ namespace NoelleGraphic
             m_uiOffset = 0;
         }
 
-        Property(ClassInfo& pOwner, const std::string& name, unsigned int uiFlag, unsigned int uiOffset)
-        : m_pOwner(&pOwner), m_Name(name), m_uiFlag(uiFlag), m_uiOffset(uiOffset)
+        Property(ClassInfo& pOwner, const StringCrc& nameCrc, unsigned int uiFlag, unsigned int uiOffset)
+        : m_pOwner(&pOwner), m_crcName(nameCrc), m_uiFlag(uiFlag), m_uiOffset(uiOffset)
         {
         }
 
@@ -84,7 +87,7 @@ namespace NoelleGraphic
             if (property->GetType() == GetType() && GetType())
             {
                 m_pOwner = property->m_pOwner;
-                m_Name = property->m_Name;
+                m_crcName = property->m_crcName;
                 m_uiFlag = property->m_uiFlag;
                 m_uiOffset = property->m_uiOffset;
                 return true;
@@ -92,13 +95,9 @@ namespace NoelleGraphic
             return false;
         }
 
-        virtual void Serialize()
+        inline const StringCrc GetName() const
         {
-        }
-
-        inline const std::string GetName() const
-        {
-            return m_Name;
+            return m_crcName;
         }
 
         inline ClassInfo* GetType() const
@@ -116,9 +115,9 @@ namespace NoelleGraphic
             m_pOwner = &pOwner;
         }
 
-        void SetName(const std::string name)
+        void SetName(const StringCrc nameCrc)
         {
-            m_Name = m_Name;
+            m_crcName = m_crcName;
         }
 
         void SetFlag(unsigned int uiFlag)
@@ -126,19 +125,24 @@ namespace NoelleGraphic
             m_uiFlag = uiFlag;
         }
 
+        virtual bool Archive(BinaryStream& stream, void* pObject)
+        {
+            return true;
+        }
+
         virtual void* GetValueAddress(void* pObj) const
         {
             return (void*)(((unsigned char*)pObj) + m_uiOffset); 
         }
 
-        virtual Property* GetInstance()
+        virtual std::unique_ptr<Property> GetInstance()
         {
             return nullptr;
         }
 
     protected:
         ClassInfo* m_pOwner;
-        std::string m_Name;
+        StringCrc m_crcName;
         unsigned int m_uiFlag;
         unsigned int m_uiOffset;
     };
@@ -151,8 +155,8 @@ namespace NoelleGraphic
         {
         }
 
-        EnumProperty(ClassInfo& pOwner, const std::string& name, const std::string& enumName, unsigned int uiFlag, unsigned int uiOffset)
-        : Property(pOwner, name, uiFlag, uiOffset), m_EnumName(enumName)
+        EnumProperty(ClassInfo& pOwner, const StringCrc& nameCrc, const StringCrc& enumName, unsigned int uiFlag, unsigned int uiOffset)
+        : Property(pOwner, nameCrc, uiFlag, uiOffset), m_EnumName(enumName)
         {
         }
 
@@ -199,13 +203,19 @@ namespace NoelleGraphic
             return *(T*)(((const unsigned char*)pObj) + m_uiOffset);
         }
 
-        virtual Property* GetInstance()
+        virtual bool Archive(BinaryStream& stream, void* pObject) override
         {
-            return new EnumProperty<T>();
+            stream.Archive(Value(pObject));
+            return true;
+        }
+
+        virtual std::unique_ptr<Property> GetInstance()
+        {
+            return std::make_unique<EnumProperty<T>>();
         }
 
     private:
-        std::string m_EnumName; //Q: There is already m_Name, why define m_EnumName
+        StringCrc m_EnumName;
     };
 
     template<typename T, typename NumType>
@@ -216,13 +226,13 @@ namespace NoelleGraphic
         {
         }
 
-        DataProperty(ClassInfo& pOwner, const std::string& name, unsigned int uiOffset, bool bDynamicCreate, unsigned int uiDataNum)
-        : Property(pOwner, name, F_SAVE_LOAD_CLONE, uiOffset), m_bDynamicCreate(bDynamicCreate), m_uiDataNum(uiDataNum)
+        DataProperty(ClassInfo& pOwner, const StringCrc& nameCrc, unsigned int uiOffset, bool bDynamicCreate, unsigned int uiDataNum)
+        : Property(pOwner, nameCrc, F_SAVE_LOAD_CLONE, uiOffset), m_bDynamicCreate(bDynamicCreate), m_uiDataNum(uiDataNum)
         {
         }
 
-        DataProperty(ClassInfo& pOwner, const std::string& name, unsigned int uiOffset, unsigned int uiNumOffset)
-        : Property(pOwner, name, F_SAVE_LOAD_CLONE, uiOffset), m_uiNumOffset(uiNumOffset)
+        DataProperty(ClassInfo& pOwner, const StringCrc& nameCrc, unsigned int uiOffset, unsigned int uiNumOffset)
+        : Property(pOwner, nameCrc, F_SAVE_LOAD_CLONE, uiOffset), m_uiNumOffset(uiNumOffset), m_bDynamicCreate(true), m_uiDataNum(0)
         {
         }
 
@@ -249,9 +259,80 @@ namespace NoelleGraphic
             return false;
         }
 
-        virtual Property* GetInstance()
+        virtual bool Archive(BinaryStream& stream, void* pObject) override
         {
-            return new DataProperty<T, NumType>();
+            uint32_t archiveType = stream.GetStreamFlag();
+            switch (archiveType)
+            {
+            case BinaryStream::AT_SAVE:
+            {
+                T* valueAddress = *(T**)GetValueAddress(pObject);  // Indirect addressing
+
+                if (m_uiDataNum > 0)  // static array
+                {
+                    stream.Write(valueAddress, m_uiDataNum * sizeof(T));
+                }
+                else  // dynamic array
+                {
+                    void* numOffset = (void*)(((unsigned char*)pObject) + m_uiNumOffset);
+                    NumType uiDataNum = *(NumType*)numOffset;
+                    stream.Write(numOffset, sizeof(NumType));
+                    stream.Write(valueAddress, uiDataNum * sizeof(T));
+                }
+            }
+            break;
+            case BinaryStream::AT_LOAD:
+            {
+                T** pTmp = (T**)GetValueAddress(pObject);
+                if (m_uiDataNum > 0)  // static array
+                {
+                    if (m_bDynamicCreate)
+                    {
+                        *pTmp = new T[m_uiDataNum];
+                        stream.Read((void*)(*pTmp), m_uiDataNum * sizeof(T));
+                    }
+                    else
+                    {
+                        stream.Read((void*)(*pTmp), m_uiDataNum * sizeof(T));
+                    }
+                }
+                else
+                {
+                    void* numOffset = (void*)(((unsigned char*)pObject) + m_uiNumOffset);
+                    stream.Read(numOffset, sizeof(NumType));
+                    NumType uiDataNum = *(NumType*)numOffset;
+                    if (uiDataNum)
+                    {
+                        *pTmp = new T[m_uiDataNum];
+                        stream.Read((void*)(*pTmp), uiDataNum * sizeof(T));
+                    }
+                }
+            }
+            break;
+            case BinaryStream::AT_SIZE:
+            {
+                if (m_uiDataNum > 0)
+                {
+                    stream.AddBufferSize(m_uiDataNum * sizeof(T));
+                }
+                else
+                {
+                    void* numOffset = (void*)(((unsigned char*)pObject) + m_uiNumOffset);
+                    NumType uiDataNum = *(NumType*)numOffset;
+
+                    stream.AddBufferSize(sizeof(NumType));
+                    stream.AddBufferSize(uiDataNum * sizeof(T));
+                }
+            }
+            break;
+            }
+
+            return true;
+        }
+
+        virtual std::unique_ptr<Property> GetInstance()
+        {
+            return std::unique_ptr<DataProperty<T, NumType>>();
         }
         
     private:
@@ -268,8 +349,8 @@ namespace NoelleGraphic
         {
         }
 
-        RangeProperty(ClassInfo& pOwner, const std::string& name, unsigned int uiFlag, unsigned int uiOffset, bool bRange = false, T lowValue = T(), T highValue = T(), T step = T())
-        : Property(pOwner, name, F_SAVE_LOAD_CLONE, uiOffset)
+        RangeProperty(ClassInfo& pOwner, const StringCrc& nameCrc, unsigned int uiFlag, unsigned int uiOffset, bool bRange = false, T lowValue = T(), T highValue = T(), T step = T())
+        : Property(pOwner, nameCrc, F_SAVE_LOAD_CLONE, uiOffset)
         {
             m_LowValue = lowValue;
             m_HighValue = highValue;
@@ -302,9 +383,9 @@ namespace NoelleGraphic
             return false;
         }
 
-        virtual Property* GetInstance()
+        virtual std::unique_ptr<Property> GetInstance()
         {
-            return new RangeProperty<T>();
+            return std::make_unique<RangeProperty<T>>();
         }
 
     protected:
@@ -322,8 +403,8 @@ namespace NoelleGraphic
         {
         }
 
-        ValueProperty(ClassInfo& pOwner, const std::string& name, unsigned int uiFlag, unsigned int uiOffset, bool bRange = false, T lowValue = T(), T highValue = T(), T step = T())
-        :RangeProperty<T>(pOwner, name, uiFlag, uiOffset, bRange, lowValue, highValue, step)
+        ValueProperty(ClassInfo& pOwner, const StringCrc& nameCrc, unsigned int uiFlag, unsigned int uiOffset, bool bRange = false, T lowValue = T(), T highValue = T(), T step = T())
+        :RangeProperty<T>(pOwner, nameCrc, uiFlag, uiOffset, bRange, lowValue, highValue, step)
         {
         }
 
@@ -336,12 +417,20 @@ namespace NoelleGraphic
         ValueProperty& operator=(const ValueProperty&) = delete;
         ValueProperty& operator=(ValueProperty&&) = default;
 
-        virtual bool SetValue(void* pObj, T& srcValue)
+        template <typename V = T>
+        std::enable_if_t<T_Has_Comparison_Operators<V>::Value, bool> SetValue(void* pObj, T& srcValue)
         {
             if (srcValue < this->m_LowValue || srcValue > this->m_HighValue)
             {
                 return false;
             }
+            *(T*)(((unsigned char*)pObj) + this->m_uiOffset) = srcValue;
+            return true;
+        }
+
+        template <typename V = T>
+        std::enable_if_t<!T_Has_Comparison_Operators<V>::Value, bool> SetValue(void* pObj, T& srcValue)
+        {
             *(T*)(((unsigned char*)pObj) + this->m_uiOffset) = srcValue;
             return true;
         }
@@ -363,9 +452,160 @@ namespace NoelleGraphic
             return *(T*)(((const unsigned char*)pObj) + this->m_uiOffset);
         }
 
-        virtual Property* GetInstance()
+        virtual bool Archive(BinaryStream& stream, void* pObject) override
         {
-            return new ValueProperty<T>();
+            stream.Archive(Value(pObject));
+            return true;
+        }
+
+        virtual std::unique_ptr<Property> GetInstance()
+        {
+            return std::make_unique<ValueProperty<T>>();
+        }
+    };
+
+    template<typename U>
+    class ValueProperty<std::unique_ptr<U>> : public RangeProperty<U> {
+    public:
+        using T = std::unique_ptr<U>;
+
+        ValueProperty() = default;
+
+        ValueProperty(ClassInfo& pOwner, const StringCrc& nameCrc, unsigned int uiFlag, unsigned int uiOffset, bool bRange = false, U lowValue = U(), U highValue = U(), U step = U())
+        : RangeProperty<U>(pOwner, nameCrc, uiFlag, uiOffset, bRange, lowValue, highValue, step) 
+        {
+        }
+
+        virtual ~ValueProperty() = default;
+
+        template <typename V = U>
+        std::enable_if_t<T_Has_Comparison_Operators<V>::Value, bool> SetValue(void* pObj, T& srcValue) 
+        {
+            if ((*srcValue) < this->m_LowValue || (*srcValue) > this->m_HighValue)
+            {
+                return false;
+            }
+            *(T*)(((unsigned char*)pObj) + this->m_uiOffset) = std::move(srcValue);
+            return true;
+        }
+
+        template <typename V = U>
+        std::enable_if_t<!T_Has_Comparison_Operators<V>::Value, bool> SetValue(void* pObj, T& srcValue) 
+        {
+            *(T*)(((unsigned char*)pObj) + this->m_uiOffset) = std::move(srcValue);
+            return true;
+        }
+
+        template <typename V = U>
+        std::enable_if_t<T_Has_Comparison_Operators<V>::Value, bool> SetValue(void* pObj, U& srcValue)
+        {
+            if (srcValue < this->m_LowValue || srcValue > this->m_HighValue)
+            {
+                return false;
+            }
+            *(T*)(((unsigned char*)pObj) + this->m_uiOffset) = std::make_shared<U>(std::move(srcValue));
+            return true;
+        }
+
+        template <typename V = U>
+        std::enable_if_t<!T_Has_Comparison_Operators<V>::Value, bool> SetValue(void* pObj, U& srcValue)
+        { 
+            *(T*)(((unsigned char*)pObj) + this->m_uiOffset) = std::make_shared<U>(std::move(srcValue));
+            return true;
+        }
+
+        virtual bool GetValue(void* pObj, T& dstValue) const
+        {
+            return false;
+        }
+
+        virtual bool GetValue(void* pObj, U* dstValue) const
+        {
+            dstValue = (*(T*)(((unsigned char*)pObj) + this->m_uiOffset)).get();
+            return true;
+        }
+
+        virtual T& Value(void *pObj) const
+        {
+            return *(T*)(((const unsigned char*)pObj) + this->m_uiOffset);
+        }
+
+        virtual bool Archive(BinaryStream& stream, void* pObject)  override
+        {
+            stream.Archive(Value(pObject));
+            return true;
+        }
+    };
+
+    template<typename U>
+    class ValueProperty<std::shared_ptr<U>> : public RangeProperty<U> {
+    public:
+        using T = std::shared_ptr<U>;
+
+        ValueProperty() = default;
+
+        ValueProperty(ClassInfo& pOwner, const StringCrc& nameCrc, unsigned int uiFlag, unsigned int uiOffset, bool bRange = false, U lowValue = U(), U highValue = U(), U step = U())
+            : RangeProperty<U>(pOwner, nameCrc, uiFlag, uiOffset, bRange, lowValue, highValue, step) {
+        }
+
+        virtual ~ValueProperty() = default;
+
+        template <typename V = U>
+        std::enable_if_t<T_Has_Comparison_Operators<V>::Value, bool> SetValue(void* pObj, T& srcValue)
+        {
+            if (*srcValue < this->m_LowValue || *srcValue > this->m_HighValue)
+            {
+                return false;
+            }
+            *(T*)(((unsigned char*)pObj) + this->m_uiOffset) = std::move(srcValue);
+            return true;
+        }
+
+        template <typename V = U>
+        std::enable_if_t<!T_Has_Comparison_Operators<V>::Value, bool> SetValue(void* pObj, T& srcValue)
+        {
+            *(T*)(((unsigned char*)pObj) + this->m_uiOffset) = std::move(srcValue);
+            return true;
+        }
+
+        template <typename V = U>
+        std::enable_if_t<T_Has_Comparison_Operators<V>::Value, bool> SetValue(void* pObj, U& srcValue)
+        {
+            if (srcValue < this->m_LowValue || srcValue > this->m_HighValue)
+            {
+                return false;
+            }
+            *(T*)(((unsigned char*)pObj) + this->m_uiOffset) = std::make_unique<U>(std::move(srcValue));
+            return true;
+        }
+
+        template <typename V = U>
+        std::enable_if_t<!T_Has_Comparison_Operators<V>::Value, bool> SetValue(void* pObj, U& srcValue)
+        {
+            *(T*)(((unsigned char*)pObj) + this->m_uiOffset) = std::make_unique<U>(std::move(srcValue));
+            return true;
+        }
+
+        virtual bool GetValue(void* pObj, T& dstValue) const
+        {
+            return false;
+        }
+
+        virtual bool GetValue(void* pObj, U* dstValue) const
+        {
+            dstValue = (*(T*)(((unsigned char*)pObj) + this->m_uiOffset)).get();
+            return true;
+        }
+
+        virtual T& Value(void *pObj) const
+        {
+            return *(T*)(((const unsigned char*)pObj) + this->m_uiOffset);
+        }
+
+        virtual bool Archive(BinaryStream& stream, void* pObject)  override
+        {
+            stream.Archive(Value(pObject));
+            return true;
         }
     };
 
@@ -377,8 +617,8 @@ namespace NoelleGraphic
         {
         }
 
-        ArrayProperty(ClassInfo& pOwner, const std::string& name, unsigned int uiFlag, unsigned int uiOffset, T lowValue = T(), T highValue = T(), T step = T(), bool bRange = false)
-        : RangeProperty<T>(pOwner, name, uiFlag, uiOffset, lowValue, highValue, step, bRange)
+        ArrayProperty(ClassInfo& pOwner, const StringCrc& nameCrc, unsigned int uiFlag, unsigned int uiOffset, T lowValue = T(), T highValue = T(), T step = T(), bool bRange = false)
+        : RangeProperty<T>(pOwner, nameCrc, uiFlag, uiOffset, lowValue, highValue, step, bRange)
         {
 
         }
@@ -413,9 +653,12 @@ namespace NoelleGraphic
 
         virtual bool SetValue(void* pObj, unsigned int uiIndex, T& pDataSrc)
         {
-            if (pDataSrc < this->m_LowValue || pDataSrc > this->m_HighValue)
+            if (T_Has_Comparison_Operators<T>::Value)
             {
-                return false;
+                if (pDataSrc < this->m_LowValue || pDataSrc > this->m_HighValue)
+                {
+                    return false;
+                }
             }
             GetContainer(pObj)[uiIndex] = pDataSrc;
             return true;
@@ -427,9 +670,15 @@ namespace NoelleGraphic
 			return true;
 		}
 
-        virtual Property* GetInstance()
+        virtual bool Archive(BinaryStream& stream, void* pObject) override
         {
-            return new ArrayProperty<ArrayType, T>();
+            stream.Archive(GetContainer(pObject));
+            return true;
+        }
+
+        virtual std::unique_ptr<Property> GetInstance()
+        {
+            return std::make_unique<ArrayProperty<ArrayType, T>>();
         }
     };
 
@@ -441,8 +690,8 @@ namespace NoelleGraphic
         {
         }
 
-        MapProperty(ClassInfo& pOwner, const std::string& name, unsigned int uiFlag, unsigned int uiOffset, ValueType lowValue = ValueType(), ValueType highValue = ValueType(), ValueType step = ValueType(), bool bRange = false)
-        : RangeProperty<MapType>(pOwner, name, uiFlag, uiOffset, lowValue, highValue, step, bRange)
+        MapProperty(ClassInfo& pOwner, const StringCrc& nameCrc, unsigned int uiFlag, unsigned int uiOffset, ValueType lowValue = ValueType(), ValueType highValue = ValueType(), ValueType step = ValueType(), bool bRange = false)
+        : RangeProperty<ValueType>(pOwner, nameCrc, uiFlag, uiOffset, lowValue, highValue, step, bRange)
         {
         }
 
@@ -477,9 +726,11 @@ namespace NoelleGraphic
 
         virtual bool SetValue(void* pObj, KeyType& key, ValueType& value)
         {
-            if (value < this->m_LowValue || value > this->m_HighValue)
-                return false;
-            
+            if (T_Has_Comparison_Operators<ValueType>::Value)
+            {
+                if (value < this->m_LowValue || value > this->m_HighValue)
+                    return false;
+            }
             MapType& container = GetContainer(pObj);
             container[key] = value;
             return true;
@@ -499,9 +750,15 @@ namespace NoelleGraphic
             }
         }
 
-        virtual Property* GetInstance()
+        virtual bool Archive(BinaryStream& stream, void* pObject) override
         {
-            return new MapProperty<MapType, KeyType, ValueType>();
+            stream.Archive(GetContainer(pObject));
+            return true;
+        }
+
+        virtual std::unique_ptr<Property> GetInstance()
+        {
+            return std::make_unique<MapProperty<MapType, KeyType, ValueType>>();
         }
     };
 
@@ -509,14 +766,14 @@ namespace NoelleGraphic
     class DataPropertyCreator
     {
     public:
-        DataProperty<T, NumType>* CreateProperty(ClassInfo& pOwner, const std::string& name, unsigned int uiOffset, bool bDynamicCreate, unsigned int uiDataNum)
+        std::unique_ptr<DataProperty<T, NumType>> CreateProperty(ClassInfo& pOwner, const StringCrc& nameCrc, unsigned int uiOffset, bool bDynamicCreate, unsigned int uiDataNum)
         {
-            return new DataProperty<T, NumType>(pOwner, name, uiOffset, bDynamicCreate, uiDataNum);
+            return std::make_unique<DataProperty<T, NumType>>(pOwner, nameCrc, uiOffset, bDynamicCreate, uiDataNum);
         }
 
-        DataProperty<T, NumType>* CreateProperty(ClassInfo& pOwner, const std::string& name, unsigned int uiOffset, unsigned int uiNumOffset)
+        std::unique_ptr<DataProperty<T, NumType>> CreateProperty(ClassInfo& pOwner, const StringCrc& nameCrc, unsigned int uiOffset, unsigned int uiNumOffset)
         {
-            return new DataProperty<T, NumType>(pOwner, name, uiOffset, uiNumOffset);
+            return std::make_unique<DataProperty<T, NumType>>(pOwner, nameCrc, uiOffset, uiNumOffset);
         }
     };
 
@@ -524,14 +781,14 @@ namespace NoelleGraphic
     class AutoPropertyCreator
     {
     public:
-        ValueProperty<T>* CreateProperty(ClassInfo& pOwner, const std::string& name, unsigned int uiFlag, unsigned int uiOffset)
+        std::unique_ptr<ValueProperty<T>> CreateProperty(ClassInfo& pOwner, const StringCrc& nameCrc, unsigned int uiFlag, unsigned int uiOffset)
         {
-            return new ValueProperty<T>(pOwner, name, uiFlag, uiOffset);
+            return std::make_unique<ValueProperty<T>>(pOwner, nameCrc, uiFlag, uiOffset);
         }
 
-        ValueProperty<T>* CreateProperty(ClassInfo& pOwner, const std::string& name, unsigned int uiFlag, unsigned int uiOffset, T lowValue, T highValue, T step)
+        std::unique_ptr<ValueProperty<T>> CreateProperty(ClassInfo& pOwner, const StringCrc& nameCrc, unsigned int uiFlag, unsigned int uiOffset, T lowValue, T highValue, T step)
         {
-            return new ValueProperty<T>(pOwner, name, uiFlag, uiOffset, lowValue, highValue, step);
+            return std::make_unique<ValueProperty<T>>(pOwner, nameCrc, uiFlag, uiOffset, lowValue, highValue, step);
         }
     };
 
@@ -539,14 +796,14 @@ namespace NoelleGraphic
     class AutoPropertyCreator<std::vector<T, Alloc>>
     {
     public:
-        ArrayProperty<std::vector<T, Alloc>, T>* CreateProperty(ClassInfo& pOwner, const std::string& name, unsigned int uiFlag, unsigned int uiOffset)
+        std::unique_ptr<ArrayProperty<std::vector<T, Alloc>, T>> CreateProperty(ClassInfo& pOwner, const StringCrc& nameCrc, unsigned int uiFlag, unsigned int uiOffset)
         {
-            return new ArrayProperty<std::vector<T, Alloc>, T>(pOwner, name, uiFlag, uiOffset);
+            return std::make_unique<ArrayProperty<std::vector<T, Alloc>, T>>(pOwner, nameCrc, uiFlag, uiOffset);
         }
 
-        ArrayProperty<std::vector<T, Alloc>, T>* CreateProperty(ClassInfo& pOwner, const std::string& name, unsigned int uiFlag, unsigned int uiOffset, T lowValue, T highValue, T step)
+        std::unique_ptr<ArrayProperty<std::vector<T, Alloc>, T>> CreateProperty(ClassInfo& pOwner, const StringCrc& nameCrc, unsigned int uiFlag, unsigned int uiOffset, T lowValue, T highValue, T step)
         {
-            return new ArrayProperty<std::vector<T, Alloc>, T>(pOwner, name, uiFlag, uiOffset, lowValue, highValue, step);
+            return std::make_unique<ArrayProperty<std::vector<T, Alloc>, T>>(pOwner, nameCrc, uiFlag, uiOffset, lowValue, highValue, step);
         }
     };
 
@@ -554,14 +811,14 @@ namespace NoelleGraphic
     class AutoPropertyCreator<std::map<KeyType, ValueType, std::less<KeyType>, Alloc>>
     {
     public:
-        MapProperty<std::map<KeyType, ValueType, std::less<KeyType>, Alloc>, KeyType, ValueType>* CreateProperty(ClassInfo& pOwner, const std::string& name, unsigned int uiFlag, unsigned int uiOffset)
+        std::unique_ptr<MapProperty<std::map<KeyType, ValueType, std::less<KeyType>, Alloc>, KeyType, ValueType>> CreateProperty(ClassInfo& pOwner, const StringCrc& nameCrc, unsigned int uiFlag, unsigned int uiOffset)
         {
-            return new MapProperty<std::map<KeyType, ValueType, std::less<KeyType>, Alloc>, KeyType, ValueType>(pOwner, name, uiFlag, uiOffset);
+            return std::make_unique<MapProperty<std::map<KeyType, ValueType, std::less<KeyType>, Alloc>, KeyType, ValueType>>(pOwner, nameCrc, uiFlag, uiOffset);
         }
 
-        MapProperty<std::map<KeyType, ValueType, std::less<KeyType>, Alloc>, KeyType, ValueType>* CreateProperty(ClassInfo& pOwner, const std::string& name, unsigned int uiFlag, unsigned int uiOffset, ValueType lowValue, ValueType highValue, ValueType step)
+        std::unique_ptr<MapProperty<std::map<KeyType, ValueType, std::less<KeyType>, Alloc>, KeyType, ValueType>> CreateProperty(ClassInfo& pOwner, const StringCrc& nameCrc, unsigned int uiFlag, unsigned int uiOffset, ValueType lowValue, ValueType highValue, ValueType step)
         {
-            return new MapProperty<std::map<KeyType, ValueType, std::less<KeyType>, Alloc>, KeyType, ValueType>(pOwner, name, uiFlag, uiOffset, lowValue, highValue, step);
+            return std::make_unique<MapProperty<std::map<KeyType, ValueType, std::less<KeyType>, Alloc>, KeyType, ValueType>>(pOwner, nameCrc, uiFlag, uiOffset, lowValue, highValue, step);
         }
     };
 
@@ -581,9 +838,9 @@ namespace NoelleGraphic
 			return apc;
 		}
 		template<class ValueType>
-		static Property* CreateEnumProperty(ValueType& valueTypeDummyRef, const std::string& Name, const std::string& EnumName, ClassInfo& pOwner, unsigned int uiFlag, unsigned int uiOffset)
+		static std::unique_ptr<EnumProperty<ValueType>> CreateEnumProperty(ValueType& valueTypeDummyRef, const StringCrc& Name, const StringCrc& EnumName, ClassInfo& pOwner, unsigned int uiFlag, unsigned int uiOffset)
 		{
-			return new EnumProperty<ValueType>(pOwner, Name, EnumName, uiFlag, uiOffset);
+			return std::make_unique<EnumProperty<ValueType>>(pOwner, Name, EnumName, uiFlag, uiOffset);
 		}
     };
 }

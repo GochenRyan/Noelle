@@ -14,26 +14,6 @@
 
 #include "Object.h"
 
-inline bool Object::IsSameType(const ClassInfo& Type) const
-{
-    return GetType().IsSameType(Type);
-}
-
-inline bool Object::IsDerived(const ClassInfo& Type) const
-{
-    return GetType().IsDerived(Type);
-}
-
-inline bool Object::IsSameType(const Object* pObject) const
-{
-    return pObject && GetType().IsSameType(pObject->GetType());
-}
-
-inline bool Object::IsDerived(const Object* pObject) const
-{
-    return pObject && GetType().IsDerived(pObject->GetType());
-}
-
 inline void Object::SetFlag(unsigned int uiFlag)
 {
     m_uiFlag |= uiFlag;

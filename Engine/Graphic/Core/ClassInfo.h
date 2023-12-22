@@ -16,6 +16,7 @@
 #include "Graphic.h"
 #include "StringCrc.h"
 #include "Property.h"
+#include "System.h"
 
 #include <memory>
 #include <functional>
@@ -31,12 +32,12 @@ namespace NoelleGraphic
         ClassInfo() = delete;
         ClassInfo(const StringCrc& nameCrc, ClassInfo* pBase, CreateObjectFunc COF);
         ClassInfo(const ClassInfo&) = delete;
-		ClassInfo& operator=(const ClassInfo&) = delete;
-		ClassInfo(ClassInfo&&) = default;
-		ClassInfo& operator=(ClassInfo&&) = default;
+        ClassInfo& operator=(const ClassInfo&) = delete;
+        ClassInfo(ClassInfo&&) = default;
+        ClassInfo& operator=(ClassInfo&&) = default;
         ~ClassInfo();
 
-        inline uint32_t GetName() const;
+        inline StringCrc GetName() const;
         inline bool IsSameType(const ClassInfo& Type) const;
         inline bool IsDerived(const ClassInfo& Type) const;
         inline ClassInfo* GetBase() const
@@ -47,12 +48,11 @@ namespace NoelleGraphic
         Property* GetProperty(unsigned int uiIndex) const;
         unsigned int GetPropertyNum() const;
         void AddProperty(std::unique_ptr<Property> property);
-        void AddProperty(Property* property);
         void AddProperty(ClassInfo& classinfo);
         void ClearProperty();
 
     private:
-        uint32_t m_uiName;
+        StringCrc m_crcName;
         ClassInfo* m_pBase;
         CreateObjectFunc m_createFunc;
         std::vector<std::unique_ptr<Property>> m_PropertyArray;

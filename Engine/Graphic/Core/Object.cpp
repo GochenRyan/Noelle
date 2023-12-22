@@ -15,6 +15,8 @@
 #include "Object.h"
 #include "StringCrc.h"
 #include "Context.h"
+#include "ClassInfo.h"
+#include "ObjectDefines.h"
 
 #include "Property.marc"
 
@@ -29,6 +31,7 @@ IMPLEMENT_INITIAL_NO_CLASS_FACTORY_END
 ADD_PROPERTY_ROOT_BEGIN(Object)
 REGISTER_PROPERTY(m_uiFlag, Flag, Property::F_CLONE)
 ADD_PROPERTY_END
+IMPLEMENT_REGISTER_TYPE_ID(1, Object)
 
 Object::Object()
 {
@@ -38,4 +41,36 @@ Object::Object()
 Object::~Object()
 {
     GetFastObjManager().DeleteObject(this);
+}
+
+inline bool Object::IsSameType(const ClassInfo& Type) const
+{
+    return GetType().IsSameType(Type);
+}
+
+inline bool Object::IsDerived(const ClassInfo& Type) const
+{
+    return GetType().IsDerived(Type);
+}
+
+inline bool Object::IsSameType(const Object* pObject) const
+{
+    return pObject && GetType().IsSameType(pObject->GetType());
+}
+
+inline bool Object::IsDerived(const Object* pObject) const
+{
+    return pObject && GetType().IsDerived(pObject->GetType());
+}
+
+
+Object* Object::GetInstance(const ClassInfo& Type)
+{
+    uint32_t nameValue = Type.GetName().Value();
+    if (ms_ClassFactory.contains(nameValue))
+    {
+        Object* pObject = ms_ClassFactory[nameValue]();
+        return pObject;
+    }
+    return nullptr;
 }

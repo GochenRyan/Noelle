@@ -14,9 +14,9 @@
 
 #pragma once
 #include "Graphic.h"
-#include "ClassInfo.h"
 #include "FastObjManager.h"
 #include "Priority.h"
+#include "Type.marc"
 
 #include "ClassInfo.marc"
 #include "Initial.marc"
@@ -28,10 +28,14 @@ namespace NoelleGraphic
 {
     class Object;
     using CreateObjectFunc = std::function<Object*()>;
+    class VSStream;
+    class ClassInfo;
 
     class GRAPHIC_API Object
     {
     public:
+        friend class VSStream;
+
         Object();
         virtual ~Object() = 0;
         DECLARE_CLASSINFO
@@ -40,6 +44,10 @@ namespace NoelleGraphic
         inline bool IsDerived(const ClassInfo& Type) const;
         inline bool IsSameType(const Object* pObject) const;
         inline bool IsDerived(const Object* pObject) const;
+
+    public:
+        static Object* GetInstance(const ClassInfo& Type);
+
         static bool ms_bRegisterFactory;
         static std::unordered_map<uint32_t, CreateObjectFunc> ms_ClassFactory;
         
@@ -67,6 +75,8 @@ namespace NoelleGraphic
 
         unsigned int m_uiFlag;
     };
+
+    TYPE_MARCO(Object)
 
     #include "Object.inl"
 }
