@@ -16,11 +16,11 @@
 #include "Core/ClassInfo.h"
 #include "Core/Context.h"
 #include <fstream>
+#include <map>
 
 using namespace NoelleGraphic;
 
 uint32_t NoelleGraphic::BinaryStream::ms_uiVersion = 0;
-
 
 BinaryStream::BinaryStream()
 {
@@ -47,6 +47,7 @@ NoelleGraphic::BinaryStream::~BinaryStream()
 {
     m_pcCurBufPtr = nullptr;
     m_pcBuffer = nullptr;
+
     m_ObjectArray.clear();
     m_Object2GUID.clear();
     m_GUID2Object.clear();
@@ -123,7 +124,7 @@ bool BinaryStream::Save(std::string path)
         uint32_t uiPropertyNum = m_ObjectArray[i]->GetType().GetPropertyNum();
         for (int j = 0; j < uiPropertyNum; ++j)
         {
-            if (m_ObjectArray[i]->GetType().GetProperty(j)->GetFlag() & Property::F_SAVE_LOAD != 0)
+            if ((m_ObjectArray[i]->GetType().GetProperty(j)->GetFlag() & Property::F_SAVE_LOAD) != 0)
             {
                 archivePropertyCnt++;
             }
@@ -141,7 +142,7 @@ bool BinaryStream::Save(std::string path)
         int archivePropertyIndex = 0;
         for (int j = 0; j < uiPropertyNum; ++j)
         {
-            if (m_ObjectArray[i]->GetType().GetProperty(j)->GetFlag() & Property::F_SAVE_LOAD != 0)
+            if ((m_ObjectArray[i]->GetType().GetProperty(j)->GetFlag() & Property::F_SAVE_LOAD) != 0)
             {
                 m_uiArchivePropertySize = 0;
                 objectTableArray[i].m_uiPropertyNum++;
@@ -213,7 +214,7 @@ bool BinaryStream::Save(std::string path)
         uint32_t uiPropertyNum = m_ObjectArray[i]->GetType().GetPropertyNum();
         for (int j = 0; j < uiPropertyNum; ++j)
         {
-            if (m_ObjectArray[i]->GetType().GetProperty(j)->GetFlag() & Property::F_SAVE_LOAD != 0)
+            if ((m_ObjectArray[i]->GetType().GetProperty(j)->GetFlag() & Property::F_SAVE_LOAD) != 0)
             {
                 m_ObjectArray[i]->GetType().GetProperty(j)->Archive(*this, m_ObjectArray[i]);
             }
@@ -282,6 +283,7 @@ bool BinaryStream::LoadFromBuffer(unsigned char* pBuffer, uint32_t uiSize)
     uint32_t uiObjectNum;
     Read(&uiObjectNum, sizeof(uint32_t));
 
+    std::map<uint32_t, ObjectTable*> GUID2ObjectTable;
     std::vector<ObjectTable> objectTableArray(uiObjectNum);
 
     for (int i = 0; i < uiObjectNum; ++i)
@@ -292,6 +294,8 @@ bool BinaryStream::LoadFromBuffer(unsigned char* pBuffer, uint32_t uiSize)
         Read(&objectTableArray[i].m_uiPropertyNum, sizeof(uint32_t));
         Read(&objectTableArray[i].m_uiPropertyTableOffset, sizeof(uint32_t));
         Read(&objectTableArray[i].m_uiPropertyTableSize, sizeof(uint32_t));
+
+        GUID2ObjectTable[objectTableArray[i].m_uiTableID] = &objectTableArray[i];
     }
 
     for (int i = 0; i < objectTableArray.size(); ++i)
@@ -307,6 +311,7 @@ bool BinaryStream::LoadFromBuffer(unsigned char* pBuffer, uint32_t uiSize)
         objectTableArray[i].m_propertyTableArray = propertyTableArray;
     }
 
+    std::map<Object*, uint32_t> Object2GUID;
     for (int i = 0; i < uiObjectNum; ++i)
     {
         ClassInfo* pType = nullptr;
@@ -316,6 +321,7 @@ bool BinaryStream::LoadFromBuffer(unsigned char* pBuffer, uint32_t uiSize)
             if (pObject != nullptr)
             {
                 m_GUID2Object[objectTableArray[i].m_uiTableID] = pObject;
+                Object2GUID[pObject] = objectTableArray[i].m_uiTableID;
                 RegisterObject(pObject);
             }   
         }
@@ -324,12 +330,23 @@ bool BinaryStream::LoadFromBuffer(unsigned char* pBuffer, uint32_t uiSize)
     m_uiStreamFlag = AT_LOAD;
     for (int i = 0; i < m_ObjectArray.size(); ++i)
     {
+        ClassInfo& type = m_ObjectArray[i]->GetType();
+        ObjectTable& objectTable = *GUID2ObjectTable[Object2GUID[m_ObjectArray[i]]];
+
         uint32_t uiPropertyNum = m_ObjectArray[i]->GetType().GetPropertyNum();
         for (int j = 0; j < uiPropertyNum; ++j)
         {
-            if (m_ObjectArray[i]->GetType().GetProperty(j)->GetFlag() & Property::F_SAVE_LOAD != 0)
+            Property* pProperty = type.GetProperty(j);
+            if ((pProperty->GetFlag() & Property::F_SAVE_LOAD) != 0)
             {
-                m_ObjectArray[i]->GetType().GetProperty(j)->Archive(*this, m_ObjectArray[i]);
+                for (PropertyTable& propertyTable : objectTable.m_propertyTableArray)
+                {
+                    if (propertyTable.m_uiPropertyName == pProperty->GetName().Value())
+                    {
+                        type.GetProperty(j)->Archive(*this, m_ObjectArray[i]);
+                        break;
+                    }
+                }
             }
         }
     }

@@ -113,10 +113,9 @@ namespace NoelleGraphic
                     else if (TIsStringType<T>::Value)
                     {
                         std::string str = *static_cast<std::string*>(static_cast<void*>(&io));
-                        uint32_t strLen = sizeof(str.data());
+                        uint32_t strLen = str.length();
                         Write(&strLen, sizeof(uint32_t));
-                        char* tmp = str.data();
-                        Write(static_cast<void*>(&tmp), strLen);
+                        Write(static_cast<void*>(str.data()), strLen);
                     }
                     else
                     {
@@ -175,6 +174,7 @@ namespace NoelleGraphic
                     else if (TIsStringType<T>::Value)
                     {
                         std::string str = *static_cast<std::string*>(static_cast<void*>(&io));
+                        m_uiArchivePropertySize += sizeof(uint32_t);  // length
                         m_uiArchivePropertySize += sizeof(str.data());
                     }
                     else
@@ -196,7 +196,7 @@ namespace NoelleGraphic
                     uint32_t uiSize = io.size();
                     Archive(uiSize);
 
-                    if (TIsNoNeedLoop<T>::Value)
+                    if (TIsNoNeedLoop<T>::Value && uiSize != 0)
                     {
                         void* dataPtr = io.data();
                         Write(dataPtr, io.size() * sizeof(T));
@@ -223,7 +223,19 @@ namespace NoelleGraphic
                 break;
             case AT_SIZE:
                 {
-                    m_uiArchivePropertySize += io.size() * sizeof(T);
+                    uint32_t uiSize = io.size();
+                    Archive(uiSize);
+                    if (TIsNoNeedLoop<T>::Value && uiSize != 0)
+                    {
+                        m_uiArchivePropertySize += io.size() * sizeof(T);
+                    }
+                    else
+                    {
+                        for (size_t i = 0; i < io.size(); ++i)
+                        {
+                            Archive(io[i]);
+                        }
+                    }
                 }
                 break;
             case AT_LOAD:
@@ -248,27 +260,19 @@ namespace NoelleGraphic
         }
 
         template <typename KeyType, typename ValueType, typename Alloc>
-        void Archive(std::map<KeyType, ValueType, std::less<KeyType>>& io) 
+        void Archive(std::map<KeyType, ValueType, std::less<KeyType>, Alloc>& io)
         {
             switch (m_uiStreamFlag)
             {
                 case AT_SAVE:
                     {
-                        uint32_t uiSize = 0;
+                        uint32_t uiSize = io.size();
                         Archive(uiSize);
 
-                        if (TIsNoNeedLoop<KeyType>::Value && TIsNoNeedLoop<ValueType>::Value)
+                        for (std::pair<KeyType, ValueType> pair : io)
                         {
-                            uint32_t dataSize = uiSize * (sizeof(KeyType) + sizeof(ValueType));
-                            Write(io.data(), dataSize);
-                        }
-                        else
-                        {
-                            for (const auto& pair : io)
-                            {
-                                Archive(pair.first);
-                                Archive(pair.second);
-                            }
+                            Archive(pair.first);
+                            Archive(pair.second);
                         }
                     }
                     break;
@@ -277,7 +281,7 @@ namespace NoelleGraphic
                         if (!TIsNeedGC<KeyType>::Value || !TIsNeedGC<ValueType>::Value)
                             return;
 
-                        for (const auto& pair : io)
+                        for (std::pair<KeyType, ValueType> pair : io)
                         {
                             if (TIsNeedGC<KeyType>::Value)
                                 Archive(pair.first);
@@ -288,7 +292,13 @@ namespace NoelleGraphic
                     break;
                 case AT_SIZE:
                     {
-                        m_uiArchivePropertySize += io.size() * (sizeof(KeyType) + sizeof(ValueType));
+                        uint32_t uiSize = io.size();
+                        Archive(uiSize);
+                        for (std::pair<KeyType, ValueType> pair : io)
+                        {
+                            Archive(pair.first);
+                            Archive(pair.second);
+                        }
                     }
                     break;
                 case AT_LOAD:
@@ -296,19 +306,13 @@ namespace NoelleGraphic
                         uint32_t uiSize = 0;
                         Archive(uiSize);
 
-                        if (TIsNoNeedLoop<KeyType>::Value && TIsNoNeedLoop<ValueType>::Value)
+                        std::vector<KeyType> keys(uiSize);
+                        std::vector<ValueType> values(uiSize);
+                        for (int i = 0; i < uiSize; ++i)
                         {
-                            void* dataPtr = io.data();
-                            size_t dataSize = io.size() * (sizeof(KeyType) + sizeof(ValueType));
-                            Read(dataPtr, dataSize);
-                        }
-                        else
-                        {
-                            for (const auto& pair : io)
-                            {
-                                Archive(pair.first);
-                                Archive(pair.second);
-                            }
+                            Archive(keys[i]);
+                            Archive(values[i]);
+                            io[keys[i]] = values[i];
                         }
                     }
                     break;

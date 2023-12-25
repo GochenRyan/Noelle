@@ -22,54 +22,56 @@
 #include "Core/ClassInfo.h"
 #include "Sample2.h"
 
-
-class Sample1: public NoelleGraphic::Object
-{
-public:
-    Sample1()
-    {
-        m_TestInt = 0;
-        m_TestFloat = 0;
-        m_FloatData = nullptr;
-        m_FloatDataNum = 0;
-        m_FloatFixedData = new float[4];
-        m_StrData = "";
-        m_Sample2UniquePtr = nullptr;
-        m_Sample2SharedPtr = nullptr;
-    }
-    virtual ~Sample1()
-    {
-        delete[] m_FloatData;
-        delete[] m_FloatFixedData;
-    }
-    DECLARE_CLASSINFO
-    DECLARE_INITIAL
-    int m_TestInt;
-    float m_TestFloat;
-    float* m_FloatData;
-    unsigned int m_FloatDataNum;
-    float* m_FloatFixedData;
-    std::string m_StrData;
-    std::unique_ptr<Sample2> m_Sample2UniquePtr;
-    std::shared_ptr<Sample2> m_Sample2SharedPtr;
-    std::vector<int> m_VecData;
-    std::map<std::string, int> m_MapData;
-
-    enum TestEnum
-    {
-        TE_1,
-        TE_2,
-        TE_3,
-        TE_MAX
-    };
-    TestEnum m_EnumTest;
-
-    static bool TestInitFunction();
-    static bool TestTerminalFunction();
-};
-
 namespace NoelleGraphic
 {
-    TYPE_MARCO(Sample1)
+    class Sample1: public NoelleGraphic::Object
+    {
+    public:
+        Sample1()
+        {
+            m_TestInt = 0;
+            m_TestFloat = 0;
+            m_FloatData = nullptr;
+            m_FloatDataNum = 0;
+            m_FloatFixedData = new float[4];
+            m_StrData = "";
+            m_Sample2UniquePtr = nullptr;
+            m_Sample2SharedPtr = nullptr;
+            m_VecData.clear();
+            m_MapData.clear();
+        }
+        virtual ~Sample1()
+        {
+            delete[] m_FloatData;
+            delete[] m_FloatFixedData;
+            m_VecData.clear();
+            m_MapData.clear();
+        }
+        DECLARE_CLASSINFO
+        DECLARE_INITIAL
+        int m_TestInt;
+        float m_TestFloat;
+        float* m_FloatData;
+        unsigned int m_FloatDataNum;
+        float* m_FloatFixedData;
+        std::string m_StrData;
+        std::unique_ptr<Sample2> m_Sample2UniquePtr;
+        std::shared_ptr<Sample2> m_Sample2SharedPtr;
+        std::vector<int> m_VecData;
+        std::map<std::string, int> m_MapData;
+
+        enum TestEnum
+        {
+            TE_1,
+            TE_2,
+            TE_3,
+            TE_MAX
+        };
+        TestEnum m_EnumTest;
+
+        static bool TestInitFunction();
+        static bool TestTerminalFunction();
+    };
+    TYPE_MARCO(Sample1);
 }
 

@@ -259,12 +259,13 @@ DebugMem::~DebugMem()
 void* DebugMem::Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArray)
 {
 	std::lock_guard<std::recursive_mutex> lock(m_mtx);
-
+	NOEL_ASSERT(uiSize);
 	m_uiNumNewCalls++;
 
 	// 
 	USIZE_TYPE uiExtendedSize = sizeof(Block) + sizeof(USIZE_TYPE) + uiSize + sizeof(USIZE_TYPE);
 	char* pcAddr = (char*)MemObject::GetCMemManager().Allocate(uiExtendedSize, uiAlignment, bIsArray);
+	NOEL_ASSERT(pcAddr);
 	if (!pcAddr)
 		return nullptr;
 
@@ -323,29 +324,27 @@ void* DebugMem::Allocate(USIZE_TYPE uiSize, USIZE_TYPE uiAlignment, bool bIsArra
 void DebugMem::Deallocate(char* pcAddr, USIZE_TYPE uiAlignment, bool bIsArray)
 {
 	std::lock_guard<std::recursive_mutex> lock(m_mtx);
-	
+	NOEL_ASSERT(pcAddr);
 	m_uiNumDeleteCalls++;
 	pcAddr -= sizeof(USIZE_TYPE);
 
 	USIZE_TYPE* pBeginMask = (USIZE_TYPE*)(pcAddr);
-	//NOELLE_ASSERT(*pBeginMask == BEGIN_MASK);
+	NOEL_ASSERT(*pBeginMask == BEGIN_MASK);
 
 	pcAddr -= sizeof(Block);
 
 	Block* pBlock = (Block*)pcAddr;
 	RemoveBlock(pBlock);
 
-	//NOELLE_ASSERT(pBlock->m_bIsArray == bIsArray);
-	//NOELLE_ASSERT(m_uiNumBlocks > 0 && m_uiNumBytes >= pBlock->m_uiSize);
+	NOEL_ASSERT(m_uiNumBlocks > 0 && m_uiNumBytes >= pBlock->m_uiSize);
 	bool bAlignment = (uiAlignment > 0) ? true : false;
-	//NOELLE_ASSERT(pBlock->m_bAlignment == bAlignment);
 	USIZE_TYPE* pEndMask = (USIZE_TYPE*)(pcAddr + sizeof(Block) + sizeof(USIZE_TYPE) + pBlock->m_uiSize);
-	//NOELLE_ASSERT(*pEndMask == END_MASK);
+	NOEL_ASSERT(*pEndMask == END_MASK);
 
 	m_uiNumBlocks--;
 	m_uiNumBytes -= pBlock->m_uiSize;
 
-	free(pcAddr);
+	MemObject::GetCMemManager().Deallocate(pcAddr, uiAlignment, bIsArray);
 }
 
 void DebugMem::InsertBlock(Block* pBlock)

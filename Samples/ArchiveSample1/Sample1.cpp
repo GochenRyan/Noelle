@@ -18,6 +18,8 @@
 
 #include <spdlog/spdlog.h>
 
+using namespace NoelleGraphic;
+
 IMPLEMENT_CLASSINFO(Sample1, NoelleGraphic::Object)
 IMPLEMENT_INITIAL_BEGIN(Sample1)
 ADD_PRIORITY(Sample2)

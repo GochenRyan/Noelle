@@ -20,20 +20,18 @@
 #include "Core/Property.marc"
 #include "Core/Priority.marc"
 #include "Core/ClassInfo.h"
-
-class Sample2: public NoelleGraphic::Object
-{
-public:
-    Sample2(){}
-    virtual ~Sample2(){}
-    DECLARE_CLASSINFO
-    DECLARE_INITIAL
-
-    static bool TestInitFunction();
-    static bool TestTerminalFunction();
-};
-
 namespace NoelleGraphic
 {
-    TYPE_MARCO(Sample2)
+    class Sample2: public NoelleGraphic::Object
+    {
+    public:
+        Sample2(){}
+        virtual ~Sample2(){}
+        DECLARE_CLASSINFO
+        DECLARE_INITIAL
+
+        static bool TestInitFunction();
+        static bool TestTerminalFunction();
+    };
+    TYPE_MARCO(Sample2);
 }

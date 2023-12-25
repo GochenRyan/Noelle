@@ -16,6 +16,8 @@
 
 #include <spdlog/spdlog.h>
 
+using namespace NoelleGraphic;
+
 IMPLEMENT_CLASSINFO(Sample2, NoelleGraphic::Object)
 NO_PROPERTY(Sample2)
 IMPLEMENT_INITIAL_BEGIN(Sample2)

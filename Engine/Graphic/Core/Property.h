@@ -303,7 +303,7 @@ namespace NoelleGraphic
                     NumType uiDataNum = *(NumType*)numOffset;
                     if (uiDataNum)
                     {
-                        *pTmp = new T[m_uiDataNum];
+                        *pTmp = new T[uiDataNum];
                         stream.Read((void*)(*pTmp), uiDataNum * sizeof(T));
                     }
                 }

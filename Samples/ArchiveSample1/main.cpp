@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "MemManager.h"
 #include "Application/Command.h"
 #include "Core/Context.h"
 #include "Core/ClassInfo.h"
@@ -22,6 +23,7 @@
 
 #include <memory>
 
+using namespace NoelleGraphic;
 
 int main(int argc, char* argv[])
 {
@@ -32,45 +34,44 @@ int main(int argc, char* argv[])
 
     /* SERIALIZE BEGIN */
 
-    std::unique_ptr<Sample1> sample1 = std::make_unique<Sample1>();
-    sample1->m_TestInt = 10086;
-    sample1->m_TestFloat = 100.86f;
+    std::unique_ptr<Sample1> pSample1 = std::make_unique<Sample1>();
+    pSample1->m_TestInt = 10086;
+    pSample1->m_TestFloat = 100.86f;
     
-    sample1->m_FloatDataNum = 4;
-    sample1->m_FloatData = new float[4];
-    sample1->m_FloatData[0] = 1.0f;
-    sample1->m_FloatData[1] = 2.0f;
-    sample1->m_FloatData[2] = 3.0f;
-    sample1->m_FloatData[3] = 4.0f;
+    pSample1->m_FloatDataNum = 4;
+    pSample1->m_FloatData = new float[4];
+    pSample1->m_FloatData[0] = 1.0f;
+    pSample1->m_FloatData[1] = 2.0f;
+    pSample1->m_FloatData[2] = 3.0f;
+    pSample1->m_FloatData[3] = 4.0f;
 
-    sample1->m_FloatFixedData[0] = 1.0f;
-    sample1->m_FloatFixedData[1] = 2.0f;
-    sample1->m_FloatFixedData[2] = 3.0f;
-    sample1->m_FloatFixedData[3] = 4.0f;
+    pSample1->m_FloatFixedData[0] = 1.0f;
+    pSample1->m_FloatFixedData[1] = 2.0f;
+    pSample1->m_FloatFixedData[2] = 3.0f;
+    pSample1->m_FloatFixedData[3] = 4.0f;
 
-    sample1->m_Sample2UniquePtr = std::make_unique<Sample2>();
-    sample1->m_Sample2SharedPtr = std::make_shared<Sample2>();
-    sample1->m_VecData = {1, 0, 0, 8, 6};
-    sample1->m_StrData = "10086";
-    sample1->m_MapData = {
+    pSample1->m_Sample2UniquePtr = std::make_unique<Sample2>();
+    pSample1->m_Sample2SharedPtr = std::make_shared<Sample2>();
+    pSample1->m_VecData = {1, 0, 0, 8, 6};
+    pSample1->m_StrData = "10086";
+    pSample1->m_MapData = {
         {"One", 1},
         {"Zero", 0},
         {"Eight", 8},
         {"Six", 6}
     };
 
-    sample1->m_EnumTest = Sample1::TestEnum::TE_2;
+    pSample1->m_EnumTest = Sample1::TestEnum::TE_2;
     std::unique_ptr<NoelleGraphic::BinaryStream> binaryStream = std::make_unique<NoelleGraphic::BinaryStream>();
     binaryStream->SetStreamFlag(NoelleGraphic::BinaryStream::AT_REGISTER);
-    binaryStream->ArchiveAll(sample1.get());
+    binaryStream->ArchiveAll(pSample1.get());
     binaryStream->Save("archive_sample_1.bin");
 
     /* SERIALIZE END */
 
     /* DESERIALIZE BEGIN */
     binaryStream->Load("archive_sample_1.bin");
-    std::unique_ptr<Sample1> pSample1(std::move((Sample1*)binaryStream->GetObjectByType(Sample1::ms_Type)));
-
+    std::unique_ptr<Sample1> pNewSample1(static_cast<Sample1*>(binaryStream->GetObjectByType(Sample1::ms_Type)));
     /* DESERIALIZE END */
 
     NoelleGraphic::Context::Terminal();
