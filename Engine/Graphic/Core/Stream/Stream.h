@@ -393,7 +393,9 @@ namespace NoelleGraphic
 
         bool ReadObjectTableID(Object*& object);
 
-        Object* GetObjectByType(const ClassInfo& pType);
+        bool GetObjectByType(const ClassInfo& pType, Object*& pObject, bool bDerivedFrom = false);
+
+        bool GetObjectsByType(const ClassInfo& pType, std::vector<Object*>& objectArray, bool bDerivedFrom = false);
     
     protected:
         uint32_t m_uiArchivePropertySize;

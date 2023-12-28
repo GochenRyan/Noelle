@@ -70,8 +70,14 @@ int main(int argc, char* argv[])
     /* SERIALIZE END */
 
     /* DESERIALIZE BEGIN */
+
     binaryStream->Load("archive_sample_1.bin");
-    std::unique_ptr<Sample1> pNewSample1(static_cast<Sample1*>(binaryStream->GetObjectByType(Sample1::ms_Type)));
+    Object* pObject = nullptr;
+    if (binaryStream->GetObjectByType(Sample1::ms_Type, pObject))
+    {
+        std::unique_ptr<Sample1> pNewSample1(static_cast<Sample1*>(pObject));
+    }
+
     /* DESERIALIZE END */
 
     NoelleGraphic::Context::Terminal();

@@ -395,13 +395,28 @@ bool BinaryStream::ReadObjectTableID(Object*& object)
     return false;
 }
 
-Object* NoelleGraphic::BinaryStream::GetObjectByType(const ClassInfo& pType)
+bool  NoelleGraphic::BinaryStream::GetObjectByType(const ClassInfo& pType, Object*& pObject, bool bDerivedFrom)
 {
     //TODO: same type objects
     for(Object* obj : m_ObjectArray)
     {
-        if (obj->GetType().IsSameType(pType))
-            return obj;
+        if (obj->GetType().IsSameType(pType) || (bDerivedFrom && obj->GetType().IsDerived(pType)))
+        {
+            pObject = obj;
+            return true;
+        }  
     }
-    return nullptr;
+    return false;
+}
+
+bool NoelleGraphic::BinaryStream::GetObjectsByType(const ClassInfo& pType, std::vector<Object*>& objectArray, bool bDerivedFrom)
+{
+    for (Object* obj : m_ObjectArray)
+    {
+        if (obj->GetType().IsSameType(pType) || (bDerivedFrom && obj->GetType().IsDerived(pType)))
+        {
+            objectArray.push_back(obj);
+        }
+    }
+    return objectArray.size() != 0;
 }
