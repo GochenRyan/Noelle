@@ -19,3 +19,8 @@ cd /d %VENDOR_PATH%\\spdlog
 cmake -E remove_directory build
 cmake -E remove_directory lib
 xmake f -c
+
+rem clean AssetPipeline
+cd /d %VENDOR_PATH%\\AssetPipeline
+cmake -E remove_directory build
+cmake -E remove_directory lib

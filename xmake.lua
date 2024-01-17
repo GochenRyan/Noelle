@@ -21,6 +21,7 @@ includes("Vendor/bimg")
 includes("Vendor/bgfx")
 includes("Vendor/imgui")
 includes("Vendor/spdlog")
+includes("Vendor/AssetPipeline")
 
 includes("Engine/System")
 includes("Engine/Graphic")

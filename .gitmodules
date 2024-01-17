@@ -34,3 +34,7 @@
 	path = Vendor/spdlog
 	url = https://github.com/GochenRyan/spdlog.git
 	branch = v1.x
+[submodule "Vendor/AssetPipeline"]
+	path = Vendor/AssetPipeline
+	url = https://github.com/GochenRyan/AssetPipeline.git
+	branch = main
