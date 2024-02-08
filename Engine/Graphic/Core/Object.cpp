@@ -63,7 +63,6 @@ inline bool Object::IsDerived(const Object* pObject) const
     return pObject && GetType().IsDerived(pObject->GetType());
 }
 
-
 Object* Object::GetInstance(const ClassInfo& Type)
 {
     uint32_t nameValue = Type.GetName().Value();
@@ -73,4 +72,9 @@ Object* Object::GetInstance(const ClassInfo& Type)
         return pObject;
     }
     return nullptr;
+}
+
+void Object::ValueChanged(std::string name, void* pData)
+{
+
 }

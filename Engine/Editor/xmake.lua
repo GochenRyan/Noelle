@@ -16,7 +16,8 @@ target("Editor")
     add_headerfiles(
         "**.h",
         "**.hpp",
-        "**.inl"
+        "**.inl",
+        "$(projectdir)/Engine/Math/**.h"
     )
     add_files(
         "**.cpp"
@@ -39,7 +40,8 @@ target("Editor")
         "Window/",
         "$(projectdir)/Engine/DataStruct/",
         "$(projectdir)/Engine/Runtime/",
-        "$(projectdir)/Engine/System/"
+        "$(projectdir)/Engine/System/",
+        "$(projectdir)/Engine/Graphic/"
     )
 
     add_links(

@@ -23,6 +23,7 @@
 
 #include <unordered_map>
 #include <functional>
+#include <vector>
 
 namespace NoelleGraphic
 {
@@ -72,7 +73,9 @@ namespace NoelleGraphic
         inline void SetFlag(unsigned int uiFlag);
         inline void ClearFlag(unsigned int uiFlag);
         inline bool IsHasFlag(unsigned int uiFlag);
-
+    
+        void ValueChanged(std::string name, void* pData);
+    private:
         unsigned int m_uiFlag;
     };
 
