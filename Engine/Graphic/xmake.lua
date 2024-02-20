@@ -3,7 +3,8 @@ target("Graphic")
 
     add_deps(
         "System",
-        "spdlog"
+        "spdlog",
+        "AssetPipeline"
     )
 
     add_defines("GRAPHIC_EXPORTS")
@@ -14,7 +15,12 @@ target("Graphic")
         "$(projectdir)/Engine/DataStruct/",
         "$(projectdir)/Engine/Graphic/",
         "$(projectdir)/Engine/System/",
-        "$(projectdir)/Vendor/spdlog/include/"
+        "$(projectdir)/Vendor/spdlog/include/",
+        
+        "$(projectdir)/Vendor/AssetPipeline/public/",
+        "$(projectdir)/Engine/Math/",
+
+        "$(projectdir)/Engine/Utils/"
     )
     add_linkdirs("$(projectdir)/lib/")
 

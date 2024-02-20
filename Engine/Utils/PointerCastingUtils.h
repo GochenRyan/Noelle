@@ -13,14 +13,19 @@
 // limitations under the License.
 
 #pragma once
-#include "Math/Vector.hpp"
-#include "Math/Transform.hpp"
+#include <memory>
 
-namespace NoelleMath
+namespace NoelleUtils
 {
-    template<typename T, std::size_t N>
-    using NVector = cd::TVector<T, N>;
 
-    template<typename T>
-    using NTransform = cd::TTransform<T>;
+    /// @brief See https://stackoverflow.com/questions/36120424/alternatives-of-static-pointer-cast-for-unique-ptr
+    /// @tparam TO 
+    /// @tparam FROM 
+    /// @param old 
+    /// @return 
+    template<typename TO, typename FROM>
+    std::unique_ptr<TO> StaticUniquePointerCast(std::unique_ptr<FROM>&& old) 
+    {
+        return std::unique_ptr<TO>{static_cast<TO*>(old.release())};
+    }
 }

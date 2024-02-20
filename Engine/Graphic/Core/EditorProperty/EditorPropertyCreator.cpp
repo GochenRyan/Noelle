@@ -21,7 +21,7 @@ void EditorPropertyCreator::Set(CreateEditorPropertyFunc func)
     m_Creator = func;
 }
 
-std::unique_ptr<EditorControl> EditorPropertyCreator::CreateUIProperty(EditorControl::CONTROL_TYPE type, std::string& name)
+std::unique_ptr<EditorControl> EditorPropertyCreator::CreateUIProperty(EditorControl::CONTROL_TYPE type, const std::string& name)
 {
     if (m_Creator != nullptr)
         return m_Creator(type, name);

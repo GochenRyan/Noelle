@@ -23,16 +23,16 @@
 */
 
 #pragma once
-#include "System.h"
 #include "MemManager.h"
+#include "System.h"
 #include "Stream/Stream.h"
 #include "Type.marc"
 
+#include <functional>
 #include <memory>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
-#include <functional>
 
 
 namespace NoelleGraphic

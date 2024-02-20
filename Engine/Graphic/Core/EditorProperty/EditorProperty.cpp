@@ -14,6 +14,7 @@
 
 #include "EditorProperty.h"
 #include "EditorPropertyCreator.h"
+#include "PointerCastingUtils.h"
 
 using namespace NoelleGraphic;
 
@@ -49,7 +50,7 @@ void ECombo::CallBackValue(std::string& value)
     }
 }
 
-void EColorTable::CallBackValue(NoelleMath::Vector<float, 3>& value)
+void EColorTable::CallBackValue(NoelleMath::NVector<float, 4>& value)
 {
     if (m_pOwner)
     {
@@ -65,11 +66,11 @@ void ETextBox::CallBackValue(std::string& value)
     }
 }
 
-EditorProperty::EditorProperty(std::string& name, Object* pOwner)
+EditorProperty::EditorProperty(const std::string& name, Object* pOwner)
 {
-    m_pLabel = EditorPropertyCreator.GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_LABEL, name);
+    m_pLabel = NoelleUtils::StaticUniquePointerCast<ELabel, EditorControl>(std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_LABEL, name)));
     m_pLabel->SetOwner(this);
-    m_pLabel->SetValue(name);
+    m_pLabel->SetValue((void*)(&name));
 
     m_pOwner = pOwner;
 }
@@ -81,7 +82,7 @@ void EditorProperty::CallBackValue(EditorControl* pControl, void* pData)
 
 EBoolProperty::EBoolProperty(bool* b, std::string& name, Object* pOwner) : EditorProperty(name, pOwner)
 {
-    m_pCheckBox = EditorPropertyCreator.GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_CHECK, name);
+    m_pCheckBox = NoelleUtils::StaticUniquePointerCast<ECheckBox, EditorControl>(std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_CHECK, name)));
     m_pCheckBox->SetOwner(this);
     m_pCheckBox->SetValue((void*)b);
 

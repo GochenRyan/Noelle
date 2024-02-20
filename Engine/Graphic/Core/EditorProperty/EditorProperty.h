@@ -15,6 +15,7 @@
 #pragma once
 #include "Graphic.h"
 #include "Core/Object.h"
+#include "NVector.h"
 
 #include <string>
 #include <vector>
@@ -38,6 +39,8 @@ namespace NoelleGraphic
         virtual ~IEditorElement() = default;
     };
 
+    // #region Logic Control
+
     class GRAPHIC_API EditorControl: public IEditorElement
     {
     public:
@@ -53,7 +56,7 @@ namespace NoelleGraphic
             CT_COLLECTION
         };
 
-        EditorControl(std::string& name)
+        EditorControl(const std::string& name)
         {
             m_sName = name; 
         }
@@ -82,7 +85,7 @@ namespace NoelleGraphic
     class GRAPHIC_API ELabel: public EditorControl
     {
     public:
-        ELabel(std::string& name): EditorControl(name)
+        ELabel(const std::string& name): EditorControl(name)
         {
         }
         
@@ -101,7 +104,7 @@ namespace NoelleGraphic
     class GRAPHIC_API ECheckBox: public EditorControl
     {
     public:
-        ECheckBox(std::string& name): EditorControl(name)
+        ECheckBox(const std::string& name): EditorControl(name)
         {
         }
 
@@ -134,6 +137,7 @@ namespace NoelleGraphic
         uint32_t m_uiMin;
         uint32_t m_uiMax;
         uint32_t m_uiStep;
+        uint32_t m_uiContent;
     };
 
     class GRAPHIC_API EViewWindow: public EditorControl
@@ -143,6 +147,7 @@ namespace NoelleGraphic
 
     class GRAPHIC_API ECombo: public EditorControl
     {
+    public:
         ECombo(std::string& name): EditorControl(name)
         {
 
@@ -159,10 +164,13 @@ namespace NoelleGraphic
         }
 
         virtual void CallBackValue(std::string& value);
+    protected:
+        std::vector<const char*> m_Options;
     };
 
     class GRAPHIC_API EColorTable: public EditorControl
     {
+    public:
         EColorTable(std::string& name): EditorControl(name)
         {
 
@@ -170,7 +178,7 @@ namespace NoelleGraphic
 
         virtual ~EColorTable() = default;
 
-        virtual void CallBackValue(NoelleMath::Vector<float, 3>& value);
+        virtual void CallBackValue(NoelleMath::NVector<float, 4>& value);
     };
 
     class GRAPHIC_API ETextBox: public EditorControl
@@ -190,6 +198,7 @@ namespace NoelleGraphic
 
     class GRAPHIC_API ECollection: public EditorControl
     {
+    public:
         ECollection(std::string& name): EditorControl(name)
         {
 
@@ -211,10 +220,14 @@ namespace NoelleGraphic
         std::vector<EditorControl> m_Collection;
     };
 
+    // #endregion
+
+    // #region Editor Property
+
     class GRAPHIC_API EditorProperty: public IEditorElement
     {
     public:
-        EditorProperty(std::string& name, Object* pOwner);
+        EditorProperty(const std::string& name, Object* pOwner);
 
         virtual ~EditorProperty()
         {
@@ -230,12 +243,15 @@ namespace NoelleGraphic
     class GRAPHIC_API EBoolProperty: public EditorProperty
     {
     public:
-        EBoolProperty(bool b, std::string& name, Object* pOwner);
+        EBoolProperty(bool* b, std::string& name, Object* pOwner);
 
-        virtual  ~EBoolProperty()
+        void NewFunction(std::string & name);
+
+        virtual ~EBoolProperty()
         {
             m_pOwner = nullptr;
         }
+
     protected:
         std::unique_ptr<ECheckBox> m_pCheckBox;
     };
@@ -249,7 +265,7 @@ namespace NoelleGraphic
     class GRAPHIC_API EColorProperty: public EditorProperty
     {
     public:
-        EColorProperty(NoelleMath::Vector<float, 4>* color, std::string& name, Object* pOwner);
+        EColorProperty(NoelleMath::NVector<float, 4>* color, std::string& name, Object* pOwner);
 
         ~EColorProperty() = default;
     protected:
@@ -286,9 +302,9 @@ namespace NoelleGraphic
     class GRAPHIC_API EIntProperty: public EValueProperty<int>
     {
     public:
-        EValueProperty(std::string& name, Object* pOwner);
+        EIntProperty(std::string& name, Object* pOwner);
 
-        ~EValueProperty() = default;
+        ~EIntProperty() = default;
     };
 
     class GRAPHIC_API EUIntProperty: public EValueProperty<uint32_t>
@@ -320,7 +336,7 @@ namespace NoelleGraphic
     class GRAPHIC_API EVector3Property: public EditorProperty
     {
     public:
-        EVector3Property(NoelleMath::Vector<float> pVector, std::string& name, Object* pOwner);
+        EVector3Property(NoelleMath::NVector<float, 3> pVector, std::string& name, Object* pOwner);
 
         ~EVector3Property() = default;
     protected:
@@ -340,7 +356,7 @@ namespace NoelleGraphic
     class GRAPHIC_API ETransformProperty: public EditorProperty
     {
     public:
-        ETransformProperty(Transform<float> pTransform, std::string& name, Object* pOwner);
+        ETransformProperty(NoelleMath::NTransform<float> pTransform, std::string& name, Object* pOwner);
 
         ~ETransformProperty() = default;
     protected:
@@ -382,6 +398,8 @@ namespace NoelleGraphic
 
         }
     };
+
+    // #endregion
 
     template<typename T>
     void CreateEditorElement(T value, Object* pOwner, ECollection* pParent, std::string& name, bool bRange, T max, T min, T step);

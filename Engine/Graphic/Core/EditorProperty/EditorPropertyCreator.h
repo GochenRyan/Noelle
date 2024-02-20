@@ -21,7 +21,7 @@
 
 namespace NoelleGraphic
 {
-    using CreateEditorPropertyFunc = std::function<std::unique_ptr<EditorControl>(EditorControl::CONTROL_TYPE, std::string&)>;
+    using CreateEditorPropertyFunc = std::function<std::unique_ptr<EditorControl>(EditorControl::CONTROL_TYPE, const std::string&)>;
 
     class GRAPHIC_API EditorPropertyCreator
     {
@@ -35,9 +35,9 @@ namespace NoelleGraphic
         EditorPropertyCreator& operator=(EditorPropertyCreator&&) = delete;
 
         void Set(CreateEditorPropertyFunc func);
-        std::unique_ptr<EditorControl> CreateUIProperty(EditorControl::CONTROL_TYPE type, std::string& name);
+        std::unique_ptr<EditorControl> CreateUIProperty(EditorControl::CONTROL_TYPE type, const std::string& name);
 
-        auto& GetInstance()
+        static auto& GetInstance()
         {
             static EditorPropertyCreator ms_Instance;
             return ms_Instance;

@@ -8,6 +8,7 @@ target("Editor")
         "libImGui",
         "libGlad",
         "SDL3",
+        "AssetPipeline",
         -- inner
         "System",
         "Runtime"
@@ -16,8 +17,7 @@ target("Editor")
     add_headerfiles(
         "**.h",
         "**.hpp",
-        "**.inl",
-        "$(projectdir)/Engine/Math/**.h"
+        "**.inl"
     )
     add_files(
         "**.cpp"
@@ -41,7 +41,10 @@ target("Editor")
         "$(projectdir)/Engine/DataStruct/",
         "$(projectdir)/Engine/Runtime/",
         "$(projectdir)/Engine/System/",
-        "$(projectdir)/Engine/Graphic/"
+        "$(projectdir)/Engine/Graphic/",
+
+        "$(projectdir)/Vendor/AssetPipeline/public/",
+        "$(projectdir)/Engine/Math/"
     )
 
     add_links(

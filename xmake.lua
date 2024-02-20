@@ -33,3 +33,11 @@ includes("Samples/Sample2")
 includes("Samples/Sample3")
 includes("Samples/PropertySample1")
 includes("Samples/ArchiveSample1")
+
+-- on_load(function (target)
+--         print("Included directories:")
+--         local includedirs = target:get("includedirs")
+--         for _, includedir in ipairs(includedirs) do
+--             print("  " .. includedir)
+--         end
+--     end)

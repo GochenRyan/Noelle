@@ -14,7 +14,7 @@
 
 #pragma once
 #include "Core/EditorProperty/EditorProperty.h"
-#include "Math/NVector.h"
+#include "NVector.h"
 
 #include <imgui.h>
 #include <string>
@@ -39,7 +39,7 @@ namespace NoelleGraphic
         virtual ~ImGuiLable() = default;
         void Update() override
         {
-            ImGui::Text(m_Content);
+            ImGui::Text(m_Content.data());
         }
     };
 
@@ -52,7 +52,7 @@ namespace NoelleGraphic
         virtual ~ImGuiCheckBox() = default;
         void Update() override
         {
-            if (ImGui::Checkbox(GetName(), &m_Content))
+            if (ImGui::Checkbox(GetName().data(), &m_Content))
             {
                 CallBackValue(m_Content);
             }
@@ -70,11 +70,14 @@ namespace NoelleGraphic
 
         void Update() override
         {
-            if (ImGui::SliderInt(GetName(), &m_Content, m_uiMin, m_uiMax))
+            if (ImGui::SliderInt(GetName().data(), &m_iContent, m_uiMin, m_uiMax))
             {
-                CallBackValue(m_Content);
+                m_uiContent = m_iContent;
+                CallBackValue(m_uiContent);
             }
         }
+    protected:
+        int m_iContent;
     };
 
     class ImGuiViewWindow: public EViewWindow, public IImGuiUpdatable
@@ -96,7 +99,7 @@ namespace NoelleGraphic
 
         void Update() override
         {
-            if (ImGui::Combo(GetName(), &m_uiSelection, m_Options.data(), m_Options.size()))
+            if (ImGui::Combo(GetName().data(), &m_uiSelection, m_Options.data(), m_Options.size()))
             {
                 std::string cur = m_Options[m_uiSelection];
                 CallBackValue(cur);
@@ -115,26 +118,26 @@ namespace NoelleGraphic
     public:
         ImGuiColorTable(std::string& name): EColorTable(name)
         {
-            m_Color = {0.0f, 0.0f, 0.0f, 0.0f}; 
+            m_Color = NoelleMath::NVector<float, 4>(0.0f, 0.0f, 0.0f, 0.0f); 
         }
 
-        virtual ~EColorTable() = default;
+        virtual ~ImGuiColorTable() = default;
 
         void Update() override
         {
-            if (ImGui::ColorEdit4(GetName(), &m_Color[0]))
+            if (ImGui::ColorEdit4(GetName().data(), &m_Color[0]))
             {
-                CallBackValue();
+                CallBackValue(m_Color);
             }
         }
     private:
-        NoelleMath::Vector<float, 4> m_Color;
+        NoelleMath::NVector<float, 4> m_Color;
     };
 
     class ImGuiTextBox: public ETextBox, public IImGuiUpdatable
     {
     public:
-        ImGuiTextBox(string::string& name): ETextBox(name)
+        ImGuiTextBox(std::string& name): ETextBox(name)
         {
         }
 
@@ -142,7 +145,7 @@ namespace NoelleGraphic
 
         void Update() override
         {
-            if (ImGui::InputText(GetName(), &m_Content))
+            if (ImGui::InputText(GetName().data(), &m_Content))
             {
                 CallBackValue(m_Content);
             }

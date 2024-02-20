@@ -63,11 +63,12 @@ void func2()
 	ms.GetPtr()->b = 2.0;
 }
 
-void main()
+int main()
 {
 	//StackMemAlloc<DefualtSample> sample(2);
 	//StackMemAlloc<ConstructSample> sample(2);
 	//StackMemAlloc<VirtualSample> vsample(2);
 	//StackMemAlloc<ArgsSample> sample(2);
 	func2();
+	return 0;
 }
