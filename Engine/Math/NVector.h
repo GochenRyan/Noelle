@@ -21,6 +21,10 @@ namespace NoelleMath
     template<typename T, std::size_t N>
     using NVector = cd::TVector<T, N>;
 
+    using NVec3f = cd::TVector<float, 3>;
+
+    using NVec4f = cd::TVector<float, 4>;
+
     template<typename T>
     using NTransform = cd::TTransform<T>;
 }

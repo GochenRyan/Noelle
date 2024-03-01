@@ -118,7 +118,7 @@ namespace NoelleGraphic
     public:
         ImGuiColorTable(std::string& name): EColorTable(name)
         {
-            m_Color = NoelleMath::NVector<float, 4>(0.0f, 0.0f, 0.0f, 0.0f); 
+            m_Color = NoelleMath::NVec4f(0.0f, 0.0f, 0.0f, 0.0f); 
         }
 
         virtual ~ImGuiColorTable() = default;
@@ -131,7 +131,7 @@ namespace NoelleGraphic
             }
         }
     private:
-        NoelleMath::NVector<float, 4> m_Color;
+        NoelleMath::NVec4f m_Color;
     };
 
     class ImGuiTextBox: public ETextBox, public IImGuiUpdatable

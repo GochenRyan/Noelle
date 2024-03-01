@@ -78,7 +78,7 @@ namespace NoelleGraphic
         }
 
     protected:
-        EditorProperty* m_pOwner;
+        EditorProperty* m_pOwner = nullptr;
         std::string m_sName;
     };
 
@@ -117,27 +117,36 @@ namespace NoelleGraphic
             m_Content = *static_cast<bool*>(value);
         }
     protected:
-        bool m_Content;
+        bool m_Content = false;
     };
 
     class GRAPHIC_API ESlider: public EditorControl
     {
     public:
-        ESlider(std::string& name, uint32_t uiMin, uint32_t uiMax, uint32_t uiStep): EditorControl(name)
+        ESlider(std::string& name): EditorControl(name)
         {
-            m_uiMin = uiMin;
-            m_uiMax = uiMax;
-            m_uiStep = uiStep;
         }
 
         virtual ~ESlider() = default;
 
         virtual void CallBackValue(uint32_t value);
+
+        virtual void SetValue(void* value)
+        {
+            m_uiContent = *static_cast<uint32_t*>(value);
+        }
+
+        void SetRange(uint32_t uiMin, uint32_t uiMax, uint32_t uiStep)
+        {
+            m_uiMin = uiMin;
+            m_uiMax = uiMax;
+            m_uiStep = uiStep;
+        }
     protected:
-        uint32_t m_uiMin;
-        uint32_t m_uiMax;
-        uint32_t m_uiStep;
-        uint32_t m_uiContent;
+        uint32_t m_uiMin = 0;
+        uint32_t m_uiMax = 0;
+        uint32_t m_uiStep = 0;
+        uint32_t m_uiContent = 0;
     };
 
     class GRAPHIC_API EViewWindow: public EditorControl
@@ -150,22 +159,29 @@ namespace NoelleGraphic
     public:
         ECombo(std::string& name): EditorControl(name)
         {
-
         }
 
         virtual ~ECombo() = default;
 
         virtual void AddOption(std::string option)
         {
+            m_Options.push_back(option);
         }
 
         virtual void AddOptions(std::vector<std::string> options)
         {
+            m_Options.append_range(options);
         }
 
         virtual void CallBackValue(std::string& value);
+
+        virtual void SetValue(void* value)
+        {
+            m_uiIndex = *static_cast<uint32_t*>(value);
+        }
     protected:
-        std::vector<const char*> m_Options;
+        std::vector<std::string> m_Options;
+        uint32_t m_uiIndex = 0;
     };
 
     class GRAPHIC_API EColorTable: public EditorControl
@@ -173,12 +189,18 @@ namespace NoelleGraphic
     public:
         EColorTable(std::string& name): EditorControl(name)
         {
-
         }
 
         virtual ~EColorTable() = default;
 
-        virtual void CallBackValue(NoelleMath::NVector<float, 4>& value);
+        virtual void CallBackValue(NoelleMath::NVec4f& value);
+
+        virtual void SetValue(void* value)
+        {
+            m_Color = *static_cast<NoelleMath::NVec4f *>(value);
+        }
+    protected:
+        NoelleMath::NVec4f m_Color = NoelleMath::NVec4f::One();
     };
 
     class GRAPHIC_API ETextBox: public EditorControl
@@ -186,12 +208,16 @@ namespace NoelleGraphic
     public:
         ETextBox(std::string& name): EditorControl(name)
         {
-
         }
 
         virtual ~ETextBox() = default;
 
         virtual void CallBackValue(std::string& value);
+
+        virtual void SetValue(void* value)
+        {
+            m_Content = *static_cast<std::string*>(value);
+        }
     protected:
         std::string m_Content;
     };
@@ -201,7 +227,6 @@ namespace NoelleGraphic
     public:
         ECollection(std::string& name): EditorControl(name)
         {
-
         }
 
         virtual ~ECollection() = default;
@@ -245,13 +270,12 @@ namespace NoelleGraphic
     public:
         EBoolProperty(bool* b, std::string& name, Object* pOwner);
 
-        void NewFunction(std::string & name);
-
         virtual ~EBoolProperty()
         {
             m_pOwner = nullptr;
         }
 
+        virtual void CallBackValue(EditorControl* pControl, void* pData);
     protected:
         std::unique_ptr<ECheckBox> m_pCheckBox;
     };
@@ -265,9 +289,11 @@ namespace NoelleGraphic
     class GRAPHIC_API EColorProperty: public EditorProperty
     {
     public:
-        EColorProperty(NoelleMath::NVector<float, 4>* color, std::string& name, Object* pOwner);
+        EColorProperty(NoelleMath::NVec4f* color, std::string& name, Object* pOwner);
 
         ~EColorProperty() = default;
+
+        virtual void CallBackValue(EditorControl* pControl, void* pData);
     protected:
         std::unique_ptr<EColorTable> m_pColorTable;
     };
@@ -275,70 +301,86 @@ namespace NoelleGraphic
     class GRAPHIC_API EEnumProperty: public EditorProperty
     {
     public:
-        EEnumProperty(unsigned int* pSelection, std::string& name, Object* pOwner);
+        EEnumProperty(const std::vector<std::string>& data, unsigned int* pSelection, std::string& name, Object* pOwner);
 
         ~EEnumProperty()
         {
-            m_pSelection = nullptr;
         }
 
         void AddEnumString(std::vector<std::string>& enumStr);
+
+        virtual void CallBackValue(EditorControl* pControl, void* pData);
     protected:
         std::unique_ptr<ECombo> m_pCombo;
-        unsigned int* m_pSelection;
     };
 
     template <typename T>
     class GRAPHIC_API EValueProperty: public EditorProperty
     {
     public:
-        EValueProperty(T* pData, std::string& name, Object* pOwner);
+        EValueProperty(T* pData, uint32_t uiMin, uint32_t uiMax, uint32_t uiStep, std::string& name, Object* pOwner);
 
         ~EValueProperty() = default;
+
+        virtual void CallBackValue(EditorControl* pControl, void* pData);
     protected:
         std::unique_ptr<ESlider> m_pSlider;
+        std::unique_ptr<ETextBox> m_pTextBox;
     };
 
     class GRAPHIC_API EIntProperty: public EValueProperty<int>
     {
     public:
-        EIntProperty(std::string& name, Object* pOwner);
+        EIntProperty(int* pData, uint32_t uiMin, uint32_t uiMax, uint32_t uiStep, std::string& name, Object* pOwner) 
+            : EValueProperty<int>(pData, uiMin, uiMax, uiStep, name, pOwner)
+        {
+        }
 
         ~EIntProperty() = default;
     };
 
-    class GRAPHIC_API EUIntProperty: public EValueProperty<uint32_t>
+    class GRAPHIC_API EUIntProperty: public EValueProperty<unsigned int>
     {
     public:
-        EUIntProperty(std::string& name, Object* pOwner);
+        EUIntProperty(unsigned int* pData, uint32_t uiMin, uint32_t uiMax, uint32_t uiStep, std::string& name, Object* pOwner) 
+            : EValueProperty<unsigned int>(pData, uiMin, uiMax, uiStep, name, pOwner)
+        {
+        }
 
         ~EUIntProperty() = default;
-    };
-
-    class GRAPHIC_API EStringProperty: public EditorProperty
-    {
-    public:
-        EStringProperty(std::string* pStr, std::string& name, Object* pOwner);
-
-        ~EStringProperty() = default;
-    protected:
-        std::unique_ptr<ETextBox> m_pTextBox;
     };
 
     class GRAPHIC_API EFloatProperty: public EValueProperty<float>
     {
     public:
-        EFloatProperty(float* pData, std::string& name, Object* pOwner);
+        EFloatProperty(float* pData, uint32_t uiMin, uint32_t uiMax, uint32_t uiStep, std::string& name, Object* pOwner)
+            : EValueProperty<unsigned int>(pData, uiMin, uiMax, uiStep, name, pOwner)
+        {
+        }
 
         ~EFloatProperty() = default;
+    };
+
+    class GRAPHIC_API EStringProperty : public EditorProperty
+    {
+    public:
+        EStringProperty(std::string* pStr, std::string& name, Object* pOwner);
+
+        ~EStringProperty() = default;
+
+        virtual void CallBackValue(EditorControl* pControl, void* pData);
+    protected:
+        std::unique_ptr<ETextBox> m_pTextBox;
     };
 
     class GRAPHIC_API EVector3Property: public EditorProperty
     {
     public:
-        EVector3Property(NoelleMath::NVector<float, 3> pVector, std::string& name, Object* pOwner);
+        EVector3Property(NoelleMath::NVec3f* pVector, NoelleMath::NVec3f min, NoelleMath::NVec3f max, NoelleMath::NVec3f step, std::string& name, Object* pOwner);
 
         ~EVector3Property() = default;
+
+        virtual void CallBackValue(EditorControl* pControl, void* pData);
     protected:
         std::unique_ptr<ELabel> m_pLabelX;
         std::unique_ptr<ESlider> m_pSliderX;
@@ -359,6 +401,9 @@ namespace NoelleGraphic
         ETransformProperty(NoelleMath::NTransform<float> pTransform, std::string& name, Object* pOwner);
 
         ~ETransformProperty() = default;
+
+        virtual void CallBackValue(EditorControl* pControl, void* pData);
+
     protected:
         std::unique_ptr<ELabel> m_pLabelPosition;
         std::unique_ptr<ETextBox> m_pTextBoxPositionX;
