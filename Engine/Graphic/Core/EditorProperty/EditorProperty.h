@@ -39,7 +39,7 @@ namespace NoelleGraphic
         virtual ~IEditorElement() = default;
     };
 
-    // #region Logic Control
+    #pragma region Logic Control
 
     class GRAPHIC_API EditorControl: public IEditorElement
     {
@@ -220,9 +220,9 @@ namespace NoelleGraphic
         std::vector<EditorControl> m_Collection;
     };
 
-    // #endregion
+    #pragma endregion
 
-    // #region Editor Property
+    #pragma region Editor Property
 
     class GRAPHIC_API EditorProperty: public IEditorElement
     {
@@ -399,7 +399,7 @@ namespace NoelleGraphic
         }
     };
 
-    // #endregion
+    #pragma endregion
 
     template<typename T>
     void CreateEditorElement(T value, Object* pOwner, ECollection* pParent, std::string& name, bool bRange, T max, T min, T step);
