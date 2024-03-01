@@ -6,3 +6,5 @@ target("libGlad")
     )
     add_includedirs("include/")
     add_files("src/glad.c")
+
+    set_group("Vendor")
