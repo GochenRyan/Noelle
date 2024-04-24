@@ -69,7 +69,7 @@ void ETextBox::CallBackValue(std::string& value)
 EditorProperty::EditorProperty(const std::string& name, Object* pOwner)
 {
     m_pLabel = NoelleUtils::StaticUniquePointerCast<ELabel, EditorControl>(
-        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_LABEL, name)));
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_LABEL, name + "_label")));
     m_pLabel->SetOwner(this);
     m_pLabel->SetValue((void*)(&name));
 
@@ -84,7 +84,7 @@ void EditorProperty::CallBackValue(EditorControl* pControl, void* pData)
 EBoolProperty::EBoolProperty(bool* b, std::string& name, Object* pOwner) : EditorProperty(name, pOwner)
 {
     m_pCheckBox = NoelleUtils::StaticUniquePointerCast<ECheckBox, EditorControl>(
-        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_CHECK, name)));
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_CHECK, name + "_checkbox")));
     m_pCheckBox->SetOwner(this);
     m_pCheckBox->SetValue((void*)b);
 }
@@ -97,7 +97,7 @@ void EBoolProperty::CallBackValue(EditorControl* pControl, void* pData)
 EColorProperty::EColorProperty(NoelleMath::NVec4f* color, std::string& name, Object* pOwner) : EditorProperty(name, pOwner)
 {
     m_pColorTable = NoelleUtils::StaticUniquePointerCast<EColorTable, EditorControl>(
-        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_COLOR, name)));
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_COLOR, name + "_colortable")));
     m_pColorTable->SetOwner(this);
     m_pColorTable->SetValue((void*)color);
 }
@@ -110,7 +110,7 @@ void EColorProperty::CallBackValue(EditorControl* pControl, void* pData)
 EEnumProperty::EEnumProperty(const std::vector<std::string>& data,unsigned int* pSelection, std::string& name, Object* pOwner) : EditorProperty(name, pOwner)
 {
     m_pCombo = NoelleUtils::StaticUniquePointerCast<ECombo, EditorControl>(
-        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_COMBO, name)));
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_COMBO, name + "_combo")));
     m_pCombo->SetOwner(this);
     m_pCombo->AddOptions(data);
     m_pCombo->SetValue((void*)pSelection);
@@ -130,12 +130,12 @@ template <typename T>
 EValueProperty<T>::EValueProperty<T>(T* pData, uint32_t uiMin, uint32_t uiMax, uint32_t uiStep, std::string& name, Object* pOwner) : EditorProperty(name, pOwner)
 {
     m_pSlider = NoelleUtils::StaticUniquePointerCast<ESlider, EditorControl>(
-        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_SLIDER, name)));
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_SLIDER, name + "_slider")));
     m_pSlider->SetRange(uiMin, uiMax, uiStep);
     m_pSlider->SetValue((void*)pData);
 
     m_pTextBox = NoelleUtils::StaticUniquePointerCast<ETextBox, EditorControl>(
-        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_TEXT, name)));
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_TEXT, name + "_textbox")));
 }
 
 template <typename T>
@@ -147,7 +147,7 @@ void EValueProperty<T>::CallBackValue(EditorControl* pControl, void* pData)
 EStringProperty::EStringProperty(std::string* pStr, std::string& name, Object* pOwner) : EditorProperty(name, pOwner)
 {
     m_pTextBox = NoelleUtils::StaticUniquePointerCast<ETextBox, EditorControl>(
-        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_TEXT, name)));
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_TEXT, name + "_textbox")));
 
     m_pTextBox->SetValue((void*)pStr);
 }
@@ -159,24 +159,26 @@ void EStringProperty::CallBackValue(EditorControl* pControl, void* pData)
 
 EVector3Property::EVector3Property(NoelleMath::NVec3f* pVector, NoelleMath::NVec3f min, NoelleMath::NVec3f max, NoelleMath::NVec3f step, std::string& name, Object* pOwner) : EditorProperty(name, pOwner)
 {
-    //m_pLabelX = NoelleUtils::StaticUniquePointerCast<ELabel, EditorControl>(
-    //    std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_LABEL, "X")));
-    //m_pSlider = NoelleUtils::StaticUniquePointerCast<ESlider, EditorControl>(
-    //    std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_SLIDER, name)));
-    //m_pTextBoxX = NoelleUtils::StaticUniquePointerCast<ETextBox, EditorControl>(
-    //    std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_TEXT, name + "X")));
+    m_pLabelX = NoelleUtils::StaticUniquePointerCast<ELabel, EditorControl>(
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_LABEL, name + "_label_x")));
+    m_pSliderX = NoelleUtils::StaticUniquePointerCast<ESlider, EditorControl>(
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_SLIDER, name + "_slider_x")));
+    m_pTextBoxX = NoelleUtils::StaticUniquePointerCast<ETextBox, EditorControl>(
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_TEXT, name + "_textbox_x")));
 
-    //m_pLabelY = NoelleUtils::StaticUniquePointerCast<ELabel, EditorControl>(
-    //    std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_LABEL, "Y")));
+    m_pLabelY = NoelleUtils::StaticUniquePointerCast<ELabel, EditorControl>(
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_LABEL, name + "_label_y")));
+    m_pSliderY = NoelleUtils::StaticUniquePointerCast<ESlider, EditorControl>(
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_SLIDER, name + "_slider_y")));
+    m_pTextBoxY = NoelleUtils::StaticUniquePointerCast<ETextBox, EditorControl>(
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_TEXT, name + "_textbox_y")));
 
-    //m_pTextBoxY = NoelleUtils::StaticUniquePointerCast<ETextBox, EditorControl>(
-    //    std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_TEXT, name + "Y")));
-
-    //m_pLabelZ = NoelleUtils::StaticUniquePointerCast<ELabel, EditorControl>(
-    //    std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_LABEL, "Z")));
-
-    //m_pTextBoxZ = NoelleUtils::StaticUniquePointerCast<ETextBox, EditorControl>(
-    //    std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_TEXT, name + "Z")));
+    m_pLabelZ = NoelleUtils::StaticUniquePointerCast<ELabel, EditorControl>(
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_LABEL, name + "_label_z")));
+    m_pSliderZ = NoelleUtils::StaticUniquePointerCast<ESlider, EditorControl>(
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_SLIDER, name + "_slider_z")));
+    m_pTextBoxZ = NoelleUtils::StaticUniquePointerCast<ETextBox, EditorControl>(
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_TEXT, name + "_textbox_z")));
 }
 
 void EVector3Property::CallBackValue(EditorControl* pControl, void* pData)
@@ -186,7 +188,50 @@ void EVector3Property::CallBackValue(EditorControl* pControl, void* pData)
 
 ETransformProperty::ETransformProperty(NoelleMath::NTransform<float> pTransform, std::string& name, Object* pOwner) : EditorProperty(name, pOwner)
 {
+    m_pLabelPosition = NoelleUtils::StaticUniquePointerCast<ELabel, EditorControl>(
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_LABEL, name + "_label_position")));
+    m_pLabelPositionX = NoelleUtils::StaticUniquePointerCast<ELabel, EditorControl>(
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_LABEL, name + "_label_position_x")));
+    m_pTextBoxPositionX = NoelleUtils::StaticUniquePointerCast<ETextBox, EditorControl>(
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_TEXT, name + "_textbox_position_x")));
+    m_pLabelPositionY = NoelleUtils::StaticUniquePointerCast<ELabel, EditorControl>(
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_LABEL, name + "_label_position_y")));
+    m_pTextBoxPositionY = NoelleUtils::StaticUniquePointerCast<ETextBox, EditorControl>(
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_TEXT, name + "_textbox_position_y")));
+    m_pLabelPositionZ = NoelleUtils::StaticUniquePointerCast<ELabel, EditorControl>(
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_LABEL, name + "_label_position_z")));
+    m_pTextBoxPositionZ = NoelleUtils::StaticUniquePointerCast<ETextBox, EditorControl>(
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_TEXT, name + "_textbox_position_z")));
 
+    m_pLabelRotation = NoelleUtils::StaticUniquePointerCast<ELabel, EditorControl>(
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_LABEL, name + "_label_rotation")));
+    m_pLabelRotationX = NoelleUtils::StaticUniquePointerCast<ELabel, EditorControl>(
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_LABEL, name + "_label_rotation_x")));
+    m_pTextBoxRotationX = NoelleUtils::StaticUniquePointerCast<ETextBox, EditorControl>(
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_TEXT, name + "_textbox_rotation_x")));
+    m_pLabelRotationY = NoelleUtils::StaticUniquePointerCast<ELabel, EditorControl>(
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_LABEL, name + "_label_rotation_y")));
+    m_pTextBoxRotationY = NoelleUtils::StaticUniquePointerCast<ETextBox, EditorControl>(
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_TEXT, name + "_textbox_rotation_y")));
+    m_pLabelRotationZ = NoelleUtils::StaticUniquePointerCast<ELabel, EditorControl>(
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_LABEL, name + "_label_rotation_z")));
+    m_pTextBoxRotationZ = NoelleUtils::StaticUniquePointerCast<ETextBox, EditorControl>(
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_TEXT, name + "_textbox_rotation_z")));
+
+    m_pLabelScale = NoelleUtils::StaticUniquePointerCast<ELabel, EditorControl>(
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_LABEL, name + "_label_scale")));
+    m_pLabelScaleX = NoelleUtils::StaticUniquePointerCast<ELabel, EditorControl>(
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_LABEL, name + "_label_scale_x")));
+    m_pTextBoxScaleX = NoelleUtils::StaticUniquePointerCast<ETextBox, EditorControl>(
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_TEXT, name + "_textbox_scale_x")));
+    m_pLabelScaleY = NoelleUtils::StaticUniquePointerCast<ELabel, EditorControl>(
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_LABEL, name + "_label_scale_y")));
+    m_pTextBoxScaleY = NoelleUtils::StaticUniquePointerCast<ETextBox, EditorControl>(
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_TEXT, name + "_textbox_scale_y")));
+    m_pLabelScaleZ = NoelleUtils::StaticUniquePointerCast<ELabel, EditorControl>(
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_LABEL, name + "_label_scale_z")));
+    m_pTextBoxScaleZ = NoelleUtils::StaticUniquePointerCast<ETextBox, EditorControl>(
+        std::move(EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_TEXT, name + "_textbox_scale_z")));
 }
 
 void ETransformProperty::CallBackValue(EditorControl* pControl, void* pData)
