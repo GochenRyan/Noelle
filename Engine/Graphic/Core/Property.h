@@ -23,6 +23,7 @@
 */
 
 #pragma once
+#include "EditorProperty/EditorProperty.h"
 #include "MemManager.h"
 #include "System.h"
 #include "Stream/Stream.h"
@@ -33,7 +34,6 @@
 #include <map>
 #include <string>
 #include <vector>
-
 
 namespace NoelleGraphic
 {
@@ -140,6 +140,10 @@ namespace NoelleGraphic
             return nullptr;
         }
 
+        virtual void AddEditorElement(void* pSrcObj, ECollection* pParent, std::string& name)
+        {
+        }
+
     protected:
         ClassInfo* m_pOwner;
         StringCrc m_crcName;
@@ -212,6 +216,25 @@ namespace NoelleGraphic
         virtual std::unique_ptr<Property> GetInstance()
         {
             return std::make_unique<EnumProperty<T>>();
+        }
+
+        virtual void AddEditorElement(void* pSrcObj, ECollection* pParent, std::string& name) override
+        {
+            std::vector<std::string> data = {};
+            
+            unsigned int selection = 0;
+            for (int i = 0; i < data.size(); ++i)
+            {
+                StringCrc tmp(data[i]);
+                if (tmp == m_EnumName)
+                {
+                    selection = i;
+                    break;
+                }
+            }
+
+            EEnumProperty* pEditorProperty = new EEnumProperty(data, &selection, name, (Object*)pSrcObj);
+            pParent->AddElement(pEditorProperty);
         }
 
     private:
@@ -462,6 +485,7 @@ namespace NoelleGraphic
         {
             return std::make_unique<ValueProperty<T>>();
         }
+
     };
 
     template<typename U>
@@ -535,6 +559,7 @@ namespace NoelleGraphic
             stream.Archive(Value(pObject));
             return true;
         }
+
     };
 
     template<typename U>
@@ -607,6 +632,7 @@ namespace NoelleGraphic
             stream.Archive(Value(pObject));
             return true;
         }
+
     };
 
     template<typename ArrayType, typename T>
@@ -679,6 +705,11 @@ namespace NoelleGraphic
         virtual std::unique_ptr<Property> GetInstance()
         {
             return std::make_unique<ArrayProperty<ArrayType, T>>();
+        }
+
+        virtual void AddEditorElement(void* pSrcObj, ECollection* pParent, std::string& name) override
+        {
+            CreateEditorElement(GetContainer(pSrcObj), pSrcObj, pParent, name, m_bRange, m_HighValue, m_LowValue, m_Step)
         }
     };
 
@@ -759,6 +790,11 @@ namespace NoelleGraphic
         virtual std::unique_ptr<Property> GetInstance()
         {
             return std::make_unique<MapProperty<MapType, KeyType, ValueType>>();
+        }
+
+        virtual void AddEditorElement(void* pSrcObj, ECollection* pParent, std::string& Name) override
+        {
+            CreateEditorElement(GetContainer(pSrcObj), pSrcObj, pParent, name, m_bRange, m_HighValue, m_LowValue, m_Step)
         }
     };
 

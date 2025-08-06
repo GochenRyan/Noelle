@@ -18,6 +18,7 @@
 #include "Core/ClassInfo.h"
 #include "Core/Stream/Stream.h"
 #include "Sample1.h"
+#include "Sample2.h"
 
 #include <spdlog/spdlog.h>
 

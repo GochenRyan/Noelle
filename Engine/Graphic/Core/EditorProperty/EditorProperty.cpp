@@ -15,6 +15,7 @@
 #include "EditorProperty.h"
 #include "EditorPropertyCreator.h"
 #include "PointerCastingUtils.h"
+#include "Core/ClassInfo.h"
 
 using namespace NoelleGraphic;
 
@@ -239,8 +240,59 @@ void ETransformProperty::CallBackValue(EditorControl* pControl, void* pData)
     m_pOwner->ValueChanged(pControl->GetName(), pData);
 }
 
+/**
+ * @brief Create a editor element object
+ * 
+ * @tparam T 
+ * @param value 
+ * @param pOwner 
+ * @param pParent 
+ * @param name 
+ * @param bRange 
+ * @param max 
+ * @param min 
+ * @param step 
+ */
 template<typename T>
-void CreateEditorElement(T value, Object* pOwner, ECollection* pParent, std::string& name, bool bRange, T max, T min, T step)
+void CreateEditorElement(T& value, Object* pOwner, ECollection* pParent, std::string& name, bool bRange, T max, T min, T step)
 {
+    if (TIsNoellePointerType<T>::Value || TIsNoelleType<T>::Value)
+    {
+        Object*& obj = *static_cast<Object**>(static_cast<void*>(&value));
+        EditorControl* element = CreateObjectEditorElement(obj, name);
+        pParent->AddElement(element);
+    }
+    else if (TIsNoelleUniquePointerType<T>::Value)
+    {
+        std::unique_ptr<Object>& obj = *static_cast<std::unique_ptr<Object>*>(static_cast<void*>(&value));
+        EditorControl* element = CreateObjectEditorElement(obj.get(), name);
+        pParent->AddElement(element);
+    }
+    else if (TIsNoelleSharedPointerType<T>::Value)
+    {
+        std::shared_ptr<Object>& obj = *static_cast<std::shared_ptr<Object>*>(static_cast<void*>(&value));
+        EditorControl* element = CreateObjectEditorElement(obj.get(), name);
+        pParent->AddElement(element);
+    }
+}
+
+template<typename T>
+EditorControl* CreateObjectEditorElement(Object* object, std::string& name)
+{
+    ClassInfo& classInfo = object->GetType();
+    int cnt = classInfo.GetPropertyNum();
+    ECollection* parent = nullptr;
     
+    if (cnt > 0)
+    {
+        parent = EditorPropertyCreator::GetInstance().CreateUIProperty(EditorControl::CONTROL_TYPE::CT_COLLECTION, name);
+    }
+
+    for (int i = 0; i < cnt; ++i)
+    {
+        Property* property = classInfo.GetProperty(i);
+        property->AddEditorElement(object, parent, name);
+    }
+
+    return parent;
 }

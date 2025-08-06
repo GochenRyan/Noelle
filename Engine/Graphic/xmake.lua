@@ -21,7 +21,7 @@ target("Graphic")
         "$(projectdir)/Engine/Math/",
 
         "$(projectdir)/Engine/Utils/"
-    )
+    , {public = true})
     add_linkdirs("$(projectdir)/lib/")
 
     set_group("Engine")

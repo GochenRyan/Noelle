@@ -13,8 +13,8 @@
 // limitations under the License.
 
 #pragma once
-#include "Graphic.h"
 #include "Core/Object.h"
+#include "Graphic.h"
 #include "NVector.h"
 
 #include <string>
@@ -170,7 +170,7 @@ namespace NoelleGraphic
 
         virtual void AddOptions(std::vector<std::string> options)
         {
-            m_Options.append_range(options);
+            m_Options.insert(m_Options.end(), options.begin(), options.end());
         }
 
         virtual void CallBackValue(std::string& value);
@@ -291,7 +291,9 @@ namespace NoelleGraphic
     public:
         EColorProperty(NoelleMath::NVec4f* color, std::string& name, Object* pOwner);
 
-        ~EColorProperty() = default;
+        virtual ~EColorProperty()
+        {
+        }
 
         virtual void CallBackValue(EditorControl* pControl, void* pData);
     protected:
@@ -303,7 +305,7 @@ namespace NoelleGraphic
     public:
         EEnumProperty(const std::vector<std::string>& data, unsigned int* pSelection, std::string& name, Object* pOwner);
 
-        ~EEnumProperty()
+        virtual ~EEnumProperty()
         {
         }
 
@@ -320,7 +322,10 @@ namespace NoelleGraphic
     public:
         EValueProperty(T* pData, uint32_t uiMin, uint32_t uiMax, uint32_t uiStep, std::string& name, Object* pOwner);
 
-        ~EValueProperty() = default;
+        virtual ~EValueProperty()
+        {
+
+        }
 
         virtual void CallBackValue(EditorControl* pControl, void* pData);
     protected:
@@ -336,7 +341,10 @@ namespace NoelleGraphic
         {
         }
 
-        ~EIntProperty() = default;
+        virtual ~EIntProperty()
+        {
+
+        }
     };
 
     class GRAPHIC_API EUIntProperty: public EValueProperty<unsigned int>
@@ -347,18 +355,24 @@ namespace NoelleGraphic
         {
         }
 
-        ~EUIntProperty() = default;
+        virtual ~EUIntProperty()
+        {
+
+        }
     };
 
     class GRAPHIC_API EFloatProperty: public EValueProperty<float>
     {
     public:
         EFloatProperty(float* pData, uint32_t uiMin, uint32_t uiMax, uint32_t uiStep, std::string& name, Object* pOwner)
-            : EValueProperty<unsigned int>(pData, uiMin, uiMax, uiStep, name, pOwner)
+            : EValueProperty<float>(pData, uiMin, uiMax, uiStep, name, pOwner)
         {
         }
 
-        ~EFloatProperty() = default;
+        virtual ~EFloatProperty()
+        {
+
+        }
     };
 
     class GRAPHIC_API EStringProperty : public EditorProperty
@@ -366,7 +380,10 @@ namespace NoelleGraphic
     public:
         EStringProperty(std::string* pStr, std::string& name, Object* pOwner);
 
-        ~EStringProperty() = default;
+        virtual ~EStringProperty()
+        {
+
+        }
 
         virtual void CallBackValue(EditorControl* pControl, void* pData);
     protected:
@@ -378,7 +395,10 @@ namespace NoelleGraphic
     public:
         EVector3Property(NoelleMath::NVec3f* pVector, NoelleMath::NVec3f min, NoelleMath::NVec3f max, NoelleMath::NVec3f step, std::string& name, Object* pOwner);
 
-        ~EVector3Property() = default;
+        virtual ~EVector3Property()
+        {
+
+        }
 
         virtual void CallBackValue(EditorControl* pControl, void* pData);
     protected:
@@ -400,7 +420,10 @@ namespace NoelleGraphic
     public:
         ETransformProperty(NoelleMath::NTransform<float> pTransform, std::string& name, Object* pOwner);
 
-        ~ETransformProperty() = default;
+        virtual ~ETransformProperty()
+        {
+
+        }
 
         virtual void CallBackValue(EditorControl* pControl, void* pData);
 
@@ -438,7 +461,7 @@ namespace NoelleGraphic
 
         }
 
-        ~ENoDefineProperty()
+        virtual ~ENoDefineProperty()
         {
 
         }
@@ -447,5 +470,8 @@ namespace NoelleGraphic
     #pragma endregion
 
     template<typename T>
-    void CreateEditorElement(T value, Object* pOwner, ECollection* pParent, std::string& name, bool bRange, T max, T min, T step);
+    void CreateEditorElement(T& value, Object* pOwner, ECollection* pParent, std::string& name, bool bRange, T max, T min, T step);
+
+    template<typename T>
+    EditorControl* CreateObjectEditorElement(Object* object, std::string& name);
 } // namespace name
